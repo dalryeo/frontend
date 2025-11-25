@@ -63,7 +63,7 @@ final class WorkoutMetrics {
             onWorkoutStateChange?(sessionState)
         }}
     private(set) var activityType: HKWorkoutActivityType = .running
-    private(set) var locationType: HKWorkoutSessionLocationType = .indoor
+    private(set) var locationType: HKWorkoutSessionLocationType = .outdoor
     private(set) var startDate: Date? = nil
     private(set) var endDate: Date? = nil
     private(set) var heartRate: Double = 0
