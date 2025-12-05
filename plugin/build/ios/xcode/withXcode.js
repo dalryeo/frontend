@@ -9,6 +9,7 @@ const addTargetDependency_1 = require("./addTargetDependency");
 const addToPbxProjectSection_1 = require("./addToPbxProjectSection");
 const addPbxGroup_1 = require("./addPbxGroup");
 const addBuildPhases_1 = require("./addBuildPhases");
+const addSharedFiles_1 = require("./addSharedFiles");
 const withXcode = (config, { name, targetName, bundleIdentifier, deploymentTarget }) => {
     return (0, config_plugins_1.withXcodeProject)(config, (config) => {
         const xcodeProject = config.modResults;
@@ -40,6 +41,15 @@ const withXcode = (config, { name, targetName, bundleIdentifier, deploymentTarge
             targetUuid,
             groupName,
             productFile,
+        });
+        (0, addSharedFiles_1.addSharedFiles)(xcodeProject, {
+            sharedFiles: [
+                'Logger.swift',
+                'WorkoutControlling.swift',
+                'WorkoutError.swift',
+                'WorkoutMetrics.swift',
+            ],
+            watchTargetUuid: targetUuid,
         });
         return config;
     });

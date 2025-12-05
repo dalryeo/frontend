@@ -1,25 +1,13 @@
-import { ConfigPlugin, withPlugins } from 'expo/config-plugins';
-import { withXcode } from './xcode/withXcode';
+import { ExpoConfig } from '@expo/config-types';
 
-const withWatchApp: ConfigPlugin = (config) => {
-  const deploymentTarget = '10.0';
-  const displayName = config.name;
-  const bundleIdentifier = config.ios?.bundleIdentifier;
-  const targetName = `${displayName} Watch App`;
+import withIosRunning from '../ios/withIosRunning';
+import withWatchRunning from '../ios/withWatchRunning';
 
-  config = withPlugins(config, [
-    [
-      withXcode,
-      {
-        name: displayName,
-        targetName,
-        bundleIdentifier,
-        deploymentTarget,
-      },
-    ],
-  ]);
+const withAppleRunning = (config: ExpoConfig) => {
+  config = withIosRunning(config);
+  config = withWatchRunning(config);
 
   return config;
 };
 
-export default withWatchApp;
+export default withAppleRunning;

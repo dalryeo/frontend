@@ -3,6 +3,6 @@
   "compilerOptions": {
     "outDir": "./build"
   },
-  "include": ["./src"],
+  "include": ["./src", "ios"],
   "exclude": ["**/__mocks__/*", "**/__tests__/*"]
 }

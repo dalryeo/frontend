@@ -26,8 +26,7 @@
       "package": "com.android.dalryeo"
     },
     "plugins": [
-      "./plugin/build/index.js",
-      "./modules/workout/workout.plugin.js",
+      "./plugin/build/src/index.js",
       [
         "expo-build-properties",
         {

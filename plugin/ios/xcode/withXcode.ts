@@ -10,6 +10,7 @@ import { addTargetDependency } from './addTargetDependency';
 import { addToPbxProjectSection } from './addToPbxProjectSection';
 import { addPbxGroup } from './addPbxGroup';
 import { addBuildPhases } from './addBuildPhases';
+import { addSharedFiles } from './addSharedFiles';
 
 export const withXcode: ConfigPlugin<{
   name: string;
@@ -51,6 +52,16 @@ export const withXcode: ConfigPlugin<{
       targetUuid,
       groupName,
       productFile,
+    });
+
+    addSharedFiles(xcodeProject, {
+      sharedFiles: [
+        'Logger.swift',
+        'WorkoutControlling.swift',
+        'WorkoutError.swift',
+        'WorkoutMetrics.swift',
+      ],
+      watchTargetUuid: targetUuid,
     });
 
     return config;

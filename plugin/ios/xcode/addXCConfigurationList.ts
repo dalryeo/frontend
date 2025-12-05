@@ -16,14 +16,10 @@ export function addXCConfigurationList(
     deploymentTarget: string;
   }
 ) {
-  console.log({
-    name,
-    targetName,
-    currentProjectVersion,
-    bundleIdentifier,
-    deploymentTarget,
-  });
   const watchBundleIdentifier = `${bundleIdentifier}.watchkitapp`;
+  // 파일명 생성 (공백을 하이픈으로 변환)
+  const infoPlistFileName = `${targetName.replace(/ /g, '-')}-Info.plist`;
+  const entitlementsFileName = `${targetName}.entitlements`;
 
   const commonBuildSettings: any = {
     ASSETCATALOG_COMPILER_APPICON_NAME: 'AppIcon',
@@ -44,7 +40,14 @@ export function addXCConfigurationList(
     ENABLE_USER_SCRIPT_SANDBOXING: 'YES',
     GCC_C_LANGUAGE_STANDARD: 'gnu17',
     GENERATE_INFOPLIST_FILE: 'YES',
+    // Info.plist 파일 경로 추가
+    INFOPLIST_FILE: `"../${targetName}/${infoPlistFileName}"`,
+    // HealthKit 권한을 위한 entitlements 파일 경로
+    CODE_SIGN_ENTITLEMENTS: `"../${targetName}/${entitlementsFileName}"`,
     INFOPLIST_KEY_CFBundleDisplayName: name,
+    // HealthKit Usage Description 추가
+    INFOPLIST_KEY_NSHealthShareUsageDescription: `"달려 앱은 러닝 운동 데이터를 HealthKit에 저장하고 읽기 위해 건강 데이터 접근 권한이 필요합니다."`,
+    INFOPLIST_KEY_NSHealthUpdateUsageDescription: `"달려 앱은 러닝 운동 기록을 HealthKit에 저장하기 위해 건강 데이터 쓰기 권한이 필요합니다."`,
     INFOPLIST_KEY_UISupportedInterfaceOrientations:
       '"UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown"',
     INFOPLIST_KEY_WKCompanionAppBundleIdentifier: bundleIdentifier,

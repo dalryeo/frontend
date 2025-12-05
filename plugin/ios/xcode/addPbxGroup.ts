@@ -4,8 +4,18 @@ export function addPbxGroup(
   xcodeProject: XcodeProject,
   { targetName }: { targetName: string }
 ) {
+  // 그룹 생성 시 entitlements, Info.plist도 포함
   const { uuid: pbxGroupUuid } = xcodeProject.addPbxGroup(
-    ['ContentView.swift', 'DalryeoWatchApp.swift', 'Assets.xcassets'],
+    [
+      'Assets.xcassets',
+      'ContentView.swift',
+      'ControlsView.swift',
+      'DalryeoWatchApp.swift',
+      'MetricsView.swift',
+      'WorkoutManager.swift',
+      'dalryeo Watch App.entitlements',
+      'dalryeo-Watch-App-Info.plist',
+    ],
     `"${targetName}"`,
     `"../${targetName}"`
   );

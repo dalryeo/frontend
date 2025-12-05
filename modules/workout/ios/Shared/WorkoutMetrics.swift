@@ -35,6 +35,7 @@ struct SessionStateChange {
     let date: Date
 }
 
+@Observable
 final class WorkoutMetrics {
     enum Constants {
         // 기본 단위 상수
@@ -160,7 +161,6 @@ final class WorkoutMetrics {
     
     public func updateHeartRate(_ bpm: Double) {
         self.heartRate = bpm
-        
         notifyMetricsChanged()
     }
     

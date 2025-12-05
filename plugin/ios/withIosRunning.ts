@@ -1,10 +1,11 @@
-const { withInfoPlist, withEntitlementsPlist } = require('@expo/config-plugins');
+import { ExpoConfig } from '@expo/config-types';
+import { withInfoPlist, withEntitlementsPlist } from 'expo/config-plugins';
 
 /**
- * Config Plugin for Workout 
- * iOS 프로젝트에 필요한 권한과 기능들을 자동으로 추가처리하는 플러그인.
+ * Config Plugin for Workout
+ * iOS 단독 운동에 필요한 권한과 기능들을 자동으로 추가처리하는 플러그인.
  */
-const withWorkoutConfig = (config) => {
+const withIosRunning = (config: ExpoConfig) => {
   // Info.plist에 권한 설명 추가
   config = withInfoPlist(config, (config) => {
     config.modResults.NSHealthShareUsageDescription =
@@ -46,4 +47,4 @@ const withWorkoutConfig = (config) => {
   return config;
 };
 
-module.exports = withWorkoutConfig;
+export default withIosRunning;

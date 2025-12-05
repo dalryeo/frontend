@@ -1,11 +1,24 @@
 import SwiftUI
+import WatchKit
+import HealthKit
 
-// 테스트
+class WatchAppDelegate: NSObject, WKExtensionDelegate {
+  func handle(_ workoutConfiguration: HKWorkoutConfiguration) {
+    WorkoutManager.shared.resetWorkout()
+    
+    Task { @MainActor in
+      try await WorkoutManager.shared.startWorkout()
+    }
+  }
+}
+
 @main
 struct Dalryeo_Watch_AppApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
+  @WKExtensionDelegateAdaptor(WatchAppDelegate.self) var extensionDelegate
+  
+  var body: some Scene {
+    WindowGroup {
+      ContentView()
     }
+  }
 }

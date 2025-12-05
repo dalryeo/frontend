@@ -8,7 +8,13 @@ const util_1 = __importDefault(require("util"));
 function addBuildPhases(xcodeProject, { targetUuid, groupName, productFile, }) {
     const buildPath = `"$(CONTENTS_FOLDER_PATH)/Watch"`;
     const folderType = 'watch2_app';
-    const buildPhaseFiles = ['ContentView.swift', 'DalryeoWatchApp.swift'];
+    const buildPhaseFiles = [
+        'ContentView.swift',
+        'ControlsView.swift',
+        'DalryeoWatchApp.swift',
+        'MetricsView.swift',
+        'WorkoutManager.swift',
+    ];
     // Sources build phase
     xcodeProject.addBuildPhase(buildPhaseFiles, 'PBXSourcesBuildPhase', groupName, targetUuid, folderType, buildPath);
     // Copy files build phase
