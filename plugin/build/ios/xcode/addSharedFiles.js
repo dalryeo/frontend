@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addSharedFiles = addSharedFiles;
-function addSharedFiles(xcodeProject, { sharedFiles, watchTargetUuid, }) {
+function addSharedFiles(xcodeProject, { sharedFiles, watchTargetUuid }) {
     const iosTargetUuid = xcodeProject.getFirstTarget().uuid;
     const sharedPath = '"../modules/workout/ios/Shared"';
     // 1. Shared 그룹 생성

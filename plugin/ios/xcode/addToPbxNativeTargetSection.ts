@@ -1,5 +1,7 @@
 import { XcodeProject } from 'expo/config-plugins';
 
+import { AddToPbxNativeTargetSectionOptions } from './types';
+
 export function addToPbxNativeTargetSection(
   xcodeProject: XcodeProject,
   {
@@ -7,12 +9,7 @@ export function addToPbxNativeTargetSection(
     targetUuid,
     productFile,
     xCConfigurationList,
-  }: {
-    targetName: string;
-    targetUuid: string;
-    productFile: { fileRef: string };
-    xCConfigurationList: { uuid: string };
-  }
+  }: AddToPbxNativeTargetSectionOptions
 ) {
   const target = {
     uuid: targetUuid,

@@ -1,6 +1,7 @@
 import { XcodeProject } from 'expo/config-plugins';
-
 import util from 'util';
+
+import { AddBuildPhasesOptions } from './types';
 
 export function addBuildPhases(
   xcodeProject: XcodeProject,
@@ -8,31 +9,16 @@ export function addBuildPhases(
     targetUuid,
     groupName,
     productFile,
-  }: {
-    targetUuid: string;
-    groupName: string;
-    productFile: {
-      uuid: string;
-      target: string;
-      basename: string;
-      group: string;
-    };
-  }
+    watchFiles,
+    resourceFiles,
+  }: AddBuildPhasesOptions
 ) {
   const buildPath = `"$(CONTENTS_FOLDER_PATH)/Watch"`;
   const folderType = 'watch2_app';
 
-  const buildPhaseFiles = [
-    'ContentView.swift',
-    'ControlsView.swift',
-    'DalryeoWatchApp.swift',
-    'MetricsView.swift',
-    'WorkoutManager.swift',
-  ];
-
   // Sources build phase
   xcodeProject.addBuildPhase(
-    buildPhaseFiles,
+    watchFiles,
     'PBXSourcesBuildPhase',
     groupName,
     targetUuid,
@@ -54,7 +40,7 @@ export function addBuildPhases(
     .buildPhaseObject('PBXCopyFilesBuildPhase', groupName, productFile.target)
     .files.push({
       value: productFile.uuid,
-      comment: util.format('%s in %s', productFile.basename, productFile.group), // longComment(file);
+      comment: util.format('%s in %s', productFile.basename, productFile.group),
     });
   xcodeProject.addToPbxBuildFileSection(productFile);
 
@@ -70,7 +56,7 @@ export function addBuildPhases(
 
   // Resources build phase
   xcodeProject.addBuildPhase(
-    ['Assets.xcassets', 'Preview Assets.xcassets'],
+    resourceFiles,
     'PBXResourcesBuildPhase',
     groupName,
     targetUuid,

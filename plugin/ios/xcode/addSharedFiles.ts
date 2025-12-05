@@ -1,14 +1,10 @@
 import { XcodeProject } from 'expo/config-plugins';
 
+import { AddSharedFilesOptions } from './types';
+
 export function addSharedFiles(
   xcodeProject: XcodeProject,
-  {
-    sharedFiles,
-    watchTargetUuid,
-  }: {
-    sharedFiles: string[];
-    watchTargetUuid: string;
-  }
+  { sharedFiles, watchTargetUuid }: AddSharedFilesOptions
 ) {
   const iosTargetUuid = xcodeProject.getFirstTarget().uuid;
   const sharedPath = '"../modules/workout/ios/Shared"';

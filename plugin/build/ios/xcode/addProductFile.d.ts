@@ -1,5 +1,3 @@
 import { XcodeProject } from 'expo/config-plugins';
-export declare function addProductFile(xcodeProject: XcodeProject, { targetName, groupName }: {
-    targetName: string;
-    groupName: string;
-}): any;
+import { AddProductFileOptions } from './types';
+export declare function addProductFile(xcodeProject: XcodeProject, { targetName, groupName }: AddProductFileOptions): any;

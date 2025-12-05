@@ -1,18 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addPbxGroup = addPbxGroup;
-function addPbxGroup(xcodeProject, { targetName }) {
-    // 그룹 생성 시 entitlements, Info.plist도 포함
-    const { uuid: pbxGroupUuid } = xcodeProject.addPbxGroup([
-        'Assets.xcassets',
-        'ContentView.swift',
-        'ControlsView.swift',
-        'DalryeoWatchApp.swift',
-        'MetricsView.swift',
-        'WorkoutManager.swift',
-        'dalryeo Watch App.entitlements',
-        'dalryeo-Watch-App-Info.plist',
-    ], `"${targetName}"`, `"../${targetName}"`);
+function addPbxGroup(xcodeProject, { targetName, watchFiles, resourceFiles }) {
+    const entitlementsFile = `${targetName}.entitlements`;
+    const infoPlistFile = `${targetName.replace(/ /g, '-')}-Info.plist`;
+    const allFiles = [
+        ...resourceFiles,
+        ...watchFiles,
+        entitlementsFile,
+        infoPlistFile,
+    ];
+    const { uuid: pbxGroupUuid } = xcodeProject.addPbxGroup(allFiles, `"${targetName}"`, `"../${targetName}"`);
     const groups = xcodeProject.hash.project.objects['PBXGroup'];
     if (pbxGroupUuid) {
         Object.keys(groups).forEach(function (key) {

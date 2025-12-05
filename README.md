@@ -33,7 +33,7 @@ const result = await workoutModule.start();
 
 | 항목                 | 버전    | 비고                     |
 | -------------------- | ------- | ------------------------ |
-| Node.js              | 18+     |                          |
+| Node.js              | 20+     |                          |
 | Xcode                | 15+     | App Store에서 설치       |
 | iOS 기기             | iOS 17+ | **시뮬레이터 제한 있음** |
 | watchOS              | 10+     | Watch 미러링 시 필요     |
@@ -41,12 +41,49 @@ const result = await workoutModule.start();
 
 ### ⚠️ 시뮬레이터 제한사항
 
-| 기능                | 시뮬레이터 | 실제 기기 |
-| ------------------- | :--------: | :-------: |
-| HealthKit 읽기/쓰기 |     ❌     |    ✅     |
-| 심박수 측정         |     ❌     |    ✅     |
-| GPS 위치            | ⚠️ 가상만  |    ✅     |
-| Watch 연동          |     ❌     |    ✅     |
+| 기능                |   시뮬레이터   | 실제 기기 |
+| ------------------- | :------------: | :-------: |
+| HealthKit 읽기/쓰기 |       ❌       |    ✅     |
+| 심박수 측정         |       ❌       |    ✅     |
+| GPS 위치            | ⚠️ 가상 위치만 |    ✅     |
+| 운동 세션           |       ❌       |    ✅     |
+| Watch 연동          |       ❌       |    ✅     |
+
+> 💡 **핵심 기능 테스트는 반드시 실제 기기에서 진행하세요.**
+
+---
+
+## CNG (Continuous Native Generation) 이해하기
+
+Expo의 CNG는 `app.json` 설정을 기반으로 네이티브 프로젝트(ios/, android/)를 자동 생성하는 방식입니다.
+
+```
+app.json + 네이티브 모듈 설정
+          ↓
+    npx expo prebuild
+          ↓
+    ios/ , android/ 폴더 생성
+          ↓
+    Xcode/Android Studio에서 빌드
+```
+
+### 핵심 명령어 비교
+
+| 명령어                      | 용도                         | 언제 사용?                       |
+| --------------------------- | ---------------------------- | -------------------------------- |
+| `npx expo prebuild`         | 네이티브 폴더 생성/업데이트  | 최초 설정, 네이티브 설정 변경 시 |
+| `npx expo prebuild --clean` | 네이티브 폴더 삭제 후 재생성 | 빌드 오류, 캐시 문제             |
+| `npx pod-install`           | iOS 의존성만 재설치          | Podfile 변경, pod 관련 에러      |
+
+### ✅ `--clean` 사용 가능
+
+CNG 환경 최적화가 완료되어 언제든 `--clean`을 사용할 수 있습니다.
+
+```bash
+npx expo prebuild --clean
+```
+
+> ⚠️ **주의:** 실행 후 Xcode에서 **iPhone, Watch 타겟 모두 Team 재설정**이 필요합니다.
 
 ---
 
@@ -64,11 +101,14 @@ npm install
 npx expo prebuild --clean
 ```
 
-### 3. Xcode에서 실행
+### 3. Xcode에서 프로젝트 열기
 
 ```bash
+# ios 폴더에서 .xcworkspace 파일을 Xcode로 열기
 xed ios
 ```
+
+> ⚠️ `.xcodeproj`가 아닌 `.xcworkspace`를 열어야 합니다.
 
 ### 4. Apple Developer 계정 설정
 
@@ -76,43 +116,46 @@ xed ios
 
 **iPhone 타겟과 Watch 타겟 모두** 서명 설정이 필요합니다:
 
-1. Xcode 좌측에서 프로젝트 선택 (파란 아이콘)
+1. Xcode 좌측 네비게이터에서 **프로젝트 선택** (파란 아이콘)
 2. **TARGETS**에서 각각 선택:
    - `dalryeo` (iPhone)
    - `dalryeo Watch App` (Watch)
-3. **Signing & Capabilities** → **Team** 선택
-4. Bundle Identifier 고유하게 변경
+3. **Signing & Capabilities** 탭 클릭
+4. **Team** 드롭다운에서 계정 선택
+   - 계정이 없으면: `Add Account...` → Apple ID 로그인
+5. **Bundle Identifier** 고유하게 변경
 
-### 5. 기기에서 실행
+```
+   com.yourname.dalryeo  # 예시
+```
 
-1. iPhone + Apple Watch를 Mac에 연결
-2. Xcode 상단에서 기기 선택
-3. ▶️ Run (`Cmd + R`)
+### 5. 실제 기기에서 실행
+
+1. iPhone을 Mac에 USB 연결 (Watch 미러링 테스트 시 Watch도 페어링 상태 유지)
+2. iPhone에서 "이 컴퓨터를 신뢰" 허용
+3. Xcode 상단에서 연결된 기기 선택
+4. ▶️ Run 버튼 클릭 (또는 `Cmd + R`)
+
+### 6. 기기에서 앱 신뢰 설정 (최초 1회)
+
+무료 개발자 계정 사용 시:
+
+1. iPhone → **설정** → **일반** → **VPN 및 기기 관리**
+2. 개발자 앱에서 본인 Apple ID 선택
+3. **"[Apple ID] 신뢰"** 탭
 
 ---
 
 ## 문제 해결
 
-### Pod 설치 오류
-
-```bash
-cd ios && rm -rf Pods Podfile.lock && cd ..
-npx pod-install
-```
-
-### 빌드 캐시 문제
-
-```bash
-rm -rf ~/Library/Developer/Xcode/DerivedData
-npx expo prebuild --clean
-```
-
-> ⚠️ `--clean` 후 반드시 **Team 재설정** 필요
-
-### Watch 앱이 설치 안 됨
-
-- iPhone과 Watch가 페어링 상태인지 확인
-- Watch 앱에서 "개발자" 모드 활성화
+| 증상                       | 해결                                                 |
+| -------------------------- | ---------------------------------------------------- |
+| Pod 관련 오류              | `npx pod-install`                                    |
+| 빌드 오류, 설정 꼬임       | `npx expo prebuild --clean` → Team 재설정            |
+| Xcode 캐시 문제            | Xcode → Product → Clean Build Folder (`Cmd+Shift+K`) |
+| Watch 앱 설치 안 됨        | iPhone-Watch 페어링 확인, Watch "개발자" 모드 활성화 |
+| "Untrusted Developer" 오류 | 위 **기기에서 앱 신뢰 설정** 참고                    |
+| HealthKit 권한이 안 뜸     | 시뮬레이터 불가 → 실제 기기 사용                     |
 
 ---
 
@@ -121,25 +164,34 @@ npx expo prebuild --clean
 ```
 ├── modules/workout/
 │   ├── ios/
-│   │   ├── Shared/           # iPhone-Watch 공유 코드
-│   │   ├── WorkoutModule.swift
-│   │   ├── WorkoutManager.swift      # iPhone 단독
-│   │   └── WatchLedWorkoutManager.swift  # Watch 미러링
+│   │   ├── Shared/                   # iPhone-Watch 공유 코드
+│   │   │   ├── WorkoutMetrics.swift
+│   │   │   ├── WorkoutControlling.swift
+│   │   │   └── WorkoutError.swift
+│   │   ├── WorkoutModule.swift       # Expo 모듈 진입점
+│   │   ├── WorkoutManager.swift      # iPhone 단독 모드
+│   │   ├── WatchLedWorkoutManager.swift  # Watch 미러링 모드
+│   │   └── DeviceManager.swift       # 기기 감지
 │   ├── src/
 │   │   ├── WorkoutModule.ts
-│   │   └── Workout.types.ts
+│   │   ├── Workout.types.ts
+│   │   └── WorkoutError.ts
 │   └── index.ts
 │
-├── dalryeo Watch App/        # watchOS 앱
+├── dalryeo Watch App/                # watchOS 앱
+│   ├── DalryeoWatchApp.swift
 │   ├── WorkoutManager.swift
 │   ├── ContentView.swift
-│   └── MetricsView.swift
+│   ├── MetricsView.swift
+│   └── ControlsView.swift
 │
-└── plugin/                   # Expo Config Plugins
-    ├── src/index.ts          # 진입점
-    └── ios/
-        ├── withIosRunning.ts     # iPhone 권한
-        └── withWatchRunning.ts   # Watch 타겟 자동 생성
+├── plugin/                           # Expo Config Plugins
+│   ├── src/index.ts                  # 진입점
+│   └── ios/
+│       ├── withIosRunning.ts         # iPhone 권한 설정
+│       └── withWatchRunning.ts       # Watch 타겟 자동 생성
+│
+└── app.json                          # Expo 설정
 ```
 
 ---
@@ -159,5 +211,6 @@ npx expo prebuild --clean
 ## 참고 문서
 
 - [Expo Modules API](https://docs.expo.dev/modules/overview/)
+- [Expo Prebuild](https://docs.expo.dev/workflow/prebuild/)
 - [HealthKit Documentation](https://developer.apple.com/documentation/healthkit)
 - [WatchConnectivity](https://developer.apple.com/documentation/watchconnectivity)

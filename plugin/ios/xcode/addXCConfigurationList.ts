@@ -1,5 +1,7 @@
 import { XcodeProject } from 'expo/config-plugins';
 
+import { AddXCConfigurationListOptions } from './types';
+
 export function addXCConfigurationList(
   xcodeProject: XcodeProject,
   {
@@ -8,13 +10,7 @@ export function addXCConfigurationList(
     currentProjectVersion,
     bundleIdentifier,
     deploymentTarget,
-  }: {
-    name: string;
-    targetName: string;
-    currentProjectVersion: string;
-    bundleIdentifier: string;
-    deploymentTarget: string;
-  }
+  }: AddXCConfigurationListOptions
 ) {
   const watchBundleIdentifier = `${bundleIdentifier}.watchkitapp`;
   // 파일명 생성 (공백을 하이픈으로 변환)
