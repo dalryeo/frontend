@@ -47,6 +47,7 @@ enum WorkoutError: Error, Sendable {
     case invalidWorkoutState
     
     // Apple Watch 관련 에러
+    case watchNotReachable
     case sessionNotActive
     case sessionCreationFailed
     case mirroringFailed

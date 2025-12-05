@@ -54,6 +54,14 @@ class WorkoutManager: NSObject, WorkoutControlling {
         return hasHealthKit && hasLocation
     }
     
+    public var isWorkoutActive: Bool {
+      switch metrics.sessionState {
+        case .running, .paused:
+            return true
+        default:
+            return false
+        }
+    }
     /// 위치 권한 변경 콜백
     public var onLocationAuthorizationChange: ((Bool) -> Void)?
     /// 운동 상태 변경 콜백

@@ -1,11 +1,10 @@
-// WorkoutModule.swift
-
 import ExpoModulesCore
 import HealthKit
 import CoreLocation
 
 public class WorkoutModule: Module {
-    @MainActor private let workoutManager = WorkoutManager()
+    @MainActor private var workoutManager: WorkoutControlling?
+    private var isInitializing = false
     
     public func definition() -> ModuleDefinition {
         Name("Workout")
@@ -19,26 +18,24 @@ public class WorkoutModule: Module {
         
         OnCreate {
             Task { @MainActor in
-                self.setupMetricsObserver()
-                self.setupLocationAuthObserver()
-                self.emitCurrentMetrics()
-                self.emitCurrentLocationAuth()
+                await self.initializeProvider()
             }
         }
         
         OnDestroy {
             Task { @MainActor in
-                self.workoutManager.onMetricsUpdate = nil
-                self.workoutManager.onWorkoutStateChange = nil
-                self.workoutManager.onLocationAuthorizationChange = nil
+                self.workoutManager?.onMetricsUpdate = nil
+                self.workoutManager?.onWorkoutStateChange = nil
+                self.workoutManager?.onLocationAuthorizationChange = nil
             }
         }
         
         AsyncFunction(WorkoutFunction.checkPermissions) { (promise: Promise) in
             Task { @MainActor in
+                let manager = await self.ensureProvider()
                 let permissions: [String: Bool] = [
-                    WorkoutKey.healthKit: self.workoutManager.checkHealthKitWritePermission(),
-                    WorkoutKey.location: self.workoutManager.checkLocationPermission()
+                    WorkoutKey.healthKit: manager.checkHealthKitWritePermission(),
+                    WorkoutKey.location: manager.checkLocationPermission()
                 ]
                 promise.resolve(permissions)
             }
@@ -46,14 +43,16 @@ public class WorkoutModule: Module {
         
         AsyncFunction(WorkoutFunction.requestLocationAuthorization) {
             Task { @MainActor in
-                await self.workoutManager.requestLocationAuthorization()
+                let manager = await self.ensureProvider()
+                await manager.requestLocationAuthorization()
             }
         }
         
         AsyncFunction(WorkoutFunction.requestHealthAuthorization) { (promise: Promise) in
             Task { @MainActor in
                 do {
-                    try await self.workoutManager.requestHealthAuthorization()
+                    let manager = await self.ensureProvider()
+                    try await manager.requestHealthAuthorization()
                     promise.resolve(nil)
                 } catch let error as WorkoutError {
                     self.rejectAndEmit(promise, error, code: WorkoutErrorCode.permissionRequestFailed)
@@ -64,8 +63,17 @@ public class WorkoutModule: Module {
         AsyncFunction(WorkoutFunction.startWorkout) { (promise: Promise) in
             Task { @MainActor in
                 do {
-                    try await self.workoutManager.startWorkout()
+                    let manager = await self.ensureProvider()
+                    try await manager.startWorkout()
                     promise.resolve(nil)
+                } catch WorkoutError.watchNotReachable {
+                    await self.fallbackToiPhoneMode()
+                    do {
+                        try await self.workoutManager?.startWorkout()
+                        promise.resolve(nil)
+                    } catch let error as WorkoutError {
+                        self.rejectAndEmit(promise, error, code: WorkoutErrorCode.startFailed)
+                    }
                 } catch let error as WorkoutError {
                     self.rejectAndEmit(promise, error, code: WorkoutErrorCode.startFailed)
                 }
@@ -75,7 +83,9 @@ public class WorkoutModule: Module {
         AsyncFunction(WorkoutFunction.pauseWorkout) { (promise: Promise) in
             Task { @MainActor in
                 do {
-                    try self.workoutManager.pauseWorkout()
+                    let manager = await self.ensureProvider()
+                    try manager.pauseWorkout()
+                    promise.resolve(nil)
                 } catch let error as WorkoutError {
                     self.rejectAndEmit(promise, error, code: WorkoutErrorCode.pauseFailed)
                 }
@@ -85,7 +95,9 @@ public class WorkoutModule: Module {
         AsyncFunction(WorkoutFunction.resumeWorkout) { (promise: Promise) in
             Task { @MainActor in
                 do {
-                    try self.workoutManager.resumeWorkout()
+                    let manager = await self.ensureProvider()
+                    try manager.resumeWorkout()
+                    promise.resolve(nil)
                 } catch let error as WorkoutError {
                     self.rejectAndEmit(promise, error, code: WorkoutErrorCode.resumeFailed)
                 }
@@ -95,7 +107,9 @@ public class WorkoutModule: Module {
         AsyncFunction(WorkoutFunction.endWorkout) { (promise: Promise) in
             Task { @MainActor in
                 do {
-                    try await self.workoutManager.endWorkout()
+                    let manager = await self.ensureProvider()
+                    try await manager.endWorkout()
+                    promise.resolve(nil)
                 } catch let error as WorkoutError {
                     self.rejectAndEmit(promise, error, code: WorkoutErrorCode.endFailed)
                 }
@@ -104,57 +118,76 @@ public class WorkoutModule: Module {
         
         Function(WorkoutFunction.resetWorkout) {
             Task { @MainActor in
-                self.workoutManager.resetWorkout()
+                self.workoutManager?.resetWorkout()
             }
         }
         
         Function(WorkoutFunction.getCurrentMetrics) {
             Task { @MainActor in
-                return self.workoutManager.metrics.toDictionary()
+                return self.workoutManager?.metrics.toDictionary() ?? [:]
             }
         }
+    }
+    
+    // MARK: - Provider 초기화
+    
+    @MainActor
+    private func initializeProvider() async {
+        if let manager = workoutManager, manager.isWorkoutActive {
+            return
+        }
         
+        isInitializing = true
+        workoutManager = await DeviceManager.shared.createWorkoutManager()
+        setupObservers()
+        emitInitialState()
+        isInitializing = false
     }
     
     @MainActor
-    private func setupLocationAuthObserver() {
-        workoutManager.onLocationAuthorizationChange = { [weak self] hasPermission in
-            guard let self = self else { return }
-            
-            self.sendEvent(WorkoutEvent.locationAuthChange, [
+    private func ensureProvider() async -> WorkoutControlling {
+        await initializeProvider()
+        return workoutManager!
+    }
+    
+    @MainActor
+    private func fallbackToiPhoneMode() async {
+        WorkoutLogger.debug("워치 연결 실패 → 아이폰 모드로 전환")
+        workoutManager = DeviceManager.shared.createFallbackManager()
+        setupObservers()
+    }
+    
+    // MARK: - Observers
+    
+    @MainActor
+    private func setupObservers() {
+        workoutManager?.onMetricsUpdate = { [weak self] metrics in
+            self?.sendEvent(WorkoutEvent.metricsUpdate, metrics.toDictionary())
+        }
+        
+        workoutManager?.onWorkoutStateChange = { [weak self] state in
+            self?.sendEvent(WorkoutEvent.stateChange, [
+                WorkoutKey.sessionState: WorkoutMetrics.stateToString(state)
+            ])
+        }
+        
+        workoutManager?.onLocationAuthorizationChange = { [weak self] hasPermission in
+            self?.sendEvent(WorkoutEvent.locationAuthChange, [
                 WorkoutKey.locationPermission: hasPermission
             ])
         }
     }
     
     @MainActor
-    private func setupMetricsObserver() {
-        workoutManager.onMetricsUpdate = { [weak self] metrics in
-            guard let self = self else { return }
-            
-            self.sendEvent(WorkoutEvent.metricsUpdate, workoutManager.metrics.toDictionary())
-        }
-        
-        workoutManager.onWorkoutStateChange = { [weak self] state in
-            guard let self = self else { return }
-            
-            self.sendEvent(WorkoutEvent.stateChange, [
-                WorkoutKey.sessionState: WorkoutMetrics.stateToString(state)
-            ])
-        }
-    }
-    
-    @MainActor
-    private func emitCurrentMetrics() {
-        sendEvent(WorkoutEvent.metricsUpdate, workoutManager.metrics.toDictionary())
-    }
-    
-    @MainActor
-    private func emitCurrentLocationAuth() {
+    private func emitInitialState() {
+        guard let manager = workoutManager else { return }
+        sendEvent(WorkoutEvent.metricsUpdate, manager.metrics.toDictionary())
         sendEvent(WorkoutEvent.locationAuthChange, [
-            WorkoutKey.locationPermission: workoutManager.checkLocationPermission()
+            WorkoutKey.locationPermission: manager.checkLocationPermission()
         ])
     }
+    
+    // MARK: - Error Handling
     
     private func rejectAndEmit(
         _ promise: Promise,
@@ -164,8 +197,9 @@ public class WorkoutModule: Module {
         sendEvent(WorkoutEvent.error, error.toErrorState(code: code).toDictionary())
         promise.reject(error.toException(code: code))
     }
-    
 }
+
+// MARK: - Extensions
 
 extension WorkoutError {
     func toErrorState(code: String) -> WorkoutErrorState {
