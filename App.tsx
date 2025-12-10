@@ -1,6 +1,6 @@
-import { WorkoutScreen } from './sample/WorkoutScreen';
+import HomeScreen from './app/HomeScreen';
+import Profile from './app/Profile';
 
 export default function App() {
-  // 샘플 코드를 추가하였습니다.
-  return <WorkoutScreen />;
+  return <HomeScreen />;
 }
