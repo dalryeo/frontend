@@ -3,7 +3,7 @@ import { useEvent } from 'expo';
 import WorkoutModule, {
   WorkoutMetrics,
   WorkoutSessionState,
-} from '../modules/workout';
+} from '@/modules/workout';
 import { useWorkoutPermissions } from './useWorkoutPermissions';
 
 const initialWorkoutState = {

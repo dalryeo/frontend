@@ -1,11 +1,11 @@
-import { useEvent, useEventListener } from 'expo';
+import { useEventListener } from 'expo';
 import { useEffect, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 
 import WorkoutModule, {
   workoutModule,
   type WorkoutPermissionStatus,
-} from '../modules/workout';
+} from '@/modules/workout';
 
 interface UseWorkoutPermissionsReturn {
   permissions: WorkoutPermissionStatus;

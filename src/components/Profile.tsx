@@ -1,19 +1,28 @@
-import { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal } from 'react-native';
-import { FONT_FAMILY, useAppFonts } from '../css/fonts';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useState } from 'react';
+import {
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-export default function Profile() {
-  const fontsLoaded = useAppFonts();
+import { FONT_FAMILY } from '../constants/FontFamily';
+import { useAppFonts } from '../hooks/useAppFonts';
+
+function Profile() {
+  const [fontsLoaded] = useAppFonts();
   const [open, setOpen] = useState(false);
   const [gender, setGender] = useState<'male' | 'female' | null>(null);
-  const [nickname, setNickname] = useState("");
+  const [nickname, setNickname] = useState('');
   const [nicknameError, setNicknameError] = useState<string | null>(null);
-  const [birth, setBirth] = useState("");
-  const [height, setHeight] = useState("");
-  const [weight, setWeight] = useState("");
+  const [birth, setBirth] = useState('');
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
   const [selectedImg, setSelectedImg] = useState<number | null>(null);
 
   if (!fontsLoaded) return null;
@@ -21,37 +30,53 @@ export default function Profile() {
   const validateNickname = (value: string) => {
     setNickname(value);
 
-    if (/\s/.test(value)) return setNicknameError("공백은 입력할 수 없어요");
-    if (value.length < 1) return setNicknameError("최소 1자 이상 입력해야 해요");
-    if (value.length > 12) return setNicknameError("최대 12자까지 입력할 수 있어요");
+    if (/\s/.test(value)) return setNicknameError('공백은 입력할 수 없어요');
+    if (value.length < 1)
+      return setNicknameError('최소 1자 이상 입력해야 해요');
+    if (value.length > 12)
+      return setNicknameError('최대 12자까지 입력할 수 있어요');
     if (!/^[a-zA-Z0-9가-힣]*$/.test(value))
-      return setNicknameError("영문, 숫자, 한글만 입력 가능해요");
+      return setNicknameError('영문, 숫자, 한글만 입력 가능해요');
 
     setNicknameError(null);
   };
 
   return (
     <View style={styles.container}>
-      <Ionicons name="chevron-back" size={24} color="white" style={styles.back} />
+      <Ionicons
+        name="chevron-back"
+        size={24}
+        color="white"
+        style={styles.back}
+      />
 
-      <Text style={styles.title}>
-        프로필을 완성해주세요
-      </Text>
+      <Text style={styles.title}>프로필을 완성해주세요</Text>
 
       <Text style={styles.subscribe}>
         입력하신 닉네임과 프로필은 랭킹 화면에 표시돼요
       </Text>
 
-      <View style={[styles.profileImg, {marginTop: 50}]}></View>
-      <MaterialIcons name="edit" onPress={() => setOpen(true)} style={styles.imgIcon} size={20} color="#979797" />
+      <View style={[styles.profileImg, { marginTop: 50 }]}></View>
+      <MaterialIcons
+        name="edit"
+        onPress={() => setOpen(true)}
+        style={styles.imgIcon}
+        size={20}
+        color="#979797"
+      />
 
       <Modal visible={open} transparent animationType="slide">
         <View style={styles.sheetBackground}>
-          <TouchableOpacity style={{ flex: 1 }} onPress={() => setOpen(false)} />
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            onPress={() => setOpen(false)}
+          />
 
           <View style={styles.sheet}>
             <View style={styles.sheetInner}>
-              <Text style={styles.profileText}>프로필 이미지를 선택해주세요</Text>
+              <Text style={styles.profileText}>
+                프로필 이미지를 선택해주세요
+              </Text>
 
               {[...Array(6)].map((_, index) => (
                 <TouchableOpacity
@@ -62,13 +87,16 @@ export default function Profile() {
                     selectedImg === index && {
                       borderWidth: 2,
                       borderColor: '#7BF179',
-                    }
+                    },
                   ]}
                 />
               ))}
             </View>
 
-            <TouchableOpacity onPress={() => setOpen(false)} style={styles.applyBtn}>
+            <TouchableOpacity
+              onPress={() => setOpen(false)}
+              style={styles.applyBtn}
+            >
               <Text style={styles.applyBtnText}>적용하기</Text>
             </TouchableOpacity>
           </View>
@@ -82,13 +110,23 @@ export default function Profile() {
             {nickname ? (
               nicknameError ? (
                 <>
-                  <MaterialIcons name="error-outline" size={16} color="#FF3B30" />
+                  <MaterialIcons
+                    name="error-outline"
+                    size={16}
+                    color="#FF3B30"
+                  />
                   <Text style={styles.nicknameError}>{nicknameError}</Text>
                 </>
               ) : (
                 <>
-                  <Ionicons name="checkmark-circle-outline" size={16} color="#7BF179" />
-                  <Text style={styles.nicknameSuccess}>사용 가능한 닉네임이에요</Text>
+                  <Ionicons
+                    name="checkmark-circle-outline"
+                    size={16}
+                    color="#7BF179"
+                  />
+                  <Text style={styles.nicknameSuccess}>
+                    사용 가능한 닉네임이에요
+                  </Text>
                 </>
               )
             ) : null}
@@ -104,22 +142,38 @@ export default function Profile() {
         onChangeText={validateNickname}
       />
 
-      <Text style={[styles.subtitle, {marginTop: 30}]}>성별</Text>
+      <Text style={[styles.subtitle, { marginTop: 30 }]}>성별</Text>
       <View style={styles.genderContainer}>
         <TouchableOpacity
-          style={[styles.genderButton, gender === 'male' && styles.genderSelected]}
+          style={[
+            styles.genderButton,
+            gender === 'male' && styles.genderSelected,
+          ]}
           onPress={() => setGender('male')}
         >
-          <Text style={[styles.genderText, gender === 'male' && styles.genderSelected]}>
+          <Text
+            style={[
+              styles.genderText,
+              gender === 'male' && styles.genderSelected,
+            ]}
+          >
             남자
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.genderButton, gender === 'female' && styles.genderSelected]}
+          style={[
+            styles.genderButton,
+            gender === 'female' && styles.genderSelected,
+          ]}
           onPress={() => setGender('female')}
         >
-          <Text style={[styles.genderText, gender === 'female' && styles.genderSelected]}>
+          <Text
+            style={[
+              styles.genderText,
+              gender === 'female' && styles.genderSelected,
+            ]}
+          >
             여자
           </Text>
         </TouchableOpacity>
@@ -129,15 +183,30 @@ export default function Profile() {
         <View style={styles.birthBox}>
           <Text style={styles.subtext}>생년월일</Text>
           <View style={styles.statureContainer}>
-            <TextInput style={styles.stature} placeholder='00/00/00' value={birth} onChangeText={setBirth} />
-            <FontAwesome6 style={styles.unit} name="calendar" size={24} color="black" />
+            <TextInput
+              style={styles.stature}
+              placeholder="00/00/00"
+              value={birth}
+              onChangeText={setBirth}
+            />
+            <FontAwesome6
+              style={styles.unit}
+              name="calendar"
+              size={24}
+              color="black"
+            />
           </View>
         </View>
 
         <View style={styles.halfBox}>
           <Text style={styles.subtext}>키</Text>
           <View style={styles.statureContainer}>
-            <TextInput style={styles.stature} keyboardType="numeric" value={height} onChangeText={setHeight} />
+            <TextInput
+              style={styles.stature}
+              keyboardType="numeric"
+              value={height}
+              onChangeText={setHeight}
+            />
             <Text style={styles.unit}>cm</Text>
           </View>
         </View>
@@ -145,15 +214,18 @@ export default function Profile() {
         <View style={styles.halfBox}>
           <Text style={styles.subtext}>몸무게</Text>
           <View style={styles.statureContainer}>
-            <TextInput style={styles.stature} keyboardType="numeric" value={weight} onChangeText={setWeight} />
+            <TextInput
+              style={styles.stature}
+              keyboardType="numeric"
+              value={weight}
+              onChangeText={setWeight}
+            />
             <Text style={styles.unit}>kg</Text>
           </View>
         </View>
       </View>
 
-      <TouchableOpacity
-        style={styles.nextBtn}
-      >
+      <TouchableOpacity style={styles.nextBtn}>
         <Text style={styles.nextBtnText}>다음으로</Text>
       </TouchableOpacity>
     </View>
@@ -350,14 +422,14 @@ const styles = StyleSheet.create({
     color: '#6E6E6E',
   },
   nicknameErrorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginRight: 20,
     gap: 4,
   },
   subtitleNick: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 35,
   },
   nicknameError: {
@@ -370,5 +442,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONT_FAMILY.MEDIUM,
   },
-  }
-);
+});
+
+export { Profile };
