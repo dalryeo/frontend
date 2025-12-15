@@ -1,10 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addBuildPhases = addBuildPhases;
-const util_1 = __importDefault(require("util"));
+const util_1 = require("util");
 function addBuildPhases(xcodeProject, { targetUuid, groupName, productFile, watchFiles, resourceFiles, }) {
     const buildPath = `"$(CONTENTS_FOLDER_PATH)/Watch"`;
     const folderType = 'watch2_app';
@@ -16,7 +13,7 @@ function addBuildPhases(xcodeProject, { targetUuid, groupName, productFile, watc
         .buildPhaseObject('PBXCopyFilesBuildPhase', groupName, productFile.target)
         .files.push({
         value: productFile.uuid,
-        comment: util_1.default.format('%s in %s', productFile.basename, productFile.group),
+        comment: (0, util_1.format)('%s in %s', productFile.basename, productFile.group),
     });
     xcodeProject.addToPbxBuildFileSection(productFile);
     // Frameworks build phase

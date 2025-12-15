@@ -18,21 +18,21 @@
  */
 
 import {
+  ActivityIndicator,
   Alert,
   Linking,
-  View,
-  Text,
   Pressable,
   StyleSheet,
-  ActivityIndicator,
+  Text,
+  View,
 } from 'react-native';
 
-import { useWorkout } from '../hooks/useWorkout';
 import {
   WorkoutMetrics,
   workoutModule,
   WorkoutSessionState,
-} from '../modules/workout';
+} from '@/modules/workout';
+import { useWorkout } from '../hooks/useWorkout';
 
 const colors = {
   primary: '#2563eb',
