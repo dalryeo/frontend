@@ -44,9 +44,9 @@ function Profile() {
   return (
     <View style={styles.container}>
       <Ionicons
-        name="chevron-back"
+        name='chevron-back'
         size={24}
-        color="white"
+        color='white'
         style={styles.back}
       />
 
@@ -58,14 +58,14 @@ function Profile() {
 
       <View style={[styles.profileImg, { marginTop: 50 }]}></View>
       <MaterialIcons
-        name="edit"
+        name='edit'
         onPress={() => setOpen(true)}
         style={styles.imgIcon}
         size={20}
-        color="#979797"
+        color='#979797'
       />
 
-      <Modal visible={open} transparent animationType="slide">
+      <Modal visible={open} transparent animationType='slide'>
         <View style={styles.sheetBackground}>
           <TouchableOpacity
             style={{ flex: 1 }}
@@ -111,18 +111,18 @@ function Profile() {
               nicknameError ? (
                 <>
                   <MaterialIcons
-                    name="error-outline"
+                    name='error-outline'
                     size={16}
-                    color="#FF3B30"
+                    color='#FF3B30'
                   />
                   <Text style={styles.nicknameError}>{nicknameError}</Text>
                 </>
               ) : (
                 <>
                   <Ionicons
-                    name="checkmark-circle-outline"
+                    name='checkmark-circle-outline'
                     size={16}
-                    color="#7BF179"
+                    color='#7BF179'
                   />
                   <Text style={styles.nicknameSuccess}>
                     사용 가능한 닉네임이에요
@@ -136,8 +136,8 @@ function Profile() {
 
       <TextInput
         style={styles.nickname}
-        placeholder="1~12자, 영문·한글·숫자만 입력할 수 있어요."
-        placeholderTextColor="#5B5B5B"
+        placeholder='1~12자, 영문·한글·숫자만 입력할 수 있어요.'
+        placeholderTextColor='#5B5B5B'
         value={nickname}
         onChangeText={validateNickname}
       />
@@ -185,15 +185,15 @@ function Profile() {
           <View style={styles.statureContainer}>
             <TextInput
               style={styles.stature}
-              placeholder="00/00/00"
+              placeholder='00/00/00'
               value={birth}
               onChangeText={setBirth}
             />
             <FontAwesome6
               style={styles.unit}
-              name="calendar"
+              name='calendar'
               size={24}
-              color="black"
+              color='black'
             />
           </View>
         </View>
@@ -203,7 +203,7 @@ function Profile() {
           <View style={styles.statureContainer}>
             <TextInput
               style={styles.stature}
-              keyboardType="numeric"
+              keyboardType='numeric'
               value={height}
               onChangeText={setHeight}
             />
@@ -216,7 +216,7 @@ function Profile() {
           <View style={styles.statureContainer}>
             <TextInput
               style={styles.stature}
-              keyboardType="numeric"
+              keyboardType='numeric'
               value={weight}
               onChangeText={setWeight}
             />

@@ -10,7 +10,7 @@ export function addXCConfigurationList(
     currentProjectVersion,
     bundleIdentifier,
     deploymentTarget,
-  }: AddXCConfigurationListOptions
+  }: AddXCConfigurationListOptions,
 ) {
   const watchBundleIdentifier = `${bundleIdentifier}.watchkitapp`;
   // 파일명 생성 (공백을 하이픈으로 변환)
@@ -86,7 +86,7 @@ export function addXCConfigurationList(
   const xCConfigurationList = xcodeProject.addXCConfigurationList(
     buildConfigurationsList,
     'Release',
-    `Build configuration list for PBXNativeTarget "${targetName}"`
+    `Build configuration list for PBXNativeTarget "${targetName}"`,
   );
 
   return xCConfigurationList;

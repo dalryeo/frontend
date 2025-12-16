@@ -1,6 +1,5 @@
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
 import {
   StyleSheet,
   Text,
@@ -14,16 +13,15 @@ import { useAppFonts } from '../hooks/useAppFonts';
 
 function HomeScreen() {
   const [fontsLoaded] = useAppFonts();
-  const router = useRouter();
 
   if (!fontsLoaded) return null;
 
   return (
     <View style={styles.container}>
       <Ionicons
-        name="chevron-back"
+        name='chevron-back'
         size={24}
-        color="white"
+        color='white'
         style={styles.back}
       />
 
@@ -42,32 +40,32 @@ function HomeScreen() {
       >
         <View>
           <FontAwesome5
-            name="running"
+            name='running'
             size={28}
-            color="white"
+            color='white'
             style={[styles.run, { marginTop: 70 }]}
           />
           <View style={styles.inputRow}>
             <TextInput
               style={styles.distanceInput}
-              placeholder="5.00"
-              placeholderTextColor="#F3F3F3"
-              keyboardType="numeric"
+              placeholder='5.00'
+              placeholderTextColor='#F3F3F3'
+              keyboardType='numeric'
             />
             <Text style={styles.unit}>km</Text>
           </View>
 
           <FontAwesome5
-            name="clock"
+            name='clock'
             size={28}
-            color="white"
+            color='white'
             style={styles.run}
           />
           <TextInput
             style={styles.distance}
-            placeholder="00:40:00"
-            placeholderTextColor="#F3F3F3"
-            keyboardType="numeric"
+            placeholder='00:40:00'
+            placeholderTextColor='#F3F3F3'
+            keyboardType='numeric'
           />
         </View>
 

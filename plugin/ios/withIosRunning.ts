@@ -1,7 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
-import { withInfoPlist, withEntitlementsPlist } from 'expo/config-plugins';
-
-import { WithIosRunningOptions } from './xcode/types';
+import { withEntitlementsPlist, withInfoPlist } from 'expo/config-plugins';
 
 /**
  * Config Plugin for Workout

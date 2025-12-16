@@ -59,7 +59,7 @@ export type Result<T, E = Error> =
  * Promise를 Result 타입으로 래핑하여 try-catch 없이 에러 처리 가능하게 함
  */
 export const wrapResult = async <T>(
-  promise: Promise<T>
+  promise: Promise<T>,
 ): Promise<Result<T, WorkoutError>> => {
   try {
     const data = await promise;

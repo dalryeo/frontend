@@ -4,7 +4,7 @@ import { AddProductFileOptions } from './types';
 
 export function addProductFile(
   xcodeProject: XcodeProject,
-  { targetName, groupName }: AddProductFileOptions
+  { targetName, groupName }: AddProductFileOptions,
 ) {
   const options = {
     basename: `${targetName}`,

@@ -26,13 +26,13 @@ export const useWorkout = () => {
   const metrics = useEvent(
     WorkoutModule,
     'onMetricsUpdate',
-    initialWorkoutMetrics
+    initialWorkoutMetrics,
   );
 
   const { sessionState } = useEvent(
     WorkoutModule,
     'onWorkoutStateChange',
-    initialWorkoutState
+    initialWorkoutState,
   );
 
   const error = useEvent(WorkoutModule, 'onWorkoutError', null);
