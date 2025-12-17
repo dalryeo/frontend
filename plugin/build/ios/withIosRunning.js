@@ -10,13 +10,13 @@ const withIosRunning = (config) => {
     config = (0, config_plugins_1.withInfoPlist)(config, (config) => {
         config.modResults.NSHealthShareUsageDescription =
             config.modResults.NSHealthShareUsageDescription ||
-                '달려 앱은 러닝 운동 데이터를 HealthKit에 저장하고 읽기 위해 건강 데이터 접근 권한이 필요합니다.';
+            '달려 앱은 러닝 운동 데이터를 HealthKit에 저장하고 읽기 위해 건강 데이터 접근 권한이 필요합니다.';
         config.modResults.NSHealthUpdateUsageDescription =
             config.modResults.NSHealthUpdateUsageDescription ||
-                '달려 앱은 러닝 운동 기록을 HealthKit에 저장하기 위해 건강 데이터 쓰기 권한이 필요합니다.';
+            '달려 앱은 러닝 운동 기록을 HealthKit에 저장하기 위해 건강 데이터 쓰기 권한이 필요합니다.';
         config.modResults.NSLocationWhenInUseUsageDescription =
             config.modResults.NSLocationWhenInUseUsageDescription ||
-                '달려 앱은 러닝 중 거리와 경로를 추적하기 위해 위치 정보가 필요합니다.';
+            '달려 앱은 러닝 중 거리와 경로를 추적하기 위해 위치 정보가 필요합니다.';
         // Background modes 추가
         if (!config.modResults.UIBackgroundModes) {
             config.modResults.UIBackgroundModes = [];

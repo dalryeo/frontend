@@ -105,7 +105,7 @@ export function WorkoutScreen() {
             needsHealthKit ? openHealthApp() : Linking.openSettings(),
         },
         { text: '취소', style: 'cancel' },
-      ]
+      ],
     );
   };
 
@@ -206,15 +206,15 @@ function ReadyView({
       {/* 조건부 렌더링: 로딩 / 권한 카드 / 없음 */}
       {isRequesting ? (
         <View style={styles.statusCard}>
-          <ActivityIndicator size="small" color={colors.primary} />
+          <ActivityIndicator size='small' color={colors.primary} />
           <Text style={styles.statusText}>권한 확인 중...</Text>
         </View>
       ) : !hasAllPermissions ? (
         <View style={styles.permissionCard}>
           <Text style={styles.permissionTitle}>필요한 권한</Text>
 
-          <PermissionItem label="건강 데이터" granted={permissions.healthKit} />
-          <PermissionItem label="위치 정보" granted={permissions.location} />
+          <PermissionItem label='건강 데이터' granted={permissions.healthKit} />
+          <PermissionItem label='위치 정보' granted={permissions.location} />
 
           <Pressable
             style={styles.permissionBtn}
@@ -322,27 +322,27 @@ function ActiveView({ metrics, sessionState }: ActiveViewProps) {
       {/* 메트릭 그리드 (2x2) */}
       <View style={styles.metricsSection}>
         <MetricCard
-          label="거리"
+          label='거리'
           value={(metrics.distance / 1000).toFixed(2)}
-          unit="km"
+          unit='km'
         />
         <MetricCard
-          label="페이스"
+          label='페이스'
           value={formatPace(metrics.pace)}
-          unit="/km"
+          unit='/km'
         />
         <MetricCard
-          label="칼로리"
+          label='칼로리'
           value={Math.round(metrics.calories).toString()}
-          unit="kcal"
+          unit='kcal'
         />
         {/* 심박수: Apple Watch 미연결 시 null */}
         <MetricCard
-          label="심박수"
+          label='심박수'
           value={
             metrics.heartRate ? Math.round(metrics.heartRate).toString() : '--'
           }
-          unit="bpm"
+          unit='bpm'
           highlight={!!metrics.heartRate}
         />
       </View>
@@ -424,23 +424,23 @@ function SummaryView({ metrics, onReset }: SummaryViewProps) {
 
       {/* 결과 카드 */}
       <View style={styles.summaryCard}>
-        <SummaryRow label="총 시간" value={formatTime(metrics.elapsedTime)} />
+        <SummaryRow label='총 시간' value={formatTime(metrics.elapsedTime)} />
         <SummaryRow
-          label="총 거리"
+          label='총 거리'
           value={`${(metrics.distance / 1000).toFixed(2)} km`}
         />
         <SummaryRow
-          label="평균 페이스"
+          label='평균 페이스'
           value={`${formatPace(metrics.pace)} /km`}
         />
         <SummaryRow
-          label="소모 칼로리"
+          label='소모 칼로리'
           value={`${Math.round(metrics.calories)} kcal`}
         />
         {/* 심박수: Apple Watch로 측정된 경우에만 표시 */}
         {metrics.averageHeartRate > 0 && (
           <SummaryRow
-            label="평균 심박수"
+            label='평균 심박수'
             value={`${Math.round(metrics.averageHeartRate)} bpm`}
           />
         )}

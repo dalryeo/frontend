@@ -4,7 +4,7 @@ import { AddPbxGroupOptions } from './types';
 
 export function addPbxGroup(
   xcodeProject: XcodeProject,
-  { targetName, watchFiles, resourceFiles }: AddPbxGroupOptions
+  { targetName, watchFiles, resourceFiles }: AddPbxGroupOptions,
 ) {
   const entitlementsFile = `${targetName}.entitlements`;
   const infoPlistFile = `${targetName.replace(/ /g, '-')}-Info.plist`;
@@ -19,7 +19,7 @@ export function addPbxGroup(
   const { uuid: pbxGroupUuid } = xcodeProject.addPbxGroup(
     allFiles,
     `"${targetName}"`,
-    `"../${targetName}"`
+    `"../${targetName}"`,
   );
 
   const groups = xcodeProject.hash.project.objects['PBXGroup'];

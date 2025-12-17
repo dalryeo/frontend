@@ -9,7 +9,7 @@ import { WithWatchRunningOptions } from './xcode/types';
  */
 const withWatchRunning: ConfigPlugin<WithWatchRunningOptions> = (
   config,
-  { deploymentTarget, files }
+  { deploymentTarget, files },
 ) => {
   const displayName = config.name;
   const bundleIdentifier = config.ios?.bundleIdentifier;

@@ -25,7 +25,7 @@ export const useWorkoutPermissions = (): UseWorkoutPermissionsReturn => {
     'onLocationAuthChange',
     ({ locationPermission }) => {
       setLocation(locationPermission);
-    }
+    },
   );
 
   const checkPermissions = async () => {

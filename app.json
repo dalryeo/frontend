@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.ios.dalryeo.cuj"
+      "bundleIdentifier": "com.ios.dalryeo"
     },
     "android": {
       "adaptiveIcon": {
