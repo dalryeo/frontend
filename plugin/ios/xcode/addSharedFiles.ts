@@ -4,7 +4,7 @@ import { AddSharedFilesOptions } from './types';
 
 export function addSharedFiles(
   xcodeProject: XcodeProject,
-  { sharedFiles, watchTargetUuid }: AddSharedFilesOptions
+  { sharedFiles, watchTargetUuid }: AddSharedFilesOptions,
 ) {
   const iosTargetUuid = xcodeProject.getFirstTarget().uuid;
   const sharedPath = '"../modules/workout/ios/Shared"';
@@ -13,7 +13,7 @@ export function addSharedFiles(
   const { uuid: sharedGroupUuid } = xcodeProject.addPbxGroup(
     [],
     '"Shared"',
-    sharedPath
+    sharedPath,
   );
 
   // 루트 그룹에 추가
@@ -70,7 +70,7 @@ export function addSharedFiles(
       xcodeProject,
       watchTargetUuid,
       watchBuildUuid,
-      fileName
+      fileName,
     );
   });
 }
@@ -79,7 +79,7 @@ function addToSourcesBuildPhase(
   xcodeProject: XcodeProject,
   targetUuid: string,
   buildFileUuid: string,
-  fileName: string
+  fileName: string,
 ) {
   const buildPhases = xcodeProject.hash.project.objects['PBXSourcesBuildPhase'];
   const nativeTargets = xcodeProject.hash.project.objects['PBXNativeTarget'];

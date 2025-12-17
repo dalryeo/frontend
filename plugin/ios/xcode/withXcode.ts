@@ -16,7 +16,7 @@ import { addSharedFiles } from './addSharedFiles';
 
 export const withXcode: ConfigPlugin<WatchAppConfig> = (
   config,
-  { name, targetName, bundleIdentifier, deploymentTarget, files }
+  { name, targetName, bundleIdentifier, deploymentTarget, files },
 ) => {
   return withXcodeProject(config, (config) => {
     const xcodeProject = config.modResults as XcodeProject;

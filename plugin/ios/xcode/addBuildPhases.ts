@@ -11,7 +11,7 @@ export function addBuildPhases(
     productFile,
     watchFiles,
     resourceFiles,
-  }: AddBuildPhasesOptions
+  }: AddBuildPhasesOptions,
 ) {
   const buildPath = `"$(CONTENTS_FOLDER_PATH)/Watch"`;
   const folderType = 'watch2_app';
@@ -23,7 +23,7 @@ export function addBuildPhases(
     groupName,
     targetUuid,
     folderType,
-    buildPath
+    buildPath,
   );
 
   // Copy files build phase
@@ -33,7 +33,7 @@ export function addBuildPhases(
     groupName,
     xcodeProject.getFirstTarget().uuid,
     folderType,
-    buildPath
+    buildPath,
   );
 
   xcodeProject
@@ -51,7 +51,7 @@ export function addBuildPhases(
     groupName,
     targetUuid,
     folderType,
-    buildPath
+    buildPath,
   );
 
   // Resources build phase
@@ -61,6 +61,6 @@ export function addBuildPhases(
     groupName,
     targetUuid,
     folderType,
-    buildPath
+    buildPath,
   );
 }
