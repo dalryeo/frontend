@@ -25,6 +25,7 @@ function HomeScreen() {
         size={24}
         color="white"
         style={styles.back}
+        onPress={() => router.back()}
       />
 
       <Text style={styles.title}>가장 최근에{'\n'}달린 기록을 알려주세요</Text>
@@ -76,7 +77,7 @@ function HomeScreen() {
           <TouchableOpacity
             style={styles.nextBtn}
             // FIXME: 경로 다시 구성하기
-            // onPress={() => router.push('/profile')}
+            onPress={() => router.push('/profile')}
           >
             <Text style={styles.nextBtnText}>다음으로</Text>
           </TouchableOpacity>
@@ -158,6 +159,7 @@ const styles = StyleSheet.create({
     color: '#6e6e6e',
     fontSize: 15,
     alignSelf: 'center',
+    marginTop: '40%',
     fontFamily: FONT_FAMILY.REGULAR,
   },
   nextBtn: {
@@ -167,7 +169,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignSelf: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: '5%',
     lineHeight: 50,
     fontSize: 15,
     fontFamily: FONT_FAMILY.SEMIBOLD,

@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.ios.dalryeo"
+      "bundleIdentifier": "com.ios.dalryeo.cuj"
     },
     "android": {
       "adaptiveIcon": {
@@ -36,7 +36,8 @@
             "deploymentTarget": "17.0"
           }
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
