@@ -13,6 +13,7 @@ import {
 
 import { FONT_FAMILY } from '../constants/FontFamily';
 import { useAppFonts } from '../hooks/useAppFonts';
+import { useRouter } from 'expo-router';
 
 function Profile() {
   const [fontsLoaded] = useAppFonts();
@@ -24,6 +25,7 @@ function Profile() {
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [selectedImg, setSelectedImg] = useState<number | null>(null);
+  const router = useRouter();
 
   if (!fontsLoaded) return null;
 
@@ -48,6 +50,7 @@ function Profile() {
         size={24}
         color='white'
         style={styles.back}
+        onPress={() => router.back()}
       />
 
       <Text style={styles.title}>프로필을 완성해주세요</Text>
@@ -225,7 +228,10 @@ function Profile() {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.nextBtn}>
+      <TouchableOpacity
+        style={styles.nextBtn}
+        onPress={() => router.push('/TierRecommend')}
+      >
         <Text style={styles.nextBtnText}>다음으로</Text>
       </TouchableOpacity>
     </View>
@@ -405,7 +411,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     justifyContent: 'center',
     marginTop: '20%',
-    lineHeight: 50,
     fontSize: 15,
     fontFamily: FONT_FAMILY.SEMIBOLD,
     color: '#151515',
