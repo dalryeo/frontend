@@ -1,16 +1,16 @@
-import { useState, useRef } from 'react';
+import { useRouter } from 'expo-router';
+import { useRef, useState } from 'react';
 import {
+  ImageBackground,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  ScrollView,
-  ImageBackground,
   TouchableOpacity,
+  View,
 } from 'react-native';
 import { FONT_FAMILY } from '../constants/FontFamily';
-import { useAppFonts } from '../hooks/useAppFonts';
 import { tiers } from '../data/tiers';
-import { useRouter } from 'expo-router';
+import { useAppFonts } from '../hooks/useAppFonts';
 
 export default function TierRecommend() {
   const fontsLoaded = useAppFonts();
@@ -34,13 +34,28 @@ export default function TierRecommend() {
 
   const tierData = tiers[tierKey];
 
-  const tierOrderActual: (keyof typeof tiers)[] = ['cheetah', 'deer', 'husky', 'fox', 'gorani', 'sheep', 'rabbit', 'panda', 'duck', 'turtle',];
+  const tierOrderActual: (keyof typeof tiers)[] = [
+    'cheetah',
+    'deer',
+    'husky',
+    'fox',
+    'gorani',
+    'sheep',
+    'rabbit',
+    'panda',
+    'duck',
+    'turtle',
+  ];
 
   const currentIndex = tierOrderActual.indexOf(tierKey);
 
-  const nextTierKey = currentIndex < tierOrderActual.length - 1 ? tierOrderActual[currentIndex + 1] : null;
+  const nextTierKey =
+    currentIndex < tierOrderActual.length - 1
+      ? tierOrderActual[currentIndex + 1]
+      : null;
 
-  const prevTierKey = currentIndex > 0 ? tierOrderActual[currentIndex - 1] : null;
+  const prevTierKey =
+    currentIndex > 0 ? tierOrderActual[currentIndex - 1] : null;
 
   const nextTierData = nextTierKey ? tiers[nextTierKey] : null;
   const prevTierData = prevTierKey ? tiers[prevTierKey] : null;
@@ -80,7 +95,7 @@ export default function TierRecommend() {
             onPress={() => changeTier(nextTierKey)}
           >
             <ImageBackground
-              source={require('../../assets/images/nextTier.png')}
+              source={require('../../assets/images/Tier/nextTier.png')}
               style={styles.nextTierSection}
               imageStyle={styles.nextTierBackground}
             >
@@ -91,9 +106,7 @@ export default function TierRecommend() {
                   <Text style={styles.NextTierText}>
                     다음 티어, {nextTierData.name}
                   </Text>
-                  <Text style={styles.NextTierTitle}>
-                    {nextTierData.title}
-                  </Text>
+                  <Text style={styles.NextTierTitle}>{nextTierData.title}</Text>
                 </View>
               </View>
             </ImageBackground>
@@ -106,7 +119,7 @@ export default function TierRecommend() {
             onPress={() => changeTier(prevTierKey)}
           >
             <ImageBackground
-              source={require('../../assets/images/prevTier.png')}
+              source={require('../../assets/images/Tier/prevTier.png')}
               style={styles.prevTierSection}
               imageStyle={styles.prevTierBackground}
             >
@@ -117,16 +130,14 @@ export default function TierRecommend() {
                   <Text style={styles.prevTierText}>
                     이전 티어, {prevTierData.name}
                   </Text>
-                  <Text style={styles.prevTierTitle}>
-                    {prevTierData.title}
-                  </Text>
+                  <Text style={styles.prevTierTitle}>{prevTierData.title}</Text>
                 </View>
               </View>
             </ImageBackground>
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity onPress={() => router.push('/TierOverView')}>
+        <TouchableOpacity onPress={() => router.push('/tierOverView')}>
           <Text style={styles.tierPlus}>다른 티어 더보기</Text>
         </TouchableOpacity>
       </ScrollView>
