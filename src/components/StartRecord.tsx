@@ -1,5 +1,6 @@
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRouter } from 'expo-router';
 import {
   StyleSheet,
   Text,
@@ -7,12 +8,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-
 import { FONT_FAMILY } from '../constants/FontFamily';
 import { useAppFonts } from '../hooks/useAppFonts';
 
-function HomeScreen() {
+function StartRecord() {
   const [fontsLoaded] = useAppFonts();
+  const router = useRouter();
 
   if (!fontsLoaded) return null;
 
@@ -182,4 +183,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export { HomeScreen };
+export { StartRecord };

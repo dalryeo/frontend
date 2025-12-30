@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from 'react-native';
-import { FONT_FAMILY } from '../constants/FontFamily';
-import { useAppFonts } from '../hooks/useAppFonts';
-import { useRouter } from 'expo-router';
-import { tiers } from '../data/tiers';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { FONT_FAMILY } from '../constants/FontFamily';
+import { tiers } from '../data/tiers';
+import { useAppFonts } from '../hooks/useAppFonts';
 import TierDetail from './TierDetail';
 
 export default function TierOverview() {
@@ -18,25 +25,25 @@ export default function TierOverview() {
   const tierList = Object.entries(tiers);
 
   const tierSystemRules = [
-    "달려의 티어는 3km 기준 페이스로 정해져요",
-    "각 티어는 Gold/Silver/Bronze 세 단계로 나뉘어요",
-    "페이스가 조금만 좋아져도 단계 상승이 바로 보여요",
+    '달려의 티어는 3km 기준 페이스로 정해져요',
+    '각 티어는 Gold/Silver/Bronze 세 단계로 나뉘어요',
+    '페이스가 조금만 좋아져도 단계 상승이 바로 보여요',
   ];
 
   const tierSystemInfoList = [
-    "내 티어가 어디쯤인지 동물 티어로 한눈에 확인해요",
-    "러닝 성장을 직관적으로 추적할 수 있어요",
-    "다음 목표까지 얼마나 남았는지 바로 보여줘요",
+    '내 티어가 어디쯤인지 동물 티어로 한눈에 확인해요',
+    '러닝 성장을 직관적으로 추적할 수 있어요',
+    '다음 목표까지 얼마나 남았는지 바로 보여줘요',
   ];
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 60 }}>
-        <TouchableOpacity
-          style={styles.closeBtn}
-          onPress={() => router.back()}
-        >
-          <AntDesign name="close" size={24} color="#EAEAEA" />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 60 }}
+      >
+        <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()}>
+          <AntDesign name='close' size={24} color='#EAEAEA' />
         </TouchableOpacity>
         <Text style={styles.title}>티어 한눈에 보기</Text>
 
@@ -48,14 +55,16 @@ export default function TierOverview() {
           >
             <Text style={styles.tierImg}>{tier.iconSet}</Text>
             <View style={styles.tierInfo}>
-              <Text style={styles.tierName}>{index + 1}위 {tier.name}</Text>
+              <Text style={styles.tierName}>
+                {index + 1}위 {tier.name}
+              </Text>
               <Text style={styles.tierInfoText}>{tier.title}</Text>
             </View>
             <MaterialIcons
               style={styles.navigateNext}
-              name="navigate-next"
+              name='navigate-next'
               size={34}
-              color="#6E6E6E"
+              color='#6E6E6E'
             />
           </TouchableOpacity>
         ))}
@@ -71,13 +80,17 @@ export default function TierOverview() {
         </View>
 
         <View style={styles.tierInfoImgContainer}>
-          <Image source={require('../../assets/images/TierInfo.png')} style={styles.tierInfoImg} resizeMode="contain" />
+          <Image
+            source={require('../../assets/images/Tier/TierInfo.png')}
+            style={styles.tierInfoImg}
+            resizeMode='contain'
+          />
         </View>
 
         <View style={styles.tierSystemInfo}>
           {tierSystemInfoList.map((item, idx) => (
             <View key={idx} style={styles.tierItem}>
-              <AntDesign name="check" size={16} color="#7BF179" />
+              <AntDesign name='check' size={16} color='#7BF179' />
               <Text style={styles.tierSystemInfoText}>{item}</Text>
             </View>
           ))}

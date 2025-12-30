@@ -1,12 +1,12 @@
 import React from 'react';
 import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
   Dimensions,
   Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { FONT_FAMILY } from '../constants/FontFamily';
 import { tiers } from '../data/tiers';
@@ -31,14 +31,11 @@ export default function TierDetail({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType='slide'
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <TouchableOpacity
-          style={styles.dimArea}
-          activeOpacity={1}
-        />
+        <TouchableOpacity style={styles.dimArea} activeOpacity={1} />
 
         <View style={[styles.container, { height: windowHeight * 0.85 }]}>
           <ScrollView
@@ -68,7 +65,6 @@ export default function TierDetail({
             ))}
           </ScrollView>
 
-          {/* 하단 고정 버튼 */}
           <View style={styles.fixedButtonContainer}>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Text style={styles.closeText}>확인</Text>
