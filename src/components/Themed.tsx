@@ -16,7 +16,7 @@ type ThemeProps = {
 export type TextProps = ThemeProps & DefaultText['props'];
 export type ViewProps = ThemeProps & DefaultView['props'];
 
-export function useThemeColor(
+function useThemeColor(
   props: { light?: string; dark?: string },
   colorName: keyof typeof Colors.light & keyof typeof Colors.dark,
 ) {
@@ -30,6 +30,9 @@ export function useThemeColor(
   }
 }
 
+/**
+ * @deprecated 해당 Text 컴포넌트는 삭제될 컴포넌트입니다. Font 컴포넌트를 대신 사용해주세요.
+ */
 export function Text(props: TextProps) {
   const { style, lightColor, darkColor, ...otherProps } = props;
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');

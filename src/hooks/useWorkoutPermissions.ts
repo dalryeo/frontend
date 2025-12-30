@@ -13,6 +13,8 @@ interface UseWorkoutPermissionsReturn {
   isRequesting: boolean;
   checkPermissions: () => Promise<void>;
   requestPermissions: () => Promise<WorkoutPermissionStatus>;
+  requestHealthPermission: () => Promise<WorkoutPermissionStatus>;
+  requestLocationPermission: () => Promise<WorkoutPermissionStatus>;
 }
 
 export const useWorkoutPermissions = (): UseWorkoutPermissionsReturn => {
@@ -58,6 +60,42 @@ export const useWorkoutPermissions = (): UseWorkoutPermissionsReturn => {
     return { healthKit: false, location: false };
   };
 
+  const requestHealthPermission = async () => {
+    setIsRequesting(true);
+    try {
+      await workoutModule.requestHealthAuthorization();
+      // 약간의 지연 후 실제 권한 상태 확인 (0.5초)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const result = await workoutModule.checkPermissions();
+
+      if (result.success) {
+        setHealthKit(result.data.healthKit);
+        return result.data;
+      }
+    } finally {
+      setIsRequesting(false);
+    }
+    return { healthKit: false, location: false };
+  };
+
+  const requestLocationPermission = async () => {
+    setIsRequesting(true);
+    try {
+      await workoutModule.requestLocationAuthorization();
+      // 약간의 지연 후 실제 권한 상태 확인 (0.5초)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const result = await workoutModule.checkPermissions();
+
+      if (result.success) {
+        setLocation(result.data.location);
+        return result.data;
+      }
+    } finally {
+      setIsRequesting(false);
+    }
+    return { healthKit: false, location: false };
+  };
+
   useEffect(() => {
     checkPermissions();
     const handleAppState = (state: AppStateStatus) => {
@@ -72,6 +110,8 @@ export const useWorkoutPermissions = (): UseWorkoutPermissionsReturn => {
     hasAllPermissions: healthKit && location,
     isRequesting,
     checkPermissions,
+    requestHealthPermission,
+    requestLocationPermission,
     requestPermissions,
   };
 };

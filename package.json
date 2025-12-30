@@ -8,10 +8,14 @@
     "ios": "expo run:ios",
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",
+    "typecheck": "tsc --noEmit",
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{ts,tsx}": "eslint --fix --max-warnings 0"
+    "*.{ts,tsx}": [
+      "eslint --fix --max-warnings 0",
+      "bash -c 'tsc --noEmit'"
+    ]
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

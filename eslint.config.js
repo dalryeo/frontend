@@ -10,5 +10,8 @@ module.exports = defineConfig([
   eslintPluginPrettierRecommended,
   {
     ignores: ['dist/*', 'plugin/build/*'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+    },
   },
 ]);
