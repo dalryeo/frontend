@@ -1,9 +1,14 @@
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useState } from 'react';
+import WheelPicker from '@quidone/react-native-wheel-picker';
+import { useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import {
+  Animated,
+  Easing,
   Modal,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -13,7 +18,24 @@ import {
 
 import { FONT_FAMILY } from '../constants/FontFamily';
 import { useAppFonts } from '../hooks/useAppFonts';
-import { useRouter } from 'expo-router';
+
+const PICKER_HEIGHT = 400;
+
+const DEFAULT_VALUES = {
+  male: { height: 175, weight: 70 },
+  female: { height: 160, weight: 55 },
+  default: { height: 170, weight: 65 },
+};
+
+const heightData = Array.from({ length: 121 }, (_, i) => ({
+  value: 100 + i,
+  label: `${100 + i} cm`,
+}));
+
+const weightData = Array.from({ length: 121 }, (_, i) => ({
+  value: 30 + i,
+  label: `${30 + i} kg`,
+}));
 
 function Profile() {
   const [fontsLoaded] = useAppFonts();
@@ -22,10 +44,84 @@ function Profile() {
   const [nickname, setNickname] = useState('');
   const [nicknameError, setNicknameError] = useState<string | null>(null);
   const [birth, setBirth] = useState('');
-  const [height, setHeight] = useState('');
-  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState<number | null>(null);
+  const [weight, setWeight] = useState<number | null>(null);
   const [selectedImg, setSelectedImg] = useState<number | null>(null);
+  const [activePicker, setActivePicker] = useState<'height' | 'weight' | null>(
+    null,
+  );
+  const [pickerValue, setPickerValue] = useState<number>(170);
+  const [isClosing, setIsClosing] = useState(false);
   const router = useRouter();
+
+  const slideAnim = useRef(new Animated.Value(PICKER_HEIGHT)).current;
+  const backdropAnim = useRef(new Animated.Value(0)).current;
+
+  const getDefaultValue = (type: 'height' | 'weight') => {
+    const values = gender ? DEFAULT_VALUES[gender] : DEFAULT_VALUES.default;
+    return values[type];
+  };
+
+  const openPicker = (type: 'height' | 'weight') => {
+    const defaultVal = getDefaultValue(type);
+    const currentValue =
+      type === 'height' ? (height ?? defaultVal) : (weight ?? defaultVal);
+
+    setPickerValue(currentValue);
+    setActivePicker(type);
+  };
+
+  useEffect(() => {
+    if (activePicker) {
+      slideAnim.setValue(PICKER_HEIGHT);
+      backdropAnim.setValue(0);
+
+      Animated.parallel([
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          damping: 20,
+          stiffness: 200,
+          mass: 0.8,
+          useNativeDriver: true,
+        }),
+        Animated.timing(backdropAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [activePicker, backdropAnim, slideAnim]);
+
+  const closePicker = () => {
+    if (isClosing) return;
+    setIsClosing(true);
+
+    if (activePicker === 'height') {
+      setHeight(pickerValue);
+    } else if (activePicker === 'weight') {
+      setWeight(pickerValue);
+    }
+
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: PICKER_HEIGHT,
+        duration: 200,
+        easing: Easing.in(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished) {
+        setActivePicker(null);
+        setIsClosing(false);
+      }
+    });
+  };
 
   if (!fontsLoaded) return null;
 
@@ -187,7 +283,7 @@ function Profile() {
           <Text style={styles.subtext}>생년월일</Text>
           <View style={styles.statureContainer}>
             <TextInput
-              style={styles.stature}
+              style={styles.statureInput}
               placeholder='00/00/00'
               value={birth}
               onChangeText={setBirth}
@@ -203,30 +299,74 @@ function Profile() {
 
         <View style={styles.halfBox}>
           <Text style={styles.subtext}>키</Text>
-          <View style={styles.statureContainer}>
-            <TextInput
-              style={styles.stature}
-              keyboardType='numeric'
-              value={height}
-              onChangeText={setHeight}
-            />
+          <Pressable
+            style={styles.statureContainer}
+            onPress={() => openPicker('height')}
+          >
+            <Text style={[styles.statureText, !height && styles.placeholder]}>
+              {height ?? '-'}
+            </Text>
             <Text style={styles.unit}>cm</Text>
-          </View>
+          </Pressable>
         </View>
 
         <View style={styles.halfBox}>
           <Text style={styles.subtext}>몸무게</Text>
-          <View style={styles.statureContainer}>
-            <TextInput
-              style={styles.stature}
-              keyboardType='numeric'
-              value={weight}
-              onChangeText={setWeight}
-            />
+          <Pressable
+            style={styles.statureContainer}
+            onPress={() => openPicker('weight')}
+          >
+            <Text style={[styles.statureText, !weight && styles.placeholder]}>
+              {weight ?? '-'}
+            </Text>
             <Text style={styles.unit}>kg</Text>
-          </View>
+          </Pressable>
         </View>
       </View>
+
+      <Modal visible={activePicker !== null} transparent animationType='none'>
+        <View style={styles.pickerModalContainer}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={closePicker}>
+            <Animated.View
+              style={[styles.pickerBackdrop, { opacity: backdropAnim }]}
+            />
+          </Pressable>
+
+          <Animated.View
+            style={[
+              styles.pickerSheet,
+              { transform: [{ translateY: slideAnim }] },
+            ]}
+          >
+            <View style={styles.pickerSheetContent}>
+              <View style={styles.pickerHeader}>
+                <Text style={styles.pickerTitle}>
+                  {activePicker === 'height' ? '키' : '몸무게'}
+                </Text>
+                <Pressable
+                  onPress={closePicker}
+                  hitSlop={10}
+                  style={styles.pickerDoneBtn}
+                >
+                  <Text style={styles.pickerDone}>완료</Text>
+                </Pressable>
+              </View>
+              <View style={styles.wheelPickerWrapper}>
+                {activePicker && (
+                  <WheelPicker
+                    data={activePicker === 'height' ? heightData : weightData}
+                    value={pickerValue}
+                    onValueChanged={({ item: { value } }) =>
+                      setPickerValue(value)
+                    }
+                    itemTextStyle={styles.pickerItemText}
+                  />
+                )}
+              </View>
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
 
       <TouchableOpacity
         style={styles.nextBtn}
@@ -239,10 +379,7 @@ function Profile() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#151515',
-  },
+  container: { flex: 1, backgroundColor: '#151515' },
   title: {
     color: 'white',
     fontSize: 28,
@@ -272,15 +409,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     gap: 10,
   },
-  subtext: {
-    color: '#979797',
-    fontSize: 16,
-    fontFamily: FONT_FAMILY.REGULAR,
-  },
-  back: {
-    top: 75,
-    left: 10,
-  },
+  subtext: { color: '#979797', fontSize: 16, fontFamily: FONT_FAMILY.REGULAR },
+  back: { top: 75, left: 10 },
   profileImg: {
     width: 110,
     height: 110,
@@ -377,18 +507,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: FONT_FAMILY.REGULAR,
   },
-
-  birthBox: {
-    width: '36%',
-  },
-  halfBox: {
-    width: '27%',
-  },
-  stature: {
+  birthBox: { width: '36%' },
+  halfBox: { width: '27%' },
+  statureInput: {
     flex: 1,
     color: 'white',
     fontSize: 16,
+    fontFamily: FONT_FAMILY.REGULAR,
   },
+  statureText: {
+    flex: 1,
+    color: 'white',
+    fontSize: 16,
+    fontFamily: FONT_FAMILY.REGULAR,
+  },
+  placeholder: { color: '#5B5B5B' },
   statureContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -399,10 +532,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 20,
   },
-  unit: {
-    fontSize: 16,
-    color: '#5B5B5B',
-  },
+  unit: { fontSize: 16, color: '#5B5B5B' },
   nextBtn: {
     width: '90%',
     height: 60,
@@ -411,9 +541,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     justifyContent: 'center',
     marginTop: '20%',
-    fontSize: 15,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
-    color: '#151515',
   },
   nextBtnText: {
     textAlign: 'center',
@@ -422,10 +549,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY.SEMIBOLD,
     color: '#151515',
   },
-  nextBtnDisabled: {
-    backgroundColor: '#3C3C3C',
-    color: '#6E6E6E',
-  },
+  nextBtnDisabled: { backgroundColor: '#3C3C3C', color: '#6E6E6E' },
   nicknameErrorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -447,6 +571,51 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONT_FAMILY.MEDIUM,
   },
+  pickerModalContainer: {
+    flex: 1,
+  },
+  pickerBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  pickerSheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  pickerSheetContent: {
+    backgroundColor: '#212121',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    overflow: 'hidden',
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3C3C3C',
+  },
+  pickerTitle: {
+    fontSize: 16,
+    color: '#fff',
+    fontFamily: FONT_FAMILY.SEMIBOLD,
+  },
+  pickerDoneBtn: {
+    position: 'absolute',
+    right: 16,
+  },
+  pickerDone: {
+    fontSize: 16,
+    color: '#7BF179',
+    fontFamily: FONT_FAMILY.SEMIBOLD,
+  },
+  wheelPickerWrapper: {
+    overflow: 'hidden',
+  },
+  pickerItemText: { fontSize: 18, color: '#fff' },
 });
 
 export { Profile };
