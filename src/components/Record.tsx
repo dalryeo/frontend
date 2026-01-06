@@ -62,7 +62,7 @@ function Record() {
           <Font type='Body1' style={styles.infoTextTop}>
             달려의 티어를 소개합니다
           </Font>
-          <Font type='Body5' style={styles.infoTextBottom}>
+          <Font type='Body7' style={styles.infoTextBottom}>
             티어는 월요일마다 새로 시작돼요
           </Font>
         </View>
@@ -101,7 +101,7 @@ function Record() {
             </Font>
 
             <Font
-              type='Body6'
+              type='Body7'
               style={[styles.recordListText, { color: NEUTRAL.GRAY_700 }]}
             >
               {item.period}

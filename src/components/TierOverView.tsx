@@ -61,7 +61,7 @@ export default function TierOverview() {
           >
             <Font type='Head1'>{tier.iconSet}</Font>
             <View style={styles.tierInfo}>
-              <Font type='Body5' style={styles.tierName}>
+              <Font type='Body7' style={styles.tierName}>
                 {index + 1}위 {tier.name}
               </Font>
               <Font type='Body1' style={styles.tierInfoText}>

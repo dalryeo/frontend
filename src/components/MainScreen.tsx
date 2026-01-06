@@ -94,7 +94,7 @@ function MainScreen() {
           <Font type='Body1' style={{ marginBottom: 3 }}>
             달려의 티어를 소개합니다
           </Font>
-          <Font type='Body5' style={{ color: NEUTRAL.GRAY_600 }}>
+          <Font type='Body7' style={{ color: NEUTRAL.GRAY_600 }}>
             티어는 월요일마다 새로 시작돼요
           </Font>
         </View>

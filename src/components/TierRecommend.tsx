@@ -111,7 +111,7 @@ export default function TierRecommend() {
                 <Font type='Head1'>{nextTierData.iconSet}</Font>
 
                 <View style={styles.nextTierTextContainer}>
-                  <Font type='Body5' style={styles.NextTierText}>
+                  <Font type='Body7' style={styles.NextTierText}>
                     다음 티어, {nextTierData.name}
                   </Font>
                   <Font type='Body1' style={styles.NextTierTitle}>
@@ -137,7 +137,7 @@ export default function TierRecommend() {
                 <Font type='Head1'>{prevTierData.iconSet}</Font>
 
                 <View style={styles.prevTierTextContainer}>
-                  <Font type='Body5' style={styles.prevTierText}>
+                  <Font type='Body7' style={styles.prevTierText}>
                     이전 티어, {prevTierData.name}
                   </Font>
                   <Font type='Body1' style={styles.prevTierTitle}>
@@ -150,7 +150,7 @@ export default function TierRecommend() {
         )}
 
         <TouchableOpacity onPress={() => router.push('/tierOverView')}>
-          <Font type='Body6' style={styles.tierPlus}>
+          <Font type='Body7' style={styles.tierPlus}>
             다른 티어 더보기
           </Font>
         </TouchableOpacity>

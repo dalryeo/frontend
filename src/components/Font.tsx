@@ -15,6 +15,7 @@ type FontType =
   | 'Body4'
   | 'Body5'
   | 'Body6'
+  | 'Body7'
   | 'Caption'
   | 'MainButton'
   | 'SubButton'
@@ -49,8 +50,9 @@ const table: Record<FontType, ReturnType<typeof createStyle>> = {
   Body2: createStyle(FONT_FAMILY.MEDIUM, 18),
   Body3: createStyle(FONT_FAMILY.REGULAR, 18),
   Body4: createStyle(FONT_FAMILY.REGULAR, 16),
-  Body5: createStyle(FONT_FAMILY.SEMIBOLD, 14),
-  Body6: createStyle(FONT_FAMILY.REGULAR, 14),
+  Body5: createStyle(FONT_FAMILY.BOLD, 14),
+  Body6: createStyle(FONT_FAMILY.SEMIBOLD, 14),
+  Body7: createStyle(FONT_FAMILY.REGULAR, 14),
   Caption: createStyle(FONT_FAMILY.REGULAR, 12),
   MainButton: createStyle(FONT_FAMILY.SEMIBOLD, 16),
   SubButton: createStyle(FONT_FAMILY.MEDIUM, 15),
