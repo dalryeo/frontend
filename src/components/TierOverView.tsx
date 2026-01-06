@@ -6,11 +6,11 @@ import {
   Image,
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { FONT_FAMILY } from '../constants/FontFamily';
+import { Font } from '../components/Font';
+import { NEUTRAL } from '../constants/Colors';
 import { tiers } from '../data/tiers';
 import { useAppFonts } from '../hooks/useAppFonts';
 import TierDetail from './TierDetail';
@@ -43,9 +43,15 @@ export default function TierOverview() {
         contentContainerStyle={{ paddingBottom: 60 }}
       >
         <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()}>
-          <AntDesign name='close' size={24} color='#EAEAEA' />
+          <AntDesign
+            style={{ color: NEUTRAL.GRAY_200 }}
+            name='close'
+            size={24}
+          />
         </TouchableOpacity>
-        <Text style={styles.title}>티어 한눈에 보기</Text>
+        <Font type='Head3' style={styles.title}>
+          티어 한눈에 보기
+        </Font>
 
         {tierList.map(([key, tier], index) => (
           <TouchableOpacity
@@ -53,28 +59,35 @@ export default function TierOverview() {
             style={styles.tiers}
             onPress={() => setSelectedTier(key)}
           >
-            <Text style={styles.tierImg}>{tier.iconSet}</Text>
+            <Font type='Head1'>{tier.iconSet}</Font>
             <View style={styles.tierInfo}>
-              <Text style={styles.tierName}>
+              <Font type='Body5' style={styles.tierName}>
                 {index + 1}위 {tier.name}
-              </Text>
-              <Text style={styles.tierInfoText}>{tier.title}</Text>
+              </Font>
+              <Font type='Body1' style={styles.tierInfoText}>
+                {tier.title}
+              </Font>
             </View>
             <MaterialIcons
-              style={styles.navigateNext}
+              style={[styles.navigateNext, { color: NEUTRAL.GRAY_600 }]}
               name='navigate-next'
               size={34}
-              color='#6E6E6E'
             />
           </TouchableOpacity>
         ))}
 
         <View style={styles.tierSystem}>
-          <Text style={styles.title}>달려 티어 시스템</Text>
+          <Font type='Head3' style={styles.title}>
+            달려 티어 시스템
+          </Font>
           {tierSystemRules.map((rule, idx) => (
             <View key={idx} style={styles.listItem}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.listText}>{rule}</Text>
+              <Font type='Body4' style={styles.bullet}>
+                •
+              </Font>
+              <Font type='Body4' style={styles.listText}>
+                {rule}
+              </Font>
             </View>
           ))}
         </View>
@@ -90,8 +103,14 @@ export default function TierOverview() {
         <View style={styles.tierSystemInfo}>
           {tierSystemInfoList.map((item, idx) => (
             <View key={idx} style={styles.tierItem}>
-              <AntDesign name='check' size={16} color='#7BF179' />
-              <Text style={styles.tierSystemInfoText}>{item}</Text>
+              <AntDesign
+                style={{ color: NEUTRAL.MAIN }}
+                name='check'
+                size={16}
+              />
+              <Font type='SubButton' style={styles.tierSystemInfoText}>
+                {item}
+              </Font>
             </View>
           ))}
         </View>
@@ -111,7 +130,7 @@ export default function TierOverview() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#151515',
+    backgroundColor: NEUTRAL.BACKGROUND,
   },
   closeBtn: {
     alignSelf: 'flex-end',
@@ -119,26 +138,21 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   title: {
-    color: 'white',
-    fontSize: 24,
+    color: NEUTRAL.WHITE,
     marginLeft: 20,
     marginTop: 20,
     marginBottom: 20,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
   },
   tiers: {
     flexDirection: 'row',
     marginTop: 15,
-    backgroundColor: '#212121',
-    borderColor: '#3C3C3C',
+    backgroundColor: NEUTRAL.GRAY_900,
+    borderColor: NEUTRAL.GRAY_800,
     borderWidth: 1,
     paddingVertical: 20,
     paddingHorizontal: 20,
     borderRadius: 25,
     marginHorizontal: 20,
-  },
-  tierImg: {
-    fontSize: 45,
   },
   tierInfo: {
     flexDirection: 'column',
@@ -146,15 +160,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tierName: {
-    color: '#6E6E6E',
-    fontSize: 15,
-    fontFamily: FONT_FAMILY.REGULAR,
+    color: NEUTRAL.GRAY_600,
   },
   tierInfoText: {
-    color: '#f3f3f3',
-    fontSize: 20,
+    color: NEUTRAL.GRAY_100,
     marginTop: 5,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
   },
   navigateNext: {
     alignSelf: 'center',
@@ -169,14 +179,11 @@ const styles = StyleSheet.create({
     marginLeft: 20,
   },
   bullet: {
-    color: '#DADADA',
-    fontSize: 19,
+    color: NEUTRAL.GRAY_300,
     marginRight: 8,
   },
   listText: {
-    color: '#DADADA',
-    fontSize: 16,
-    fontFamily: FONT_FAMILY.REGULAR,
+    color: NEUTRAL.GRAY_300,
     flexShrink: 1,
   },
   tierInfoImgContainer: {
@@ -197,7 +204,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     gap: 8,
     borderRadius: 15,
-    borderColor: '#7BF179',
+    borderColor: NEUTRAL.MAIN,
     backgroundColor: 'rgba(123, 241, 121, 0.08)',
     borderWidth: 1,
     marginBottom: 50,
@@ -206,9 +213,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   tierSystemInfoText: {
-    color: '#7BF179',
+    color: NEUTRAL.MAIN,
     marginLeft: 10,
-    fontSize: 15,
-    fontFamily: FONT_FAMILY.MEDIUM,
   },
 });

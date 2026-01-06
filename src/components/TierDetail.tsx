@@ -4,12 +4,14 @@ import {
   Modal,
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { FONT_FAMILY } from '../constants/FontFamily';
 import { tiers } from '../data/tiers';
+
+import { Font } from '../components/Font';
+import { NEUTRAL } from '../constants/Colors';
+import { useAppFonts } from '../hooks/useAppFonts';
 
 interface TierDetailProps {
   tierKey: string;
@@ -22,11 +24,13 @@ export default function TierDetail({
   visible,
   onClose,
 }: TierDetailProps) {
+  const [fontsLoaded] = useAppFonts();
   if (!visible) return null;
 
   const tierData = tiers[tierKey as keyof typeof tiers];
   const windowHeight = Dimensions.get('window').height;
 
+  if (!fontsLoaded) return null;
   return (
     <Modal
       visible={visible}
@@ -42,22 +46,30 @@ export default function TierDetail({
             contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.title}>{tierData.title}</Text>
-            <Text style={styles.subscribe}>{tierData.subtitle}</Text>
+            <Font type='Head4' style={styles.title}>
+              {tierData.title}
+            </Font>
+            <Font type='Body4' style={styles.subscribe}>
+              {tierData.subtitle}
+            </Font>
 
             <View style={styles.profileImg} />
 
             {tierData.sections.map((section, index) => (
               <View key={index} style={styles.section}>
-                <Text style={styles.sectionTitle}>
+                <Font type='Head5' style={styles.sectionTitle}>
                   {section.icon} {section.title}
-                </Text>
+                </Font>
 
                 <View style={styles.listSection}>
                   {section.items.map((item, i) => (
                     <View key={i} style={styles.listItem}>
-                      <Text style={styles.bullet}>•</Text>
-                      <Text style={styles.listText}>{item}</Text>
+                      <Font type='Body4' style={styles.bullet}>
+                        •
+                      </Font>
+                      <Font type='Body4' style={styles.listText}>
+                        {item}
+                      </Font>
                     </View>
                   ))}
                 </View>
@@ -67,7 +79,9 @@ export default function TierDetail({
 
           <View style={styles.fixedButtonContainer}>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Text style={styles.closeText}>확인</Text>
+              <Font type='SubButton' style={styles.closeText}>
+                확인
+              </Font>
             </TouchableOpacity>
           </View>
         </View>
@@ -88,34 +102,30 @@ const styles = StyleSheet.create({
   },
 
   container: {
-    backgroundColor: '#212121',
+    backgroundColor: NEUTRAL.GRAY_900,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     overflow: 'hidden',
   },
 
   title: {
-    color: 'white',
-    fontSize: 24,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
+    color: NEUTRAL.WHITE,
     marginTop: 15,
     marginBottom: 15,
     alignSelf: 'center',
   },
 
   subscribe: {
-    color: '#979797',
-    fontSize: 16,
+    color: NEUTRAL.GRAY_500,
     alignSelf: 'center',
     marginBottom: 20,
-    fontFamily: FONT_FAMILY.REGULAR,
   },
 
   profileImg: {
     width: 150,
     height: 150,
     borderRadius: 80,
-    backgroundColor: '#3C3C3C',
+    backgroundColor: NEUTRAL.GRAY_800,
     marginTop: 10,
     alignSelf: 'center',
   },
@@ -125,14 +135,12 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    color: 'white',
-    fontSize: 20,
+    color: NEUTRAL.WHITE,
     marginBottom: 5,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
   },
 
   listSection: {
-    backgroundColor: '#212121',
+    backgroundColor: NEUTRAL.GRAY_900,
     borderRadius: 20,
     padding: 15,
   },
@@ -143,13 +151,12 @@ const styles = StyleSheet.create({
   },
 
   bullet: {
-    color: '#DADADA',
+    color: NEUTRAL.GRAY_300,
     marginRight: 5,
   },
 
   listText: {
-    color: '#DADADA',
-    fontSize: 16,
+    color: NEUTRAL.GRAY_300,
     flexShrink: 1,
   },
 
@@ -159,21 +166,19 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     paddingBottom: 20,
-    backgroundColor: '#212121',
+    backgroundColor: NEUTRAL.GRAY_900,
   },
 
   closeBtn: {
     width: '100%',
     height: 65,
-    backgroundColor: '#111111',
+    backgroundColor: NEUTRAL.BLACK,
     borderRadius: 33,
     justifyContent: 'center',
   },
 
   closeText: {
     textAlign: 'center',
-    fontSize: 15,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
-    color: '#ffffff',
+    color: NEUTRAL.WHITE,
   },
 });
