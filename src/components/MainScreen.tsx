@@ -1,8 +1,10 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { FONT_FAMILY } from '../constants/FontFamily';
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+
+import { Font } from '../components/Font';
+import { NEUTRAL } from '../constants/Colors';
 import { useAppFonts } from '../hooks/useAppFonts';
 
 function MainScreen() {
@@ -40,60 +42,74 @@ function MainScreen() {
           style={styles.accountIcon}
         />
       </View>
-      <Text style={styles.title}>날쌘돌이님,{'\n'}이번 주도 달려볼까요?</Text>
+
+      <Font type='Head2' style={styles.title}>
+        날쌘돌이님,{'\n'}이번 주도 달려볼까요?
+      </Font>
 
       <View style={styles.weeklyRecord}>
         <View style={styles.weeklyRecordTitle}>
-          <Text style={styles.weeklyRecordTitleText}>주간 기록</Text>
+          <Font type='SubButton' style={styles.weeklyRecordTitleText}>
+            주간 기록
+          </Font>
         </View>
 
         <View style={styles.recordList}>
           <View style={styles.recordItem}>
-            <Text style={styles.recordItemTop}>🦊</Text>
-            <Text style={styles.recordItemBottom}>현재 티어</Text>
+            <Font type='Head2' style={styles.recordItemTop}>
+              🦊
+            </Font>
+            <Font type='Body4' style={styles.recordItemBottom}>
+              현재 티어
+            </Font>
           </View>
 
           <View style={styles.recordItem}>
-            <Text
-              style={[
-                styles.recordItemTop,
-                { color: '#7BF179', marginBottom: 3 },
-              ]}
+            <Font
+              type='Head2'
+              style={[styles.recordItemTop, { color: NEUTRAL.MAIN }]}
             >
               {`05'32"`}
-            </Text>
-            <Text style={styles.recordItemBottom}>평균 페이스</Text>
+            </Font>
+            <Font type='Body4' style={styles.recordItemBottom}>
+              평균 페이스
+            </Font>
           </View>
 
           <View style={styles.recordItem}>
-            <Text style={[styles.recordItemTop, { marginBottom: 3 }]}>1</Text>
-            <Text style={styles.recordItemBottom}>러닝 횟수</Text>
+            <Font type='Head2' style={styles.recordItemTop}>
+              1
+            </Font>
+            <Font type='Body4' style={styles.recordItemBottom}>
+              러닝 횟수
+            </Font>
           </View>
         </View>
       </View>
 
       <View style={styles.info}>
-        <View>
-          <Text style={styles.infoTier}>🐆</Text>
-        </View>
+        <Font type='Head1'>🐆</Font>
 
         <View style={styles.infoText}>
-          <Text style={styles.infoTextTop}>달려의 티어를 소개합니다</Text>
-          <Text style={styles.infoTextBottom}>
+          <Font type='Body1' style={{ marginBottom: 3 }}>
+            달려의 티어를 소개합니다
+          </Font>
+          <Font type='Body7' style={{ color: NEUTRAL.GRAY_600 }}>
             티어는 월요일마다 새로 시작돼요
-          </Text>
+          </Font>
         </View>
 
         <MaterialIcons
-          style={styles.navigateNext}
+          style={[styles.navigateNext, { color: NEUTRAL.GRAY_600 }]}
           name='navigate-next'
           size={34}
-          color='#6E6E6E'
         />
       </View>
 
       <View style={styles.commentWrapper}>
-        <Text style={styles.comment}>{commentMessage}</Text>
+        <Font type='SubButton' style={styles.comment}>
+          {commentMessage}
+        </Font>
 
         <View style={styles.tailOuter} />
         <View style={styles.tailInner} />
@@ -105,7 +121,7 @@ function MainScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#151515',
+    backgroundColor: NEUTRAL.BACKGROUND,
   },
   Icon: {
     flexDirection: 'row',
@@ -123,15 +139,13 @@ const styles = StyleSheet.create({
     marginLeft: 20,
   },
   title: {
-    color: 'white',
-    fontSize: 32,
+    color: NEUTRAL.WHITE,
     marginTop: 30,
     marginLeft: 20,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
     lineHeight: 35,
   },
   weeklyRecord: {
-    backgroundColor: '#111111',
+    backgroundColor: NEUTRAL.BLACK,
     borderRadius: 30,
     padding: 20,
     marginTop: 50,
@@ -141,16 +155,14 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   weeklyRecordTitleText: {
-    color: '#979797',
-    fontSize: 16,
+    color: NEUTRAL.GRAY_500,
     marginVertical: 5,
-    fontFamily: FONT_FAMILY.MEDIUM,
   },
   recordList: {
     marginTop: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderTopColor: '#979797',
+    borderTopColor: NEUTRAL.GRAY_500,
     borderTopWidth: 2,
   },
   recordItem: {
@@ -159,47 +171,36 @@ const styles = StyleSheet.create({
   },
   recordItemTop: {
     alignSelf: 'center',
-    fontSize: 30,
-    color: '#f3f3f3',
-    fontFamily: FONT_FAMILY.SEMIBOLD,
+    color: NEUTRAL.GRAY_100,
   },
   recordItemBottom: {
     alignSelf: 'center',
     marginTop: 5,
-    fontSize: 16,
-    color: '#f3f3f3',
-    fontFamily: FONT_FAMILY.REGULAR,
+    color: NEUTRAL.GRAY_100,
   },
   info: {
     flexDirection: 'row',
-    backgroundColor: '#212121',
-    borderColor: '#3c3c3c',
+    backgroundColor: NEUTRAL.GRAY_900,
+    borderColor: NEUTRAL.GRAY_800,
     borderRadius: 30,
     marginTop: 30,
     marginHorizontal: 20,
     padding: 20,
-  },
-  infoTier: {
-    fontSize: 40,
   },
   infoText: {
     alignSelf: 'center',
     marginLeft: 15,
   },
   infoTextTop: {
-    fontSize: 19,
-    color: '#f3f3f3',
+    color: NEUTRAL.GRAY_100,
     marginBottom: 3,
-    fontFamily: FONT_FAMILY.BOLD,
   },
   infoTextBottom: {
-    fontSize: 15,
-    color: '#6e6e6e',
-    fontFamily: FONT_FAMILY.SEMIBOLD,
+    color: NEUTRAL.GRAY_600,
   },
   navigateNext: {
     alignSelf: 'center',
-    marginLeft: 30,
+    marginLeft: 65,
   },
   commentWrapper: {
     alignItems: 'center',
@@ -211,13 +212,11 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     justifyContent: 'center',
     textAlign: 'center',
-    borderColor: '#7BF179',
+    borderColor: NEUTRAL.MAIN,
     borderWidth: 1,
     borderRadius: 30,
-    fontSize: 16,
-    color: '#dadada',
-    backgroundColor: '#151515',
-    fontFamily: FONT_FAMILY.MEDIUM,
+    color: NEUTRAL.GRAY_300,
+    backgroundColor: NEUTRAL.BACKGROUND,
   },
   tailOuter: {
     position: 'absolute',
@@ -229,7 +228,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 10,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: '#7BF179',
+    borderTopColor: NEUTRAL.MAIN,
   },
   tailInner: {
     position: 'absolute',
@@ -241,7 +240,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 9,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: '#151515',
+    borderTopColor: NEUTRAL.BACKGROUND,
   },
 });
 

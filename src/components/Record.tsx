@@ -1,8 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
-import { FONT_FAMILY } from '../constants/FontFamily';
+import { StyleSheet, View } from 'react-native';
+import { Font } from '../components/Font';
+import { NEUTRAL } from '../constants/Colors';
 import { useAppFonts } from '../hooks/useAppFonts';
 
 function Record() {
@@ -39,73 +40,72 @@ function Record() {
     <View style={styles.container}>
       <View style={styles.top}>
         <Ionicons
+          style={{ color: NEUTRAL.WHITE }}
           name='chevron-back'
           size={24}
-          color='white'
-          style={styles.back}
           onPress={() => router.back()}
         />
 
         <View style={styles.titleWrapper}>
-          <Text style={styles.title}>주간 기록</Text>
+          <Font type='Head5' style={styles.title}>
+            주간 기록
+          </Font>
         </View>
       </View>
 
       <View style={styles.info}>
         <View>
-          <Text style={styles.infoTier}>🐆</Text>
+          <Font type='Head1'>🐆</Font>
         </View>
 
         <View style={styles.infoText}>
-          <Text style={styles.infoTextTop}>달려의 티어를 소개합니다</Text>
-          <Text style={styles.infoTextBottom}>
+          <Font type='Body1' style={styles.infoTextTop}>
+            달려의 티어를 소개합니다
+          </Font>
+          <Font type='Body7' style={styles.infoTextBottom}>
             티어는 월요일마다 새로 시작돼요
-          </Text>
+          </Font>
         </View>
 
         <MaterialIcons
-          style={styles.navigateNext}
+          style={[styles.navigateNext, { color: NEUTRAL.GRAY_600 }]}
           name='navigate-next'
           size={34}
-          color='#6E6E6E'
         />
       </View>
 
       {recordData.map((item) => (
         <View key={item.id} style={styles.recordList}>
-          <Text style={styles.recordListIcon}>{item.icon}</Text>
+          <Font type='Head1' style={styles.recordListIcon}>
+            {item.icon}
+          </Font>
 
           <View style={styles.recordListItem}>
-            <Text
-              style={[
-                styles.recordListText,
-                { color: '#FFFFFF', fontSize: 16 },
-              ]}
+            <Font
+              type='Body4'
+              style={[styles.recordListText, { color: NEUTRAL.WHITE }]}
             >
               {item.countText}
-            </Text>
+            </Font>
 
-            <Text
+            <Font
+              type='Head2'
               style={[
                 styles.recordListText,
                 {
-                  color: '#7BF179',
-                  fontSize: 32,
-                  fontFamily: FONT_FAMILY.SEMIBOLD,
+                  color: NEUTRAL.MAIN,
                 },
               ]}
             >
               {item.time}
-            </Text>
+            </Font>
 
-            <Text
-              style={[
-                styles.recordListText,
-                { color: '#5B5B5B', fontSize: 14 },
-              ]}
+            <Font
+              type='Body7'
+              style={[styles.recordListText, { color: NEUTRAL.GRAY_700 }]}
             >
               {item.period}
-            </Text>
+            </Font>
           </View>
         </View>
       ))}
@@ -116,7 +116,7 @@ function Record() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#151515',
+    backgroundColor: NEUTRAL.BACKGROUND,
   },
   top: {
     marginTop: 70,
@@ -125,61 +125,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginHorizontal: 10,
   },
-  back: {
-    fontSize: 27,
-  },
   titleWrapper: {
     flex: 1,
     alignItems: 'center',
     marginRight: 27,
   },
   title: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
+    color: NEUTRAL.WHITE,
   },
   info: {
     flexDirection: 'row',
-    backgroundColor: '#212121',
-    borderColor: '#3c3c3c',
+    backgroundColor: NEUTRAL.GRAY_900,
+    borderColor: NEUTRAL.GRAY_800,
     borderRadius: 30,
     marginTop: 50,
     marginHorizontal: 20,
     padding: 20,
-  },
-  infoTier: {
-    fontSize: 40,
   },
   infoText: {
     alignSelf: 'center',
     marginLeft: 15,
   },
   infoTextTop: {
-    fontSize: 19,
-    color: '#f3f3f3',
+    color: NEUTRAL.GRAY_100,
     marginBottom: 3,
-    fontFamily: FONT_FAMILY.BOLD,
   },
   infoTextBottom: {
-    fontSize: 15,
-    color: '#6e6e6e',
-    fontFamily: FONT_FAMILY.SEMIBOLD,
+    color: NEUTRAL.GRAY_600,
   },
   navigateNext: {
     alignSelf: 'center',
-    marginLeft: 30,
+    marginLeft: 65,
   },
   recordList: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 20,
-    backgroundColor: '#111111',
+    backgroundColor: NEUTRAL.BLACK,
     marginHorizontal: 20,
     borderRadius: 20,
     padding: 20,
   },
   recordListIcon: {
-    fontSize: 50,
     marginRight: 20,
   },
   recordListItem: {

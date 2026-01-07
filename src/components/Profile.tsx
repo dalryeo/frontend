@@ -16,7 +16,8 @@ import {
   View,
 } from 'react-native';
 
-import { FONT_FAMILY } from '../constants/FontFamily';
+import { Font } from '../components/Font';
+import { NEUTRAL } from '../constants/Colors';
 import { useAppFonts } from '../hooks/useAppFonts';
 
 const PICKER_HEIGHT = 400;
@@ -144,24 +145,24 @@ function Profile() {
       <Ionicons
         name='chevron-back'
         size={24}
-        color='white'
-        style={styles.back}
+        style={[styles.back, { color: NEUTRAL.WHITE }]}
         onPress={() => router.back()}
       />
 
-      <Text style={styles.title}>프로필을 완성해주세요</Text>
+      <Font type='Head2' style={styles.title}>
+        프로필을 완성해주세요
+      </Font>
 
-      <Text style={styles.subscribe}>
+      <Font type='Body3' style={styles.subscribe}>
         입력하신 닉네임과 프로필은 랭킹 화면에 표시돼요
-      </Text>
+      </Font>
 
       <View style={[styles.profileImg, { marginTop: 50 }]}></View>
       <MaterialIcons
         name='edit'
         onPress={() => setOpen(true)}
-        style={styles.imgIcon}
+        style={[styles.imgIcon, { color: NEUTRAL.GRAY_500 }]}
         size={20}
-        color='#979797'
       />
 
       <Modal visible={open} transparent animationType='slide'>
@@ -185,7 +186,7 @@ function Profile() {
                     styles.profileImg,
                     selectedImg === index && {
                       borderWidth: 2,
-                      borderColor: '#7BF179',
+                      borderColor: NEUTRAL.MAIN,
                     },
                   ]}
                 />
@@ -203,7 +204,9 @@ function Profile() {
       </Modal>
 
       <View style={styles.subtitleNick}>
-        <Text style={styles.subtitle}>닉네임</Text>
+        <Font type='Body4' style={styles.subtitle}>
+          닉네임
+        </Font>
         <View style={styles.nicknameErrorContainer}>
           <View style={styles.nicknameErrorContainer}>
             {nickname ? (
@@ -212,20 +215,22 @@ function Profile() {
                   <MaterialIcons
                     name='error-outline'
                     size={16}
-                    color='#FF3B30'
+                    style={{ color: NEUTRAL.DANGER }}
                   />
-                  <Text style={styles.nicknameError}>{nicknameError}</Text>
+                  <Font type='Error' style={styles.nicknameError}>
+                    {nicknameError}
+                  </Font>
                 </>
               ) : (
                 <>
                   <Ionicons
                     name='checkmark-circle-outline'
                     size={16}
-                    color='#7BF179'
+                    style={{ color: NEUTRAL.MAIN }}
                   />
-                  <Text style={styles.nicknameSuccess}>
+                  <Font type='Error' style={styles.nicknameSuccess}>
                     사용 가능한 닉네임이에요
-                  </Text>
+                  </Font>
                 </>
               )
             ) : null}
@@ -236,12 +241,14 @@ function Profile() {
       <TextInput
         style={styles.nickname}
         placeholder='1~12자, 영문·한글·숫자만 입력할 수 있어요.'
-        placeholderTextColor='#5B5B5B'
+        placeholderTextColor={NEUTRAL.GRAY_700}
         value={nickname}
         onChangeText={validateNickname}
       />
 
-      <Text style={[styles.subtitle, { marginTop: 30 }]}>성별</Text>
+      <Font type='Body4' style={[styles.subtitle, { marginTop: 30 }]}>
+        성별
+      </Font>
       <View style={styles.genderContainer}>
         <TouchableOpacity
           style={[
@@ -250,14 +257,15 @@ function Profile() {
           ]}
           onPress={() => setGender('male')}
         >
-          <Text
+          <Font
+            type='Body4'
             style={[
               styles.genderText,
               gender === 'male' && styles.genderSelected,
             ]}
           >
             남자
-          </Text>
+          </Font>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -267,20 +275,23 @@ function Profile() {
           ]}
           onPress={() => setGender('female')}
         >
-          <Text
+          <Font
+            type='Body4'
             style={[
               styles.genderText,
               gender === 'female' && styles.genderSelected,
             ]}
           >
             여자
-          </Text>
+          </Font>
         </TouchableOpacity>
       </View>
 
       <View style={styles.stats}>
         <View style={styles.birthBox}>
-          <Text style={styles.subtext}>생년월일</Text>
+          <Font type='Body4' style={styles.subtext}>
+            생년월일
+          </Font>
           <View style={styles.statureContainer}>
             <TextInput
               style={styles.statureInput}
@@ -289,37 +300,50 @@ function Profile() {
               onChangeText={setBirth}
             />
             <FontAwesome6
-              style={styles.unit}
+              style={[styles.unit, { color: NEUTRAL.GRAY_500 }]}
               name='calendar'
-              size={24}
-              color='black'
+              size={16}
             />
           </View>
         </View>
 
         <View style={styles.halfBox}>
-          <Text style={styles.subtext}>키</Text>
+          <Font type='Body4' style={styles.subtext}>
+            키
+          </Font>
           <Pressable
             style={styles.statureContainer}
             onPress={() => openPicker('height')}
           >
-            <Text style={[styles.statureText, !height && styles.placeholder]}>
+            <Font
+              type='Body4'
+              style={[styles.statureText, !height && styles.placeholder]}
+            >
               {height ?? '-'}
-            </Text>
-            <Text style={styles.unit}>cm</Text>
+            </Font>
+            <Font type='Body4' style={styles.unit}>
+              cm
+            </Font>
           </Pressable>
         </View>
 
         <View style={styles.halfBox}>
-          <Text style={styles.subtext}>몸무게</Text>
+          <Font type='Body4' style={styles.subtext}>
+            몸무게
+          </Font>
           <Pressable
             style={styles.statureContainer}
             onPress={() => openPicker('weight')}
           >
-            <Text style={[styles.statureText, !weight && styles.placeholder]}>
+            <Font
+              type='Body4'
+              style={[styles.statureText, !weight && styles.placeholder]}
+            >
               {weight ?? '-'}
-            </Text>
-            <Text style={styles.unit}>kg</Text>
+            </Font>
+            <Font type='Body4' style={styles.unit}>
+              kg
+            </Font>
           </Pressable>
         </View>
       </View>
@@ -340,15 +364,17 @@ function Profile() {
           >
             <View style={styles.pickerSheetContent}>
               <View style={styles.pickerHeader}>
-                <Text style={styles.pickerTitle}>
+                <Font type='Body4' style={styles.pickerTitle}>
                   {activePicker === 'height' ? '키' : '몸무게'}
-                </Text>
+                </Font>
                 <Pressable
                   onPress={closePicker}
                   hitSlop={10}
                   style={styles.pickerDoneBtn}
                 >
-                  <Text style={styles.pickerDone}>완료</Text>
+                  <Font type='Body4' style={styles.pickerDone}>
+                    완료
+                  </Font>
                 </Pressable>
               </View>
               <View style={styles.wheelPickerWrapper}>
@@ -370,35 +396,31 @@ function Profile() {
 
       <TouchableOpacity
         style={styles.nextBtn}
-        onPress={() => router.push('/TierRecommend')}
+        onPress={() => router.push('/tierRecommend')}
       >
-        <Text style={styles.nextBtnText}>다음으로</Text>
+        <Font type='MainButton' style={styles.nextBtnText}>
+          다음으로
+        </Font>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#151515' },
+  container: { flex: 1, backgroundColor: NEUTRAL.BACKGROUND },
   title: {
-    color: 'white',
-    fontSize: 28,
+    color: NEUTRAL.WHITE,
     marginTop: 100,
     marginLeft: 20,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
     lineHeight: 35,
   },
   subscribe: {
     marginTop: 12,
-    fontSize: 16,
-    color: '#979797',
-    fontFamily: FONT_FAMILY.REGULAR,
+    color: NEUTRAL.GRAY_500,
     marginLeft: 20,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#979797',
-    fontFamily: FONT_FAMILY.REGULAR,
+    color: NEUTRAL.GRAY_500,
     marginLeft: 20,
   },
   stats: {
@@ -409,13 +431,15 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     gap: 10,
   },
-  subtext: { color: '#979797', fontSize: 16, fontFamily: FONT_FAMILY.REGULAR },
+  subtext: {
+    color: NEUTRAL.GRAY_500,
+  },
   back: { top: 75, left: 10 },
   profileImg: {
     width: 110,
     height: 110,
     borderRadius: 70,
-    backgroundColor: '#333333',
+    backgroundColor: NEUTRAL.GRAY_900,
     marginTop: 20,
     alignSelf: 'center',
   },
@@ -425,7 +449,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#212121',
+    backgroundColor: NEUTRAL.GRAY_900,
     paddingBottom: 20,
     paddingTop: 30,
     paddingHorizontal: 20,
@@ -441,46 +465,40 @@ const styles = StyleSheet.create({
   },
   applyBtn: {
     width: '100%',
-    backgroundColor: '#111111',
+    backgroundColor: NEUTRAL.BLACK,
     borderRadius: 30,
     height: 60,
     justifyContent: 'center',
     marginTop: 25,
   },
   applyBtnText: {
-    color: 'white',
+    color: NEUTRAL.WHITE,
     textAlign: 'center',
-    fontSize: 16,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
   },
   profileText: {
     width: '100%',
-    fontSize: 19,
-    color: 'white',
+    color: NEUTRAL.WHITE,
     marginBottom: 20,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
   },
   imgIcon: {
     position: 'absolute',
     top: 325,
     left: '54%',
-    backgroundColor: '#EAEAEA',
+    backgroundColor: NEUTRAL.GRAY_200,
     borderRadius: 20,
     padding: 5,
   },
   nickname: {
     height: 50,
-    backgroundColor: '#212121',
-    borderColor: '#3C3C3C',
+    backgroundColor: NEUTRAL.GRAY_900,
+    borderColor: NEUTRAL.GRAY_800,
     borderWidth: 1,
     borderRadius: 32,
     marginTop: 10,
     alignSelf: 'center',
     width: '90%',
     paddingHorizontal: 23,
-    fontSize: 16,
-    color: 'white',
-    fontFamily: FONT_FAMILY.REGULAR,
+    color: NEUTRAL.WHITE,
   },
   genderContainer: {
     flexDirection: 'row',
@@ -492,51 +510,44 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 17,
     borderWidth: 1,
-    borderColor: '#3C3C3C',
+    borderColor: NEUTRAL.GRAY_800,
     borderRadius: 13,
     alignItems: 'center',
     marginHorizontal: 5,
   },
   genderSelected: {
-    borderColor: '#7BF179',
-    color: '#7BF179',
-    fontFamily: FONT_FAMILY.SEMIBOLD,
+    borderColor: NEUTRAL.MAIN,
+    color: NEUTRAL.MAIN,
   },
   genderText: {
-    color: '#979797',
-    fontSize: 16,
-    fontFamily: FONT_FAMILY.REGULAR,
+    color: NEUTRAL.GRAY_500,
   },
   birthBox: { width: '36%' },
   halfBox: { width: '27%' },
   statureInput: {
     flex: 1,
-    color: 'white',
-    fontSize: 16,
-    fontFamily: FONT_FAMILY.REGULAR,
+    color: NEUTRAL.WHITE,
   },
   statureText: {
     flex: 1,
-    color: 'white',
-    fontSize: 16,
-    fontFamily: FONT_FAMILY.REGULAR,
+    color: NEUTRAL.WHITE,
   },
-  placeholder: { color: '#5B5B5B' },
+  placeholder: { color: NEUTRAL.GRAY_700 },
   statureContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 10,
-    backgroundColor: '#212121',
+    backgroundColor: NEUTRAL.GRAY_900,
     borderRadius: 32,
     height: 50,
     alignSelf: 'center',
     paddingHorizontal: 20,
   },
-  unit: { fontSize: 16, color: '#5B5B5B' },
+  unit: { color: NEUTRAL.GRAY_700 },
   nextBtn: {
     width: '90%',
     height: 60,
-    backgroundColor: '#7BF179',
+    backgroundColor: NEUTRAL.MAIN,
     borderRadius: 30,
     alignSelf: 'center',
     justifyContent: 'center',
@@ -545,11 +556,12 @@ const styles = StyleSheet.create({
   nextBtnText: {
     textAlign: 'center',
     lineHeight: 50,
-    fontSize: 15,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
-    color: '#151515',
+    color: NEUTRAL.BACKGROUND,
   },
-  nextBtnDisabled: { backgroundColor: '#3C3C3C', color: '#6E6E6E' },
+  nextBtnDisabled: {
+    backgroundColor: NEUTRAL.GRAY_800,
+    color: NEUTRAL.GRAY_600,
+  },
   nicknameErrorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -562,14 +574,10 @@ const styles = StyleSheet.create({
     marginTop: 35,
   },
   nicknameError: {
-    color: '#FF3B30',
-    fontSize: 14,
-    fontFamily: FONT_FAMILY.MEDIUM,
+    color: NEUTRAL.DANGER,
   },
   nicknameSuccess: {
-    color: '#7BF179',
-    fontSize: 14,
-    fontFamily: FONT_FAMILY.MEDIUM,
+    color: NEUTRAL.MAIN,
   },
   pickerModalContainer: {
     flex: 1,
@@ -585,7 +593,7 @@ const styles = StyleSheet.create({
     right: 0,
   },
   pickerSheetContent: {
-    backgroundColor: '#212121',
+    backgroundColor: NEUTRAL.GRAY_900,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     overflow: 'hidden',
@@ -596,26 +604,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#3C3C3C',
+    borderBottomColor: NEUTRAL.GRAY_800,
   },
   pickerTitle: {
-    fontSize: 16,
-    color: '#fff',
-    fontFamily: FONT_FAMILY.SEMIBOLD,
+    color: NEUTRAL.WHITE,
   },
   pickerDoneBtn: {
     position: 'absolute',
     right: 16,
   },
   pickerDone: {
-    fontSize: 16,
-    color: '#7BF179',
-    fontFamily: FONT_FAMILY.SEMIBOLD,
+    color: NEUTRAL.MAIN,
   },
   wheelPickerWrapper: {
     overflow: 'hidden',
   },
-  pickerItemText: { fontSize: 18, color: '#fff' },
+  pickerItemText: { color: NEUTRAL.WHITE },
 });
 
 export { Profile };

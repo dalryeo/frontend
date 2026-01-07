@@ -4,11 +4,11 @@ import {
   ImageBackground,
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { FONT_FAMILY } from '../constants/FontFamily';
+import { Font } from '../components/Font';
+import { NEUTRAL } from '../constants/Colors';
 import { tiers } from '../data/tiers';
 import { useAppFonts } from '../hooks/useAppFonts';
 
@@ -67,22 +67,30 @@ export default function TierRecommend() {
         style={styles.container}
         contentContainerStyle={{ paddingBottom: 60 }}
       >
-        <Text style={styles.title}>{tierData.title}</Text>
-        <Text style={styles.subscribe}>{tierData.subtitle}</Text>
+        <Font type='Head2' style={styles.title}>
+          {tierData.title}
+        </Font>
+        <Font type='Body4' style={styles.subscribe}>
+          {tierData.subtitle}
+        </Font>
 
         <View style={styles.profileImg} />
 
         {tierData.sections.map((section, index) => (
           <View key={index} style={styles.section}>
-            <Text style={styles.sectionTitle}>
+            <Font type='Head5' style={styles.sectionTitle}>
               {section.icon} {section.title}
-            </Text>
+            </Font>
 
             <View style={styles.listSection}>
               {section.items.map((item, i) => (
                 <View key={i} style={styles.listItem}>
-                  <Text style={styles.bullet}>•</Text>
-                  <Text style={styles.listText}>{item}</Text>
+                  <Font type='Body4' style={styles.bullet}>
+                    •
+                  </Font>
+                  <Font type='Body4' style={styles.listText}>
+                    {item}
+                  </Font>
                 </View>
               ))}
             </View>
@@ -100,13 +108,15 @@ export default function TierRecommend() {
               imageStyle={styles.nextTierBackground}
             >
               <View style={styles.nextTier}>
-                <Text style={styles.TierImg}>{nextTierData.iconSet}</Text>
+                <Font type='Head1'>{nextTierData.iconSet}</Font>
 
                 <View style={styles.nextTierTextContainer}>
-                  <Text style={styles.NextTierText}>
+                  <Font type='Body7' style={styles.NextTierText}>
                     다음 티어, {nextTierData.name}
-                  </Text>
-                  <Text style={styles.NextTierTitle}>{nextTierData.title}</Text>
+                  </Font>
+                  <Font type='Body1' style={styles.NextTierTitle}>
+                    {nextTierData.title}
+                  </Font>
                 </View>
               </View>
             </ImageBackground>
@@ -124,13 +134,15 @@ export default function TierRecommend() {
               imageStyle={styles.prevTierBackground}
             >
               <View style={styles.prevTier}>
-                <Text style={styles.TierImg}>{prevTierData.iconSet}</Text>
+                <Font type='Head1'>{prevTierData.iconSet}</Font>
 
                 <View style={styles.prevTierTextContainer}>
-                  <Text style={styles.prevTierText}>
+                  <Font type='Body7' style={styles.prevTierText}>
                     이전 티어, {prevTierData.name}
-                  </Text>
-                  <Text style={styles.prevTierTitle}>{prevTierData.title}</Text>
+                  </Font>
+                  <Font type='Body1' style={styles.prevTierTitle}>
+                    {prevTierData.title}
+                  </Font>
                 </View>
               </View>
             </ImageBackground>
@@ -138,13 +150,20 @@ export default function TierRecommend() {
         )}
 
         <TouchableOpacity onPress={() => router.push('/tierOverView')}>
-          <Text style={styles.tierPlus}>다른 티어 더보기</Text>
+          <Font type='Body7' style={styles.tierPlus}>
+            다른 티어 더보기
+          </Font>
         </TouchableOpacity>
       </ScrollView>
 
       <View style={styles.fixedButtonContainer}>
-        <TouchableOpacity style={styles.nextBtn}>
-          <Text style={styles.nextBtnText}>시작하기</Text>
+        <TouchableOpacity
+          style={styles.nextBtn}
+          onPress={() => router.replace('/')}
+        >
+          <Font type='MainButton' style={styles.nextBtnText}>
+            시작하기
+          </Font>
         </TouchableOpacity>
       </View>
     </View>
@@ -154,49 +173,41 @@ export default function TierRecommend() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#151515',
+    backgroundColor: NEUTRAL.BACKGROUND,
   },
   title: {
-    color: 'white',
-    fontSize: 28,
+    color: NEUTRAL.WHITE,
     marginTop: 100,
     alignSelf: 'center',
-    fontFamily: FONT_FAMILY.SEMIBOLD,
   },
   subscribe: {
     marginTop: 12,
-    fontSize: 16,
-    color: '#979797',
+    color: NEUTRAL.GRAY_500,
     alignSelf: 'center',
-    fontFamily: FONT_FAMILY.REGULAR,
   },
   profileImg: {
     width: 130,
     height: 130,
     borderRadius: 70,
-    backgroundColor: '#212121',
+    backgroundColor: NEUTRAL.GRAY_900,
     marginTop: 30,
     alignSelf: 'center',
   },
   subtitle: {
-    fontSize: 18,
-    color: '#F3F3F3',
+    color: NEUTRAL.GRAY_100,
     marginLeft: 15,
     marginTop: 30,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
   },
   section: {
     marginTop: 30,
     paddingHorizontal: 20,
   },
   sectionTitle: {
-    fontSize: 18,
-    color: '#F3F3F3',
-    fontFamily: FONT_FAMILY.SEMIBOLD,
+    color: NEUTRAL.GRAY_100,
     marginBottom: 10,
   },
   listSection: {
-    backgroundColor: '#212121',
+    backgroundColor: NEUTRAL.GRAY_900,
     borderRadius: 30,
     padding: 18,
   },
@@ -205,14 +216,11 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   bullet: {
-    color: '#DADADA',
-    fontSize: 16,
+    color: NEUTRAL.GRAY_300,
     marginRight: 8,
   },
   listText: {
-    color: '#DADADA',
-    fontSize: 15,
-    fontFamily: FONT_FAMILY.REGULAR,
+    color: NEUTRAL.GRAY_300,
     flexShrink: 1,
   },
   nextTierSection: {
@@ -230,23 +238,16 @@ const styles = StyleSheet.create({
   nextTierBackground: {
     resizeMode: 'contain',
   },
-  TierImg: {
-    fontSize: 40,
-  },
   nextTierTextContainer: {
     marginLeft: 15,
     justifyContent: 'center',
   },
   NextTierText: {
     color: '#378336',
-    fontSize: 14,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
   },
   NextTierTitle: {
-    color: '#111111',
-    fontSize: 18,
+    color: NEUTRAL.BLACK,
     marginTop: 3,
-    fontFamily: FONT_FAMILY.BOLD,
   },
   prevTierSection: {
     flexDirection: 'row',
@@ -267,26 +268,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   prevTierText: {
-    color: '#6E6E6E',
-    fontSize: 14,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
+    color: NEUTRAL.GRAY_600,
   },
   prevTierTitle: {
-    color: '#979797',
-    fontSize: 18,
+    color: NEUTRAL.GRAY_500,
     marginTop: 3,
-    fontFamily: FONT_FAMILY.BOLD,
   },
   tierPlus: {
-    color: '#979797',
-    fontSize: 14,
+    color: NEUTRAL.GRAY_500,
     alignSelf: 'center',
-    borderColor: '#979797',
+    borderColor: NEUTRAL.GRAY_500,
     borderBottomWidth: 1,
     paddingBottom: 5,
     marginTop: 20,
     marginBottom: 60,
-    fontFamily: FONT_FAMILY.MEDIUM,
   },
   fixedButtonContainer: {
     position: 'absolute',
@@ -297,23 +292,19 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     borderTopLeftRadius: 65,
     borderTopRightRadius: 65,
-    backgroundColor: '#151515',
+    backgroundColor: NEUTRAL.BACKGROUND,
   },
   nextBtn: {
     width: '90%',
     height: 60,
-    backgroundColor: '#7BF179',
+    backgroundColor: NEUTRAL.MAIN,
     borderRadius: 30,
     alignSelf: 'center',
     justifyContent: 'center',
-    fontSize: 15,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
   },
   nextBtnText: {
     textAlign: 'center',
     lineHeight: 50,
-    fontSize: 15,
-    fontFamily: FONT_FAMILY.SEMIBOLD,
-    color: '#151515',
+    color: NEUTRAL.BACKGROUND,
   },
 });

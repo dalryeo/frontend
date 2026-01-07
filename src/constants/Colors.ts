@@ -19,6 +19,7 @@ export const NEUTRAL = {
   GRAY_800: '#3C3C3C',
   GRAY_900: '#212121',
   BLACK: '#111111',
+  DANGER: '#FF3B30',
 } as const;
 
 const tintColorDark = NEUTRAL.WHITE;

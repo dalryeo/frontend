@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { FONT_FAMILY } from '../constants/FontFamily';
+import { StyleSheet, View } from 'react-native';
+import { Font } from '../components/Font';
+import { NEUTRAL } from '../constants/Colors';
 import { useAppFonts } from '../hooks/useAppFonts';
 
 function CountDown() {
@@ -19,11 +20,17 @@ function CountDown() {
 
   if (!fontsLoaded) return null;
 
-  const displayText = count > 0 ? count : '달려!';
-
   return (
     <View style={styles.container}>
-      <Text style={styles.countText}>{displayText}</Text>
+      {count > 0 ? (
+        <Font type='CountDown1' style={styles.countText}>
+          {count}
+        </Font>
+      ) : (
+        <Font type='CountDown2' style={styles.countText}>
+          달려!
+        </Font>
+      )}
     </View>
   );
 }
@@ -31,14 +38,12 @@ function CountDown() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#151515',
+    backgroundColor: NEUTRAL.BACKGROUND,
     justifyContent: 'center',
     alignItems: 'center',
   },
   countText: {
-    fontSize: 120,
-    color: '#7BF179',
-    fontFamily: FONT_FAMILY.BOLD,
+    color: NEUTRAL.MAIN,
   },
 });
 
