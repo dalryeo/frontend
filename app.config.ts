@@ -1,4 +1,4 @@
-import { ExpoConfig, ConfigContext } from 'expo/config';
+import { ConfigContext, ExpoConfig } from 'expo/config';
 
 const IS_PROD = process.env.APP_ENV === 'production';
 const BUNDLE_SUFFIX = process.env.BUNDLE_SUFFIX || 'unknown';
@@ -37,6 +37,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     'expo-router',
+    '@react-native-community/datetimepicker',
     './plugin/build/src/index.js',
     [
       'expo-build-properties',

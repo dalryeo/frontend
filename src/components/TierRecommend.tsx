@@ -17,7 +17,7 @@ export default function TierRecommend() {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
 
-  const [tierKey, setTierKey] = useState<keyof typeof tiers>('gorani');
+  const [tierKey, setTierKey] = useState<keyof typeof tiers>('husky');
 
   const changeTier = (key: keyof typeof tiers) => {
     setTierKey(key);
@@ -70,7 +70,7 @@ export default function TierRecommend() {
         <Font type='Head2' style={styles.title}>
           {tierData.title}
         </Font>
-        <Font type='Body4' style={styles.subscribe}>
+        <Font type='Body3' style={styles.subscribe}>
           {tierData.subtitle}
         </Font>
 

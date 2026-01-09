@@ -27,10 +27,32 @@ function MainScreen() {
 
   if (!fontsLoaded) return null;
 
+  const gradientSegments = [];
+  const totalSegments = 50;
+
+  for (let i = 0; i < totalSegments; i++) {
+    const position = i / (totalSegments - 1);
+
+    const intensity = Math.sin(position * Math.PI);
+
+    const opacity = 0.05 + intensity * 0.55;
+
+    gradientSegments.push(
+      <View
+        key={i}
+        style={{
+          flex: 1,
+          height: 1,
+          backgroundColor: `rgba(183, 183, 183, ${opacity})`,
+        }}
+      />,
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.Icon}>
-        <TouchableOpacity onPress={() => router.push('/record')}>
+        <TouchableOpacity onPress={() => router.push('/weeklyRecord')}>
           <Image
             source={require('../../assets/images/Main/record.png')}
             style={styles.recordIcon}
@@ -53,6 +75,8 @@ function MainScreen() {
             주간 기록
           </Font>
         </View>
+
+        <View style={styles.dividerContainer}>{gradientSegments}</View>
 
         <View style={styles.recordList}>
           <View style={styles.recordItem}>
@@ -158,12 +182,16 @@ const styles = StyleSheet.create({
     color: NEUTRAL.GRAY_500,
     marginVertical: 5,
   },
-  recordList: {
+  dividerContainer: {
     marginTop: 10,
+    marginBottom: 15,
+    flexDirection: 'row',
+    height: 1,
+    alignItems: 'center',
+  },
+  recordList: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderTopColor: NEUTRAL.GRAY_500,
-    borderTopWidth: 2,
   },
   recordItem: {
     flexDirection: 'column',

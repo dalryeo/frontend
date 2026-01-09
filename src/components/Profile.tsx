@@ -2,17 +2,23 @@ import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import WheelPicker from '@quidone/react-native-wheel-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
+  Keyboard,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 
@@ -38,6 +44,14 @@ const weightData = Array.from({ length: 121 }, (_, i) => ({
   label: `${30 + i} kg`,
 }));
 
+type DateTimePickerEvent = {
+  type: string;
+  nativeEvent: {
+    timestamp: number;
+    utcOffset: number;
+  };
+};
+
 function Profile() {
   const [fontsLoaded] = useAppFonts();
   const [open, setOpen] = useState(false);
@@ -45,12 +59,13 @@ function Profile() {
   const [nickname, setNickname] = useState('');
   const [nicknameError, setNicknameError] = useState<string | null>(null);
   const [birth, setBirth] = useState('');
+  const [birthDate, setBirthDate] = useState<Date>(new Date(2000, 0, 1));
   const [height, setHeight] = useState<number | null>(null);
   const [weight, setWeight] = useState<number | null>(null);
   const [selectedImg, setSelectedImg] = useState<number | null>(null);
-  const [activePicker, setActivePicker] = useState<'height' | 'weight' | null>(
-    null,
-  );
+  const [activePicker, setActivePicker] = useState<
+    'height' | 'weight' | 'date' | null
+  >(null);
   const [pickerValue, setPickerValue] = useState<number>(170);
   const [isClosing, setIsClosing] = useState(false);
   const router = useRouter();
@@ -63,13 +78,32 @@ function Profile() {
     return values[type];
   };
 
-  const openPicker = (type: 'height' | 'weight') => {
+  const openPicker = (type: 'height' | 'weight' | 'date') => {
+    if (type === 'date') {
+      setActivePicker('date');
+      return;
+    }
+
     const defaultVal = getDefaultValue(type);
     const currentValue =
       type === 'height' ? (height ?? defaultVal) : (weight ?? defaultVal);
 
     setPickerValue(currentValue);
     setActivePicker(type);
+  };
+
+  const formatDate = (date: Date): string => {
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  };
+
+  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (selectedDate) {
+      setBirthDate(selectedDate);
+      setBirth(formatDate(selectedDate));
+    }
   };
 
   useEffect(() => {
@@ -141,211 +175,239 @@ function Profile() {
   };
 
   return (
-    <View style={styles.container}>
-      <Ionicons
-        name='chevron-back'
-        size={24}
-        style={[styles.back, { color: NEUTRAL.WHITE }]}
-        onPress={() => router.back()}
-      />
-
-      <Font type='Head2' style={styles.title}>
-        프로필을 완성해주세요
-      </Font>
-
-      <Font type='Body3' style={styles.subscribe}>
-        입력하신 닉네임과 프로필은 랭킹 화면에 표시돼요
-      </Font>
-
-      <View style={[styles.profileImg, { marginTop: 50 }]}></View>
-      <MaterialIcons
-        name='edit'
-        onPress={() => setOpen(true)}
-        style={[styles.imgIcon, { color: NEUTRAL.GRAY_500 }]}
-        size={20}
-      />
-
-      <Modal visible={open} transparent animationType='slide'>
-        <View style={styles.sheetBackground}>
-          <TouchableOpacity
-            style={{ flex: 1 }}
-            onPress={() => setOpen(false)}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps='handled'
+        >
+          <Ionicons
+            name='chevron-back'
+            size={24}
+            style={[styles.back, { color: NEUTRAL.WHITE }]}
+            onPress={() => router.back()}
           />
 
-          <View style={styles.sheet}>
-            <View style={styles.sheetInner}>
-              <Text style={styles.profileText}>
-                프로필 이미지를 선택해주세요
-              </Text>
+          <Font type='Head2' style={styles.title}>
+            프로필을 완성해주세요
+          </Font>
 
-              {[...Array(6)].map((_, index) => (
+          <Font type='Body3' style={styles.subscribe}>
+            입력하신 닉네임과 프로필은 랭킹 화면에 표시돼요
+          </Font>
+
+          <View style={[styles.profileImg, { marginTop: 50 }]}></View>
+          <MaterialIcons
+            name='edit'
+            onPress={() => setOpen(true)}
+            style={[styles.imgIcon, { color: NEUTRAL.GRAY_500 }]}
+            size={20}
+          />
+
+          <Modal visible={open} transparent animationType='slide'>
+            <View style={styles.sheetBackground}>
+              <TouchableOpacity
+                style={{ flex: 1 }}
+                onPress={() => setOpen(false)}
+              />
+
+              <View style={styles.sheet}>
+                <Font type='Head4' style={styles.profileText}>
+                  프로필 이미지를 선택해주세요
+                </Font>
+
+                <View style={styles.sheetInner}>
+                  {[...Array(6)].map((_, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      onPress={() => setSelectedImg(index)}
+                      style={[
+                        styles.profileImgModal,
+                        selectedImg === index && {
+                          borderWidth: 2,
+                          borderColor: NEUTRAL.MAIN,
+                        },
+                      ]}
+                    />
+                  ))}
+                </View>
+
                 <TouchableOpacity
-                  key={index}
-                  onPress={() => setSelectedImg(index)}
-                  style={[
-                    styles.profileImg,
-                    selectedImg === index && {
-                      borderWidth: 2,
-                      borderColor: NEUTRAL.MAIN,
-                    },
-                  ]}
-                />
-              ))}
+                  onPress={() => setOpen(false)}
+                  style={styles.applyBtn}
+                >
+                  <Text style={styles.applyBtnText}>적용하기</Text>
+                </TouchableOpacity>
+              </View>
             </View>
+          </Modal>
+
+          <View style={styles.subtitleNick}>
+            <Font type='Body4' style={styles.subtitle}>
+              닉네임
+            </Font>
+            <View style={styles.nicknameErrorContainer}>
+              {nickname ? (
+                nicknameError ? (
+                  <>
+                    <MaterialIcons
+                      name='error-outline'
+                      size={16}
+                      style={{ color: NEUTRAL.DANGER }}
+                    />
+                    <Font type='Error' style={styles.nicknameError}>
+                      {nicknameError}
+                    </Font>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons
+                      name='checkmark-circle-outline'
+                      size={16}
+                      style={{ color: NEUTRAL.MAIN }}
+                    />
+                    <Font type='Error' style={styles.nicknameSuccess}>
+                      사용 가능한 닉네임이에요
+                    </Font>
+                  </>
+                )
+              ) : null}
+            </View>
+          </View>
+
+          <TextInput
+            style={styles.nickname}
+            placeholder='1~12자, 영문·한글·숫자만 입력할 수 있어요.'
+            placeholderTextColor={NEUTRAL.GRAY_700}
+            value={nickname}
+            onChangeText={validateNickname}
+            returnKeyType='done'
+          />
+
+          <Font type='Body4' style={[styles.subtitle, { marginTop: 30 }]}>
+            성별
+          </Font>
+          <View style={styles.genderContainer}>
+            <TouchableOpacity
+              style={[
+                styles.genderButton,
+                gender === 'male' && styles.genderSelected,
+              ]}
+              onPress={() => setGender('male')}
+            >
+              <Font
+                type='Body4'
+                style={[
+                  styles.genderText,
+                  gender === 'male' && styles.genderSelected,
+                ]}
+              >
+                남자
+              </Font>
+            </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => setOpen(false)}
-              style={styles.applyBtn}
+              style={[
+                styles.genderButton,
+                gender === 'female' && styles.genderSelected,
+              ]}
+              onPress={() => setGender('female')}
             >
-              <Text style={styles.applyBtnText}>적용하기</Text>
+              <Font
+                type='Body4'
+                style={[
+                  styles.genderText,
+                  gender === 'female' && styles.genderSelected,
+                ]}
+              >
+                여자
+              </Font>
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
 
-      <View style={styles.subtitleNick}>
-        <Font type='Body4' style={styles.subtitle}>
-          닉네임
-        </Font>
-        <View style={styles.nicknameErrorContainer}>
-          <View style={styles.nicknameErrorContainer}>
-            {nickname ? (
-              nicknameError ? (
-                <>
-                  <MaterialIcons
-                    name='error-outline'
-                    size={16}
-                    style={{ color: NEUTRAL.DANGER }}
-                  />
-                  <Font type='Error' style={styles.nicknameError}>
-                    {nicknameError}
-                  </Font>
-                </>
-              ) : (
-                <>
-                  <Ionicons
-                    name='checkmark-circle-outline'
-                    size={16}
-                    style={{ color: NEUTRAL.MAIN }}
-                  />
-                  <Font type='Error' style={styles.nicknameSuccess}>
-                    사용 가능한 닉네임이에요
-                  </Font>
-                </>
-              )
-            ) : null}
+          <View style={styles.stats}>
+            <View style={styles.birthBox}>
+              <Font type='Body4' style={styles.subtext}>
+                생년월일
+              </Font>
+              <Pressable
+                style={styles.statureContainer}
+                onPress={() => openPicker('date')}
+              >
+                <Font
+                  type='Body4'
+                  style={[styles.statureText, !birth && styles.placeholder]}
+                >
+                  {birth || '00/00/00'}
+                </Font>
+                <FontAwesome6
+                  style={[styles.unit, { color: NEUTRAL.GRAY_500 }]}
+                  name='calendar'
+                  size={16}
+                />
+              </Pressable>
+            </View>
+
+            <View style={styles.halfBox}>
+              <Font type='Body4' style={styles.subtext}>
+                키
+              </Font>
+              <Pressable
+                style={styles.statureContainer}
+                onPress={() => openPicker('height')}
+              >
+                <Font
+                  type='Body4'
+                  style={[styles.statureText, !height && styles.placeholder]}
+                >
+                  {height ?? '-'}
+                </Font>
+                <Font type='Body4' style={styles.unit}>
+                  cm
+                </Font>
+              </Pressable>
+            </View>
+
+            <View style={styles.halfBox}>
+              <Font type='Body4' style={styles.subtext}>
+                몸무게
+              </Font>
+              <Pressable
+                style={styles.statureContainer}
+                onPress={() => openPicker('weight')}
+              >
+                <Font
+                  type='Body4'
+                  style={[styles.statureText, !weight && styles.placeholder]}
+                >
+                  {weight ?? '-'}
+                </Font>
+                <Font type='Body4' style={styles.unit}>
+                  kg
+                </Font>
+              </Pressable>
+            </View>
           </View>
-        </View>
-      </View>
 
-      <TextInput
-        style={styles.nickname}
-        placeholder='1~12자, 영문·한글·숫자만 입력할 수 있어요.'
-        placeholderTextColor={NEUTRAL.GRAY_700}
-        value={nickname}
-        onChangeText={validateNickname}
-      />
+          <View style={styles.bottomSpacer} />
+        </ScrollView>
+      </TouchableWithoutFeedback>
 
-      <Font type='Body4' style={[styles.subtitle, { marginTop: 30 }]}>
-        성별
-      </Font>
-      <View style={styles.genderContainer}>
+      <View style={styles.fixedButtonContainer}>
         <TouchableOpacity
-          style={[
-            styles.genderButton,
-            gender === 'male' && styles.genderSelected,
-          ]}
-          onPress={() => setGender('male')}
+          style={styles.nextBtn}
+          onPress={() => router.push('/tierRecommend')}
         >
-          <Font
-            type='Body4'
-            style={[
-              styles.genderText,
-              gender === 'male' && styles.genderSelected,
-            ]}
-          >
-            남자
+          <Font type='MainButton' style={styles.nextBtnText}>
+            다음으로
           </Font>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.genderButton,
-            gender === 'female' && styles.genderSelected,
-          ]}
-          onPress={() => setGender('female')}
-        >
-          <Font
-            type='Body4'
-            style={[
-              styles.genderText,
-              gender === 'female' && styles.genderSelected,
-            ]}
-          >
-            여자
-          </Font>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.stats}>
-        <View style={styles.birthBox}>
-          <Font type='Body4' style={styles.subtext}>
-            생년월일
-          </Font>
-          <View style={styles.statureContainer}>
-            <TextInput
-              style={styles.statureInput}
-              placeholder='00/00/00'
-              value={birth}
-              onChangeText={setBirth}
-            />
-            <FontAwesome6
-              style={[styles.unit, { color: NEUTRAL.GRAY_500 }]}
-              name='calendar'
-              size={16}
-            />
-          </View>
-        </View>
-
-        <View style={styles.halfBox}>
-          <Font type='Body4' style={styles.subtext}>
-            키
-          </Font>
-          <Pressable
-            style={styles.statureContainer}
-            onPress={() => openPicker('height')}
-          >
-            <Font
-              type='Body4'
-              style={[styles.statureText, !height && styles.placeholder]}
-            >
-              {height ?? '-'}
-            </Font>
-            <Font type='Body4' style={styles.unit}>
-              cm
-            </Font>
-          </Pressable>
-        </View>
-
-        <View style={styles.halfBox}>
-          <Font type='Body4' style={styles.subtext}>
-            몸무게
-          </Font>
-          <Pressable
-            style={styles.statureContainer}
-            onPress={() => openPicker('weight')}
-          >
-            <Font
-              type='Body4'
-              style={[styles.statureText, !weight && styles.placeholder]}
-            >
-              {weight ?? '-'}
-            </Font>
-            <Font type='Body4' style={styles.unit}>
-              kg
-            </Font>
-          </Pressable>
-        </View>
       </View>
 
       <Modal visible={activePicker !== null} transparent animationType='none'>
@@ -365,7 +427,11 @@ function Profile() {
             <View style={styles.pickerSheetContent}>
               <View style={styles.pickerHeader}>
                 <Font type='Body4' style={styles.pickerTitle}>
-                  {activePicker === 'height' ? '키' : '몸무게'}
+                  {activePicker === 'height'
+                    ? '키'
+                    : activePicker === 'weight'
+                      ? '몸무게'
+                      : '생년월일'}
                 </Font>
                 <Pressable
                   onPress={closePicker}
@@ -378,39 +444,70 @@ function Profile() {
                 </Pressable>
               </View>
               <View style={styles.wheelPickerWrapper}>
-                {activePicker && (
-                  <WheelPicker
-                    data={activePicker === 'height' ? heightData : weightData}
-                    value={pickerValue}
-                    onValueChanged={({ item: { value } }) =>
-                      setPickerValue(value)
-                    }
-                    itemTextStyle={styles.pickerItemText}
-                  />
+                {activePicker === 'date' ? (
+                  <View style={styles.datePickerContainer}>
+                    <DateTimePicker
+                      testID='dateTimePicker'
+                      value={birthDate}
+                      mode='date'
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={onDateChange}
+                      maximumDate={new Date()}
+                      minimumDate={new Date(1950, 0, 1)}
+                      textColor={NEUTRAL.WHITE}
+                      themeVariant='dark'
+                      style={styles.dateTimePicker}
+                    />
+                  </View>
+                ) : (
+                  activePicker && (
+                    <WheelPicker
+                      data={activePicker === 'height' ? heightData : weightData}
+                      value={pickerValue}
+                      onValueChanged={({ item: { value } }) =>
+                        setPickerValue(value)
+                      }
+                      itemTextStyle={styles.pickerItemText}
+                    />
+                  )
                 )}
               </View>
             </View>
           </Animated.View>
         </View>
       </Modal>
-
-      <TouchableOpacity
-        style={styles.nextBtn}
-        onPress={() => router.push('/tierRecommend')}
-      >
-        <Font type='MainButton' style={styles.nextBtnText}>
-          다음으로
-        </Font>
-      </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: NEUTRAL.BACKGROUND },
+  container: {
+    flex: 1,
+    backgroundColor: NEUTRAL.BACKGROUND,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 100,
+  },
+  fixedButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: NEUTRAL.BACKGROUND,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+  },
+  bottomSpacer: {
+    height: 20,
+  },
   title: {
     color: NEUTRAL.WHITE,
-    marginTop: 100,
+    marginTop: 120,
     marginLeft: 20,
     lineHeight: 35,
   },
@@ -434,7 +531,11 @@ const styles = StyleSheet.create({
   subtext: {
     color: NEUTRAL.GRAY_500,
   },
-  back: { top: 75, left: 10 },
+  back: {
+    position: 'absolute',
+    top: 75,
+    left: 10,
+  },
   profileImg: {
     width: 110,
     height: 110,
@@ -451,7 +552,7 @@ const styles = StyleSheet.create({
   sheet: {
     backgroundColor: NEUTRAL.GRAY_900,
     paddingBottom: 20,
-    paddingTop: 30,
+    paddingTop: 20,
     paddingHorizontal: 20,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
@@ -460,8 +561,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: 15,
-    columnGap: 10,
+    marginTop: 20,
+    backgroundColor: NEUTRAL.GRAY_900,
+  },
+  profileImgModal: {
+    width: 110,
+    height: 110,
+    borderRadius: 70,
+    backgroundColor: NEUTRAL.GRAY_800,
+    marginTop: 20,
+    alignSelf: 'center',
   },
   applyBtn: {
     width: '100%',
@@ -476,9 +585,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   profileText: {
-    width: '100%',
     color: NEUTRAL.WHITE,
-    marginBottom: 20,
   },
   imgIcon: {
     position: 'absolute',
@@ -522,8 +629,12 @@ const styles = StyleSheet.create({
   genderText: {
     color: NEUTRAL.GRAY_500,
   },
-  birthBox: { width: '36%' },
-  halfBox: { width: '27%' },
+  birthBox: {
+    width: '36%', // 수정: '3%'에서 '36%'로 변경
+  },
+  halfBox: {
+    width: '27%',
+  },
   statureInput: {
     flex: 1,
     color: NEUTRAL.WHITE,
@@ -532,7 +643,9 @@ const styles = StyleSheet.create({
     flex: 1,
     color: NEUTRAL.WHITE,
   },
-  placeholder: { color: NEUTRAL.GRAY_700 },
+  placeholder: {
+    color: NEUTRAL.GRAY_700,
+  },
   statureContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -543,24 +656,20 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 20,
   },
-  unit: { color: NEUTRAL.GRAY_700 },
+  unit: {
+    color: NEUTRAL.GRAY_700,
+  },
   nextBtn: {
-    width: '90%',
+    width: '100%',
     height: 60,
     backgroundColor: NEUTRAL.MAIN,
     borderRadius: 30,
-    alignSelf: 'center',
     justifyContent: 'center',
-    marginTop: '20%',
   },
   nextBtnText: {
     textAlign: 'center',
     lineHeight: 50,
     color: NEUTRAL.BACKGROUND,
-  },
-  nextBtnDisabled: {
-    backgroundColor: NEUTRAL.GRAY_800,
-    color: NEUTRAL.GRAY_600,
   },
   nicknameErrorContainer: {
     flexDirection: 'row',
@@ -618,8 +727,20 @@ const styles = StyleSheet.create({
   },
   wheelPickerWrapper: {
     overflow: 'hidden',
+    paddingVertical: 20,
   },
-  pickerItemText: { color: NEUTRAL.WHITE },
+  pickerItemText: {
+    color: NEUTRAL.WHITE,
+  },
+  datePickerContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dateTimePicker: {
+    width: '100%',
+    backgroundColor: NEUTRAL.GRAY_900,
+  },
 });
 
 export { Profile };
