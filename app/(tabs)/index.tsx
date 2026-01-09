@@ -1,3 +1,3 @@
-import { Profile } from '@/src/components/Profile';
+import { MainScreen } from '@/src/components/MainScreen';
 
-export default Profile;
+export default MainScreen;
