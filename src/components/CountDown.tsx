@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Font } from '../components/Font';
@@ -7,16 +8,27 @@ import { useAppFonts } from '../hooks/useAppFonts';
 function CountDown() {
   const [fontsLoaded] = useAppFonts();
   const [count, setCount] = useState(3);
+  const router = useRouter();
 
   useEffect(() => {
     if (count < 0) return;
 
-    const timer = setTimeout(() => {
-      setCount((prev) => prev - 1);
-    }, 1000);
+    if (count > 0) {
+      const timer = setTimeout(() => {
+        setCount((prev) => prev - 1);
+      }, 1000);
 
-    return () => clearTimeout(timer);
-  }, [count]);
+      return () => clearTimeout(timer);
+    }
+
+    if (count === 0) {
+      const navigateTimer = setTimeout(() => {
+        router.replace('/record');
+      }, 1000);
+
+      return () => clearTimeout(navigateTimer);
+    }
+  }, [count, router]);
 
   if (!fontsLoaded) return null;
 

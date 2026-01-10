@@ -21,7 +21,8 @@ type FontType =
   | 'SubButton'
   | 'Error'
   | 'CountDown1'
-  | 'CountDown2';
+  | 'CountDown2'
+  | 'Record';
 
 interface FontProps extends TextProps {
   type: FontType;
@@ -59,6 +60,7 @@ const table: Record<FontType, ReturnType<typeof createStyle>> = {
   Error: createStyle(FONT_FAMILY.MEDIUM, 13),
   CountDown1: createStyle(FONT_FAMILY.BOLD, 140),
   CountDown2: createStyle(FONT_FAMILY.BOLD, 120),
+  Record: createStyle(FONT_FAMILY.BOLD, 80),
 };
 
 const Font: FC<PropsWithChildren<FontProps>> = ({
