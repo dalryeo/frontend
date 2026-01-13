@@ -1,3 +1,3 @@
-import { CountDown } from '@/src/components/CountDown';
+import { CountDown } from '@/src/components/Record/CountDown';
 
 export default CountDown;

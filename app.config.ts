@@ -25,6 +25,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: false,
     bundleIdentifier: BUNDLE_ID.ios,
+    usesAppleSignIn: true,
   },
   android: {
     adaptiveIcon: {

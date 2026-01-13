@@ -1,9 +1,9 @@
-import React, { FC } from 'react';
+import { FC } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NEUTRAL } from '../constants/Colors';
-import { Font } from './Font';
-import { View } from './Themed';
+import { NEUTRAL } from '../../constants/Colors';
+import { Font } from '../Font';
+import { View } from '../Themed';
 
 const TOP_PADDING = 68;
 
