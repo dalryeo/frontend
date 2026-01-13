@@ -1,3 +1,3 @@
-import { MainScreen } from '@/src/components/MainScreen';
+import { MainScreen } from '@/src/components/Record/MainScreen';
 
 export default MainScreen;

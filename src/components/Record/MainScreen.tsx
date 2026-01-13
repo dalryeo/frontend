@@ -3,9 +3,9 @@ import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-import { Font } from '../components/Font';
-import { NEUTRAL } from '../constants/Colors';
-import { useAppFonts } from '../hooks/useAppFonts';
+import { NEUTRAL } from '../../constants/Colors';
+import { useAppFonts } from '../../hooks/useAppFonts';
+import { Font } from '../Font';
 
 function MainScreen() {
   const [fontsLoaded] = useAppFonts();
@@ -54,13 +54,13 @@ function MainScreen() {
       <View style={styles.Icon}>
         <TouchableOpacity onPress={() => router.push('/weeklyRecord')}>
           <Image
-            source={require('../../assets/images/Main/record.png')}
+            source={require('../../../assets/images/Main/record.png')}
             style={styles.recordIcon}
           />
         </TouchableOpacity>
 
         <Image
-          source={require('../../assets/images/Main/accountIcon.png')}
+          source={require('../../../assets/images/Main/accountIcon.png')}
           style={styles.accountIcon}
         />
       </View>

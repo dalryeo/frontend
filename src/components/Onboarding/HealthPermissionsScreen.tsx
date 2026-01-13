@@ -1,5 +1,4 @@
-import React from 'react';
-import { useWorkoutPermissions } from '../hooks/useWorkoutPermissions';
+import { useWorkoutPermissions } from '../../hooks/useWorkoutPermissions';
 import { PermissionScreen } from './PermissionScreen';
 
 const HealthPermissionsScreen = () => {

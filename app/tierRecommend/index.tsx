@@ -1,3 +1,3 @@
-import TierRecommend from '../../src/components/TierRecommend';
+import TierRecommend from '../../src/components/Onboarding/TierRecommend';
 
 export default TierRecommend;

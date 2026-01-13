@@ -1,7 +1,7 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Image,
   ScrollView,
@@ -9,10 +9,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Font } from '../components/Font';
-import { NEUTRAL } from '../constants/Colors';
-import { tiers } from '../data/tiers';
-import { useAppFonts } from '../hooks/useAppFonts';
+import { NEUTRAL } from '../../constants/Colors';
+import { tiers } from '../../data/tiers';
+import { useAppFonts } from '../../hooks/useAppFonts';
+import { Font } from '../Font';
 import TierDetail from './TierDetail';
 
 export default function TierOverview() {
@@ -94,7 +94,7 @@ export default function TierOverview() {
 
         <View style={styles.tierInfoImgContainer}>
           <Image
-            source={require('../../assets/images/Tier/TierInfo.png')}
+            source={require('../../../assets/images/Tier/TierInfo.png')}
             style={styles.tierInfoImg}
             resizeMode='contain'
           />

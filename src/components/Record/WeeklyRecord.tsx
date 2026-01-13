@@ -2,9 +2,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { NEUTRAL } from '../constants/Colors';
-import { useAppFonts } from '../hooks/useAppFonts';
-import { Font } from './Font';
+import { NEUTRAL } from '../../constants/Colors';
+import { useAppFonts } from '../../hooks/useAppFonts';
+import { Font } from '../Font';
 
 function WeeklyRecord() {
   const [fontsLoaded] = useAppFonts();

@@ -22,9 +22,9 @@ import {
   View,
 } from 'react-native';
 
-import { Font } from '../components/Font';
-import { NEUTRAL } from '../constants/Colors';
-import { useAppFonts } from '../hooks/useAppFonts';
+import { NEUTRAL } from '../../constants/Colors';
+import { useAppFonts } from '../../hooks/useAppFonts';
+import { Font } from '../Font';
 
 const PICKER_HEIGHT = 400;
 

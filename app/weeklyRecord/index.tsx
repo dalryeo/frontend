@@ -1,3 +1,3 @@
-import { WeeklyRecord } from '@/src/components/WeeklyRecord';
+import { WeeklyRecord } from '@/src/components/Record/WeeklyRecord';
 
 export default WeeklyRecord;

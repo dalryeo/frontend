@@ -3,8 +3,8 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { router } from 'expo-router';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Font } from '../components/Font';
 import { useAppFonts } from '../hooks/useAppFonts';
+import { Font } from './Font';
 
 import type { ComponentProps } from 'react';
 import { NEUTRAL } from '../constants/Colors';
@@ -33,6 +33,11 @@ export default function CustomTabBar({ state }: BottomTabBarProps) {
 
   if (!fontsLoaded) return null;
 
+  const currentRouteName = state.routes[state.index]?.name;
+
+  console.log('Current route name:', currentRouteName);
+  console.log('Current index:', state.index);
+
   return (
     <View style={styles.wrapper}>
       <View style={styles.container}>
@@ -40,16 +45,16 @@ export default function CustomTabBar({ state }: BottomTabBarProps) {
           label='분석'
           iconType='MaterialIcons'
           icon='insert-chart-outlined'
-          focused={state.index === 0}
-          onPress={() => router.push('/')}
+          focused={currentRouteName === 'analysis/index'}
+          onPress={() => router.push('/(tabs)/analysis')}
         />
 
         <TabItem
           label='랭킹'
           iconType='Ionicons'
           icon='trophy-outline'
-          focused={state.index === 2}
-          onPress={() => router.push('/')}
+          focused={currentRouteName === 'ranking/index'}
+          onPress={() => router.push('/(tabs)/ranking')}
         />
       </View>
 
@@ -57,6 +62,7 @@ export default function CustomTabBar({ state }: BottomTabBarProps) {
         style={styles.centerButton}
         onPress={() => router.push('/countDown')}
         activeOpacity={0.9}
+        hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
       >
         <Ionicons style={{ color: NEUTRAL.GRAY_900 }} name='walk' size={34} />
         <Font type='Caption' style={styles.centerText}>
@@ -71,7 +77,11 @@ function TabItem(props: TabItemProps) {
   const { label, focused, onPress } = props;
 
   return (
-    <TouchableOpacity style={styles.tabItem} onPress={onPress}>
+    <TouchableOpacity
+      style={styles.tabItem}
+      onPress={onPress}
+      hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+    >
       {props.iconType === 'Ionicons' ? (
         <Ionicons
           name={props.icon}
@@ -133,7 +143,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 0 },
-    elevation: 12,
   },
   centerText: {
     marginTop: 4,

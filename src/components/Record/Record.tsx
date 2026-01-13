@@ -7,13 +7,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { NEUTRAL } from '../constants/Colors';
-import { useAppFonts } from '../hooks/useAppFonts';
-import { Font } from './Font';
+import { NEUTRAL } from '../../constants/Colors';
+import { useAppFonts } from '../../hooks/useAppFonts';
+import { Font } from '../Font';
 
 import { workoutModule, WorkoutSessionState } from '@/modules/workout';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import { useWorkout } from '../hooks/useWorkout';
+import { useWorkout } from '../../hooks/useWorkout';
 
 type ControlState = 'paused' | 'playing' | 'sheet';
 

@@ -1,8 +1,6 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
 
 import CustomTabBar from '@/src/components/CustomTabBar';
-import { useClientOnlyValue } from '@/src/components/useClientOnlyValue';
 import { useColorScheme } from '@/src/components/useColorScheme';
 import Colors from '@/src/constants/Colors';
 
@@ -14,30 +12,30 @@ export default function TabLayout() {
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: useClientOnlyValue(false, true),
+        headerShown: false,
       }}
     >
       <Tabs.Screen
         name='index'
         options={{
           headerShown: false,
-          tabBarLabel: '분석',
+          tabBarLabel: 'Home',
         }}
       />
 
       <Tabs.Screen
-        name='record'
+        name='analysis'
         options={{
           headerShown: false,
-          tabBarLabel: '기록',
+          tabBarLabel: 'analysis',
         }}
       />
 
       <Tabs.Screen
-        name='ranking'
+        name='ranking/index'
         options={{
           headerShown: false,
-          tabBarLabel: '랭킹',
+          tabBarLabel: 'ranking',
         }}
       />
     </Tabs>

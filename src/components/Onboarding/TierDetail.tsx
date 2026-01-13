@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Dimensions,
   Modal,
@@ -7,11 +6,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { tiers } from '../data/tiers';
+import { tiers } from '../../data/tiers';
 
-import { Font } from '../components/Font';
-import { NEUTRAL } from '../constants/Colors';
-import { useAppFonts } from '../hooks/useAppFonts';
+import { NEUTRAL } from '../../constants/Colors';
+import { useAppFonts } from '../../hooks/useAppFonts';
+import { Font } from '../Font';
 
 interface TierDetailProps {
   tierKey: string;

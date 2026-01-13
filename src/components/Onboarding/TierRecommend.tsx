@@ -7,10 +7,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Font } from '../components/Font';
-import { NEUTRAL } from '../constants/Colors';
-import { tiers } from '../data/tiers';
-import { useAppFonts } from '../hooks/useAppFonts';
+import { NEUTRAL } from '../../constants/Colors';
+import { tiers } from '../../data/tiers';
+import { useAppFonts } from '../../hooks/useAppFonts';
+import { Font } from '../Font';
 
 export default function TierRecommend() {
   const fontsLoaded = useAppFonts();
@@ -103,7 +103,7 @@ export default function TierRecommend() {
             onPress={() => changeTier(nextTierKey)}
           >
             <ImageBackground
-              source={require('../../assets/images/Tier/nextTier.png')}
+              source={require('../../../assets/images/Tier/nextTier.png')}
               style={styles.nextTierSection}
               imageStyle={styles.nextTierBackground}
             >
@@ -129,7 +129,7 @@ export default function TierRecommend() {
             onPress={() => changeTier(prevTierKey)}
           >
             <ImageBackground
-              source={require('../../assets/images/Tier/prevTier.png')}
+              source={require('../../../assets/images/Tier/prevTier.png')}
               style={styles.prevTierSection}
               imageStyle={styles.prevTierBackground}
             >
