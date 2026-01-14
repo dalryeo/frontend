@@ -20,8 +20,6 @@ export function WeeklyRankingDetail() {
   const params = useLocalSearchParams();
   const type = params.type as RankingType;
 
-  console.log('📍 Received type:', type);
-
   if (!type || (type !== 'tier' && type !== 'distance')) {
     return (
       <View style={styles.container}>

@@ -1,21 +1,54 @@
 import { router } from 'expo-router';
+import { jwtDecode, JwtPayload } from 'jwt-decode';
 import { Alert } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
 import { appleLogin } from '../services/authService';
 
+interface CustomJwtPayload extends JwtPayload {
+  nickname?: string;
+  name?: string;
+  email?: string;
+}
+
 export function useAppleLogin() {
+  const { login: authLogin, isOnboardingComplete } = useAuth();
+
   const login = async () => {
     try {
-      const { accessToken, refreshToken, isNewUser } = await appleLogin();
+      const response = await appleLogin();
 
-      console.log('accessToken:', accessToken);
-      console.log('refreshToken:', refreshToken);
+      const { accessToken, refreshToken } = response;
 
-      if (isNewUser) {
-        router.replace('/profile');
+      if (!accessToken || !refreshToken) {
+        Alert.alert('로그인 실패', '토큰을 받아오지 못했습니다.');
+        return;
+      }
+
+      const decoded = jwtDecode<CustomJwtPayload>(accessToken);
+
+      if (!decoded.sub) {
+        Alert.alert('로그인 실패', '사용자 정보를 가져올 수 없습니다.');
+        return;
+      }
+
+      const user = {
+        id: decoded.sub,
+        nickname: decoded.nickname || decoded.name || undefined,
+        email: decoded.email || undefined,
+      };
+
+      await authLogin(user, accessToken, refreshToken);
+
+      if (!user.nickname || user.nickname.trim() === '') {
+        router.replace('/startRecord');
+      } else if (isOnboardingComplete) {
+        router.replace('/(tabs)');
       } else {
-        router.replace('/mainScreen');
+        router.replace('/startRecord');
       }
     } catch (error) {
+      console.error('Apple login error:', error);
+
       if (error && typeof error === 'object' && 'code' in error) {
         if (error.code === 'ERR_REQUEST_CANCELED') {
           return;
@@ -23,12 +56,11 @@ export function useAppleLogin() {
       }
 
       if (error instanceof Error && error.message === 'NO_IDENTITY_TOKEN') {
-        Alert.alert('로그인 실패', 'Apple 인증 정보를 가져오지 못했습니다.');
+        Alert.alert('로그인 실패', 'Apple identityToken이 없습니다.');
         return;
       }
 
       Alert.alert('로그인 오류', 'Apple 로그인 중 문제가 발생했습니다.');
-      console.error(error);
     }
   };
 

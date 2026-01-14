@@ -35,9 +35,6 @@ export default function CustomTabBar({ state }: BottomTabBarProps) {
 
   const currentRouteName = state.routes[state.index]?.name;
 
-  console.log('Current route name:', currentRouteName);
-  console.log('Current index:', state.index);
-
   return (
     <View style={styles.wrapper}>
       <View style={styles.container}>
