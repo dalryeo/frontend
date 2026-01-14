@@ -13,20 +13,21 @@ import {
 } from 'react-native-safe-area-context';
 
 import { useColorScheme } from '@/src/components/useColorScheme';
-import { AuthProvider } from '@/src/contexts/AuthContext';
 import { useAppFonts } from '@/src/hooks/useAppFonts';
-
 export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: 'login',
+  // Ensure that reloading on `/modal` keeps a back button present.
+  initialRouteName: '(tabs)',
 };
 
+// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useAppFonts();
 
+  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -48,38 +49,13 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <AuthProvider>
-      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <ThemeProvider
-          value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-        >
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-            <Stack.Screen name='login' options={{ headerShown: false }} />
-            <Stack.Screen
-              name='startRecord/index'
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name='profile/index'
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name='tierRecommend/index'
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name='healthPermission/index'
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name='locationPermission/index'
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
-          </Stack>
-        </ThemeProvider>
-      </SafeAreaProvider>
-    </AuthProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+          <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
+        </Stack>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

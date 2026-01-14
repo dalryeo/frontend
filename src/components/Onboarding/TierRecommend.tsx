@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ImageBackground,
   ScrollView,
@@ -8,7 +8,6 @@ import {
   View,
 } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
-import { useAuth } from '../../contexts/AuthContext';
 import { tiers } from '../../data/tiers';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
@@ -17,38 +16,8 @@ export default function TierRecommend() {
   const fontsLoaded = useAppFonts();
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
-  const { tierData: userTierData, setOnboardingComplete } = useAuth();
 
-  const getTierKeyFromCode = (tierCode: string): keyof typeof tiers => {
-    const tierCodeMap: { [key: string]: keyof typeof tiers } = {
-      CHEETAH: 'cheetah',
-      DEER: 'deer',
-      HUSKY: 'husky',
-      FOX: 'fox',
-      GORANI: 'gorani',
-      SHEEP: 'sheep',
-      RABBIT: 'rabbit',
-      PANDA: 'panda',
-      DUCK: 'duck',
-      TURTLE: 'turtle',
-    };
-
-    return tierCodeMap[tierCode] || 'husky';
-  };
-
-  const [tierKey, setTierKey] = useState<keyof typeof tiers>(() => {
-    if (userTierData?.tierCode) {
-      return getTierKeyFromCode(userTierData.tierCode);
-    }
-    return 'husky';
-  });
-
-  useEffect(() => {
-    if (userTierData?.tierCode) {
-      const newTierKey = getTierKeyFromCode(userTierData.tierCode);
-      setTierKey(newTierKey);
-    }
-  }, [userTierData]);
+  const [tierKey, setTierKey] = useState<keyof typeof tiers>('husky');
 
   const changeTier = (key: keyof typeof tiers) => {
     setTierKey(key);
@@ -59,16 +28,6 @@ export default function TierRecommend() {
         animated: true,
       });
     });
-  };
-
-  const handleComplete = async () => {
-    try {
-      await setOnboardingComplete(true);
-      router.replace('/healthPermission');
-    } catch (error) {
-      console.error('온보딩 완료 처리 오류:', error);
-      router.replace('/healthPermission');
-    }
   };
 
   if (!fontsLoaded) return null;
@@ -198,7 +157,10 @@ export default function TierRecommend() {
       </ScrollView>
 
       <View style={styles.fixedButtonContainer}>
-        <TouchableOpacity style={styles.nextBtn} onPress={handleComplete}>
+        <TouchableOpacity
+          style={styles.nextBtn}
+          onPress={() => router.replace('/')}
+        >
           <Font type='MainButton' style={styles.nextBtnText}>
             시작하기
           </Font>

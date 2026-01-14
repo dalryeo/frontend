@@ -4,10 +4,10 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import WheelPicker from '@quidone/react-native-wheel-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   Animated,
+  Easing,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -15,6 +15,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -22,21 +23,26 @@ import {
 } from 'react-native';
 
 import { NEUTRAL } from '../../constants/Colors';
-import { useAuth } from '../../contexts/AuthContext';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
 
-import { formatDate, formatDateForAPI } from '../../utils/dateFormat';
-import {
-  getDefaultValue,
-  heightData,
-  weightData,
-} from '../../utils/profileData';
+const PICKER_HEIGHT = 400;
 
-import { submitProfileData } from '../../services/profileService';
+const DEFAULT_VALUES = {
+  male: { height: 175, weight: 70 },
+  female: { height: 160, weight: 55 },
+  default: { height: 170, weight: 65 },
+};
 
-import { usePickerModal } from '../../hooks/usePickerModal';
-import { useProfileForm } from '../../hooks/useProfileForm';
+const heightData = Array.from({ length: 121 }, (_, i) => ({
+  value: 100 + i,
+  label: `${100 + i} cm`,
+}));
+
+const weightData = Array.from({ length: 121 }, (_, i) => ({
+  value: 30 + i,
+  label: `${30 + i} kg`,
+}));
 
 type DateTimePickerEvent = {
   type: string;
@@ -49,61 +55,48 @@ type DateTimePickerEvent = {
 function Profile() {
   const [fontsLoaded] = useAppFonts();
   const [open, setOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [gender, setGender] = useState<'male' | 'female' | null>(null);
+  const [nickname, setNickname] = useState('');
+  const [nicknameError, setNicknameError] = useState<string | null>(null);
+  const [birth, setBirth] = useState('');
+  const [birthDate, setBirthDate] = useState<Date>(new Date(2000, 0, 1));
+  const [height, setHeight] = useState<number | null>(null);
+  const [weight, setWeight] = useState<number | null>(null);
+  const [selectedImg, setSelectedImg] = useState<number | null>(null);
+  const [activePicker, setActivePicker] = useState<
+    'height' | 'weight' | 'date' | null
+  >(null);
+  const [pickerValue, setPickerValue] = useState<number>(170);
+  const [isClosing, setIsClosing] = useState(false);
   const router = useRouter();
-  const { getAccessToken, tierData, setOnboardingComplete, user, setUser } =
-    useAuth();
 
-  const {
-    gender,
-    nickname,
-    nicknameError,
-    birth,
-    birthDate,
-    height,
-    weight,
-    selectedImg,
-    isFormValid,
-    setGender,
-    handleNicknameChange,
-    setBirth,
-    setBirthDate,
-    setHeight,
-    setWeight,
-    setSelectedImg,
-  } = useProfileForm();
+  const slideAnim = useRef(new Animated.Value(PICKER_HEIGHT)).current;
+  const backdropAnim = useRef(new Animated.Value(0)).current;
 
-  const {
-    activePicker,
-    pickerValue,
-    setPickerValue,
-    slideAnim,
-    backdropAnim,
-    openPicker,
-    closePicker,
-  } = usePickerModal();
+  const getDefaultValue = (type: 'height' | 'weight') => {
+    const values = gender ? DEFAULT_VALUES[gender] : DEFAULT_VALUES.default;
+    return values[type];
+  };
 
-  const handleOpenPicker = (type: 'height' | 'weight' | 'date') => {
+  const openPicker = (type: 'height' | 'weight' | 'date') => {
     if (type === 'date') {
-      openPicker('date');
+      setActivePicker('date');
       return;
     }
 
-    const defaultVal = getDefaultValue(gender, type);
+    const defaultVal = getDefaultValue(type);
     const currentValue =
       type === 'height' ? (height ?? defaultVal) : (weight ?? defaultVal);
-    openPicker(type, currentValue);
+
+    setPickerValue(currentValue);
+    setActivePicker(type);
   };
 
-  const handleClosePicker = () => {
-    const onApply = (value: number) => {
-      if (activePicker === 'height') {
-        setHeight(value);
-      } else if (activePicker === 'weight') {
-        setWeight(value);
-      }
-    };
-    closePicker(onApply);
+  const formatDate = (date: Date): string => {
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}/${month}/${day}`;
   };
 
   const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -113,66 +106,73 @@ function Profile() {
     }
   };
 
-  const handleSubmit = async () => {
-    setIsLoading(true);
+  useEffect(() => {
+    if (activePicker) {
+      slideAnim.setValue(PICKER_HEIGHT);
+      backdropAnim.setValue(0);
 
-    try {
-      const token = await getAccessToken();
-
-      if (!token) {
-        Alert.alert('오류', '인증 토큰이 없습니다. 다시 로그인해주세요.');
-        return;
-      }
-
-      await submitProfileData(
-        {
-          nickname: nickname.trim(),
-          gender: gender === 'male' ? 'M' : 'F',
-          birth: formatDateForAPI(birthDate),
-          height: height!,
-          weight: weight!,
-          profileImage: selectedImg,
-        },
-        token,
-      );
-
-      if (user) {
-        const updatedUser = {
-          ...user,
-          nickname: nickname.trim(),
-        };
-        await setUser(updatedUser);
-      }
-
-      await setOnboardingComplete(true);
-
-      if (tierData) {
-        router.replace('/tierRecommend');
-      } else {
-        router.replace('/healthPermission');
-      }
-    } catch (error) {
-      console.error('Profile submission error:', error);
-
-      let errorMessage = '프로필 저장 중 오류가 발생했습니다.';
-
-      if (error instanceof Error) {
-        if (error.message === 'PROFILE_SAVE_FAILED') {
-          errorMessage = '프로필 저장에 실패했습니다. 다시 시도해주세요.';
-        } else if (error.message.includes('네트워크')) {
-          errorMessage = error.message;
-        } else {
-          errorMessage = error.message;
-        }
-      }
-
-      Alert.alert('오류', errorMessage);
-    } finally {
-      setIsLoading(false);
+      Animated.parallel([
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          damping: 20,
+          stiffness: 200,
+          mass: 0.8,
+          useNativeDriver: true,
+        }),
+        Animated.timing(backdropAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
+  }, [activePicker, backdropAnim, slideAnim]);
+
+  const closePicker = () => {
+    if (isClosing) return;
+    setIsClosing(true);
+
+    if (activePicker === 'height') {
+      setHeight(pickerValue);
+    } else if (activePicker === 'weight') {
+      setWeight(pickerValue);
+    }
+
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: PICKER_HEIGHT,
+        duration: 200,
+        easing: Easing.in(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished) {
+        setActivePicker(null);
+        setIsClosing(false);
+      }
+    });
   };
 
   if (!fontsLoaded) return null;
+
+  const validateNickname = (value: string) => {
+    setNickname(value);
+
+    if (/\s/.test(value)) return setNicknameError('공백은 입력할 수 없어요');
+    if (value.length < 1)
+      return setNicknameError('최소 1자 이상 입력해야 해요');
+    if (value.length > 12)
+      return setNicknameError('최대 12자까지 입력할 수 있어요');
+    if (!/^[a-zA-Z0-9가-힣]*$/.test(value))
+      return setNicknameError('영문, 숫자, 한글만 입력 가능해요');
+
+    setNicknameError(null);
+  };
 
   return (
     <KeyboardAvoidingView
@@ -242,9 +242,7 @@ function Profile() {
                   onPress={() => setOpen(false)}
                   style={styles.applyBtn}
                 >
-                  <Font type='SubButton' style={styles.applyBtnText}>
-                    적용하기
-                  </Font>
+                  <Text style={styles.applyBtnText}>적용하기</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -255,30 +253,31 @@ function Profile() {
               닉네임
             </Font>
             <View style={styles.nicknameErrorContainer}>
-              {nickname && nicknameError && (
-                <>
-                  <MaterialIcons
-                    name='error-outline'
-                    size={16}
-                    style={{ color: NEUTRAL.DANGER }}
-                  />
-                  <Font type='Error' style={styles.nicknameError}>
-                    {nicknameError}
-                  </Font>
-                </>
-              )}
-              {nickname && !nicknameError && (
-                <>
-                  <Ionicons
-                    name='checkmark-circle-outline'
-                    size={16}
-                    style={{ color: NEUTRAL.MAIN }}
-                  />
-                  <Font type='Error' style={styles.nicknameSuccess}>
-                    사용 가능한 닉네임이에요
-                  </Font>
-                </>
-              )}
+              {nickname ? (
+                nicknameError ? (
+                  <>
+                    <MaterialIcons
+                      name='error-outline'
+                      size={16}
+                      style={{ color: NEUTRAL.DANGER }}
+                    />
+                    <Font type='Error' style={styles.nicknameError}>
+                      {nicknameError}
+                    </Font>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons
+                      name='checkmark-circle-outline'
+                      size={16}
+                      style={{ color: NEUTRAL.MAIN }}
+                    />
+                    <Font type='Error' style={styles.nicknameSuccess}>
+                      사용 가능한 닉네임이에요
+                    </Font>
+                  </>
+                )
+              ) : null}
             </View>
           </View>
 
@@ -287,7 +286,7 @@ function Profile() {
             placeholder='1~12자, 영문·한글·숫자만 입력할 수 있어요.'
             placeholderTextColor={NEUTRAL.GRAY_700}
             value={nickname}
-            onChangeText={handleNicknameChange}
+            onChangeText={validateNickname}
             returnKeyType='done'
           />
 
@@ -339,7 +338,7 @@ function Profile() {
               </Font>
               <Pressable
                 style={styles.statureContainer}
-                onPress={() => handleOpenPicker('date')}
+                onPress={() => openPicker('date')}
               >
                 <Font
                   type='Body4'
@@ -361,7 +360,7 @@ function Profile() {
               </Font>
               <Pressable
                 style={styles.statureContainer}
-                onPress={() => handleOpenPicker('height')}
+                onPress={() => openPicker('height')}
               >
                 <Font
                   type='Body4'
@@ -381,7 +380,7 @@ function Profile() {
               </Font>
               <Pressable
                 style={styles.statureContainer}
-                onPress={() => handleOpenPicker('weight')}
+                onPress={() => openPicker('weight')}
               >
                 <Font
                   type='Body4'
@@ -402,31 +401,18 @@ function Profile() {
 
       <View style={styles.fixedButtonContainer}>
         <TouchableOpacity
-          style={[
-            styles.nextBtn,
-            (!isFormValid || isLoading) && styles.nextBtnDisabled,
-          ]}
-          onPress={handleSubmit}
-          disabled={!isFormValid || isLoading}
+          style={styles.nextBtn}
+          onPress={() => router.push('/tierRecommend')}
         >
-          <Font
-            type='MainButton'
-            style={[
-              styles.nextBtnText,
-              (!isFormValid || isLoading) && styles.nextBtnTextDisabled,
-            ]}
-          >
-            {isLoading ? '저장 중...' : '다음으로'}
+          <Font type='MainButton' style={styles.nextBtnText}>
+            다음으로
           </Font>
         </TouchableOpacity>
       </View>
 
       <Modal visible={activePicker !== null} transparent animationType='none'>
         <View style={styles.pickerModalContainer}>
-          <Pressable
-            style={StyleSheet.absoluteFill}
-            onPress={handleClosePicker}
-          >
+          <Pressable style={StyleSheet.absoluteFill} onPress={closePicker}>
             <Animated.View
               style={[styles.pickerBackdrop, { opacity: backdropAnim }]}
             />
@@ -448,7 +434,7 @@ function Profile() {
                       : '생년월일'}
                 </Font>
                 <Pressable
-                  onPress={handleClosePicker}
+                  onPress={closePicker}
                   hitSlop={10}
                   style={styles.pickerDoneBtn}
                 >
@@ -644,7 +630,7 @@ const styles = StyleSheet.create({
     color: NEUTRAL.GRAY_500,
   },
   birthBox: {
-    width: '36%',
+    width: '36%', // 수정: '3%'에서 '36%'로 변경
   },
   halfBox: {
     width: '27%',
@@ -680,16 +666,10 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
   },
-  nextBtnDisabled: {
-    backgroundColor: NEUTRAL.GRAY_800,
-  },
   nextBtnText: {
     textAlign: 'center',
     lineHeight: 50,
     color: NEUTRAL.BACKGROUND,
-  },
-  nextBtnTextDisabled: {
-    color: NEUTRAL.GRAY_600,
   },
   nicknameErrorContainer: {
     flexDirection: 'row',

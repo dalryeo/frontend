@@ -24,7 +24,7 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name='analysis/index'
+        name='analysis'
         options={{
           headerShown: false,
           tabBarLabel: 'analysis',
