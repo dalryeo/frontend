@@ -29,3 +29,29 @@ export async function appleLogin() {
 
   return result.data;
 }
+
+export async function estimateTier(
+  distanceKm: number,
+  paceSecPerKm: number,
+  accessToken: string,
+) {
+  const response = await fetch(`${BASE_URL}/onboarding/estimate-tier`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      distanceKm,
+      paceSecPerKm,
+    }),
+  });
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error?.message ?? 'ESTIMATE_TIER_FAILED');
+  }
+
+  return result.data;
+}
