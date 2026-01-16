@@ -1,47 +1,53 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import {
-  ActivityIndicator,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { NEUTRAL } from '../../constants/Colors';
-import { useAuth } from '../../contexts/AuthContext';
 import { useAppFonts } from '../../hooks/useAppFonts';
-import { useWeeklyRecord } from '../../hooks/useWeeklyRecord';
 import { Font } from '../Font';
-
-import { getDisplayName } from '../../utils/displayUtils';
-import { formatPace, getTierEmoji } from '../../utils/paceFormat';
-
-import { useRandomMessage } from '../../hooks/useRandomMessage';
-import { generateGradientSegments } from '../../utils/gradientUtils';
 
 function MainScreen() {
   const [fontsLoaded] = useAppFonts();
   const router = useRouter();
-  const { user } = useAuth();
-  const { weeklyRecord, loading, error } = useWeeklyRecord();
+  const [commentMessage, setCommentMessage] = useState('');
 
-  const commentMessage = useRandomMessage();
+  const COMMENT_MESSAGES = useMemo(
+    () => [
+      '랜덤 메시지 리스트 작성 필요',
+      '첫 러닝을 기록하고 진짜 티어를 확인해보세요 🔥',
+    ],
+    [],
+  );
+
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * COMMENT_MESSAGES.length);
+    setCommentMessage(COMMENT_MESSAGES[randomIndex]);
+  }, [COMMENT_MESSAGES]);
 
   if (!fontsLoaded) return null;
 
-  const displayName = getDisplayName(user);
-  const gradientSegments = generateGradientSegments();
+  const gradientSegments = [];
+  const totalSegments = 50;
 
-  const hasRecord =
-    weeklyRecord &&
-    typeof weeklyRecord === 'object' &&
-    !('code' in weeklyRecord) &&
-    weeklyRecord.weeklyCount > 0;
+  for (let i = 0; i < totalSegments; i++) {
+    const position = i / (totalSegments - 1);
 
-  // console.log('🔍 MainScreen - 현재 사용자:', user);
-  // console.log('🔍 MainScreen - 주간 기록:', weeklyRecord);
-  // console.log('🔍 MainScreen - 기록 존재 여부:', hasRecord);
+    const intensity = Math.sin(position * Math.PI);
+
+    const opacity = 0.05 + intensity * 0.55;
+
+    gradientSegments.push(
+      <View
+        key={i}
+        style={{
+          flex: 1,
+          height: 1,
+          backgroundColor: `rgba(183, 183, 183, ${opacity})`,
+        }}
+      />,
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -60,7 +66,7 @@ function MainScreen() {
       </View>
 
       <Font type='Head2' style={styles.title}>
-        {displayName}님,{'\n'}이번 주도 달려볼까요?
+        날쌘돌이님,{'\n'}이번 주도 달려볼까요?
       </Font>
 
       <View style={styles.weeklyRecord}>
@@ -70,85 +76,38 @@ function MainScreen() {
           </Font>
         </View>
 
-        <View style={styles.dividerContainer}>
-          {gradientSegments.map((segment) => (
-            <View
-              key={segment.id}
-              style={{
-                flex: 1,
-                height: 1,
-                backgroundColor: `rgba(183, 183, 183, ${segment.opacity})`,
-              }}
-            />
-          ))}
-        </View>
+        <View style={styles.dividerContainer}>{gradientSegments}</View>
 
         <View style={styles.recordList}>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size='small' color={NEUTRAL.MAIN} />
-              <Font type='Body4' style={styles.loadingText}>
-                데이터를 불러오는 중...
-              </Font>
-            </View>
-          ) : error ? (
-            <View style={styles.errorContainer}>
-              <Font type='Body4' style={styles.errorText}>
-                데이터를 불러올 수 없습니다
-              </Font>
-            </View>
-          ) : (
-            <>
-              <View style={styles.recordItem}>
-                <Font
-                  type='Head2'
-                  style={[
-                    styles.recordItemTop,
-                    hasRecord ? {} : { color: NEUTRAL.GRAY_100 },
-                  ]}
-                >
-                  {hasRecord ? getTierEmoji(weeklyRecord.currentTier) : '-'}
-                </Font>
-                <Font type='Body4' style={styles.recordItemBottom}>
-                  현재 티어
-                </Font>
-              </View>
+          <View style={styles.recordItem}>
+            <Font type='Head2' style={styles.recordItemTop}>
+              🦊
+            </Font>
+            <Font type='Body4' style={styles.recordItemBottom}>
+              현재 티어
+            </Font>
+          </View>
 
-              <View style={styles.recordItem}>
-                <Font
-                  type='Head2'
-                  style={[
-                    styles.recordItemTop,
-                    hasRecord
-                      ? { color: NEUTRAL.MAIN }
-                      : { color: NEUTRAL.GRAY_100 },
-                  ]}
-                >
-                  {hasRecord && weeklyRecord?.weeklyAvgPace
-                    ? formatPace(weeklyRecord.weeklyAvgPace)
-                    : '-'}
-                </Font>
-                <Font type='Body4' style={styles.recordItemBottom}>
-                  평균 페이스
-                </Font>
-              </View>
+          <View style={styles.recordItem}>
+            <Font
+              type='Head2'
+              style={[styles.recordItemTop, { color: NEUTRAL.MAIN }]}
+            >
+              {`05'32"`}
+            </Font>
+            <Font type='Body4' style={styles.recordItemBottom}>
+              평균 페이스
+            </Font>
+          </View>
 
-              <View style={styles.recordItem}>
-                <Font
-                  type='Head2'
-                  style={[
-                    styles.recordItemTop,
-                    hasRecord ? {} : { color: NEUTRAL.GRAY_100 },
-                  ]}
-                >
-                  {hasRecord ? (weeklyRecord?.weeklyCount ?? 0) : '-'}
-                </Font>
-                <Font type='Body4' style={styles.recordItemBottom}>
-                  러닝 횟수
-                </Font>
-              </View>
-            </>
-          )}
+          <View style={styles.recordItem}>
+            <Font type='Head2' style={styles.recordItemTop}>
+              1
+            </Font>
+            <Font type='Body4' style={styles.recordItemBottom}>
+              러닝 횟수
+            </Font>
+          </View>
         </View>
       </View>
 
@@ -247,25 +206,6 @@ const styles = StyleSheet.create({
     marginTop: 5,
     color: NEUTRAL.GRAY_100,
   },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 15,
-  },
-  loadingText: {
-    color: NEUTRAL.GRAY_500,
-    marginTop: 10,
-  },
-  errorContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 15,
-  },
-  errorText: {
-    color: NEUTRAL.DANGER,
-  },
   info: {
     flexDirection: 'row',
     backgroundColor: NEUTRAL.GRAY_900,
@@ -278,6 +218,13 @@ const styles = StyleSheet.create({
   infoText: {
     alignSelf: 'center',
     marginLeft: 15,
+  },
+  infoTextTop: {
+    color: NEUTRAL.GRAY_100,
+    marginBottom: 3,
+  },
+  infoTextBottom: {
+    color: NEUTRAL.GRAY_600,
   },
   navigateNext: {
     alignSelf: 'center',

@@ -2,10 +2,10 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import WheelPicker from '@quidone/react-native-wheel-picker';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   Animated,
+  Easing,
   Modal,
   Pressable,
   StyleSheet,
@@ -14,111 +14,121 @@ import {
 } from 'react-native';
 
 import { NEUTRAL } from '../../constants/Colors';
-import { useAuth } from '../../contexts/AuthContext';
 import { useAppFonts } from '../../hooks/useAppFonts';
-import { estimateTier } from '../../services/authService';
 import { Font } from '../Font';
 
-import {
-  distanceData,
-  hourData,
-  minuteData,
-  secondData,
-} from '../../utils/pickerData';
-import { calculatePaceSecPerKm, formatTime } from '../../utils/timeFormat';
+const PICKER_HEIGHT = 400;
 
-import { usePickerAnimation } from '../../hooks/usePickerAnimation';
-import { useRunRecordForm } from '../../hooks/useRunRecordForm';
+const distanceData = Array.from({ length: 500 }, (_, i) => ({
+  value: (i + 1) / 10,
+  label: `${((i + 1) / 10).toFixed(1)} km`,
+}));
+
+const minuteData = Array.from({ length: 60 }, (_, i) => ({
+  value: i,
+  label: i.toString().padStart(2, '0'),
+}));
+
+const secondData = Array.from({ length: 60 }, (_, i) => ({
+  value: i,
+  label: i.toString().padStart(2, '0'),
+}));
+
+const hourData = Array.from({ length: 13 }, (_, i) => ({
+  value: i,
+  label: i.toString().padStart(2, '0'),
+}));
 
 function StartRecord() {
   const [fontsLoaded] = useAppFonts();
   const router = useRouter();
-  const { setTierData, getAccessToken } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const {
-    distance,
-    hours,
-    minutes,
-    seconds,
-    activePicker,
-    distanceValue,
-    setDistanceValue,
-    hourValue,
-    setHourValue,
-    minuteValue,
-    setMinuteValue,
-    secondValue,
-    setSecondValue,
-    isClosing,
-    setIsClosing,
-    openPicker,
-    applyPickerValues,
-    closePicker: closePickerForm,
-  } = useRunRecordForm();
+  const [distance, setDistance] = useState<number | null>(null);
+  const [hours, setHours] = useState<number | null>(null);
+  const [minutes, setMinutes] = useState<number | null>(null);
+  const [seconds, setSeconds] = useState<number | null>(null);
 
-  const {
-    slideAnim,
-    backdropAnim,
-    closePicker: animateClose,
-  } = usePickerAnimation(activePicker);
+  const [activePicker, setActivePicker] = useState<'distance' | 'time' | null>(
+    null,
+  );
 
-  const handleNext = async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
+  const [distanceValue, setDistanceValue] = useState<number>(5.0);
+  const [hourValue, setHourValue] = useState<number>(0);
+  const [minuteValue, setMinuteValue] = useState<number>(40);
+  const [secondValue, setSecondValue] = useState<number>(0);
 
-    try {
-      if (distance && hours !== null && minutes !== null && seconds !== null) {
-        const accessToken = await getAccessToken();
-        if (!accessToken) {
-          Alert.alert('오류', '인증 토큰이 없습니다.');
-          return;
-        }
+  const [isClosing, setIsClosing] = useState(false);
 
-        const paceSecPerKm = calculatePaceSecPerKm(
-          hours,
-          minutes,
-          seconds,
-          distance,
-        );
-        const tierResult = await estimateTier(
-          distance,
-          paceSecPerKm,
-          accessToken,
-        );
-        await setTierData(tierResult);
-      } else {
-        await setTierData(null);
-      }
-      router.push('/profile');
-    } catch (error) {
-      console.error('티어 계산 오류:', error);
-      Alert.alert('오류', '티어 계산 중 문제가 발생했습니다.');
-    } finally {
-      setIsSubmitting(false);
+  const slideAnim = useRef(new Animated.Value(PICKER_HEIGHT)).current;
+  const backdropAnim = useRef(new Animated.Value(0)).current;
+
+  const openPicker = (type: 'distance' | 'time') => {
+    if (type === 'distance') {
+      setDistanceValue(distance ?? 5.0);
+    } else {
+      setHourValue(hours ?? 0);
+      setMinuteValue(minutes ?? 40);
+      setSecondValue(seconds ?? 0);
     }
+    setActivePicker(type);
   };
 
-  const handleSkip = async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      await setTierData(null);
-      router.push('/profile');
-    } catch (error) {
-      console.error('건너뛰기 오류:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
+  const formatTime = (h: number, m: number, s: number): string => {
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleClosePicker = async () => {
+  useEffect(() => {
+    if (activePicker) {
+      slideAnim.setValue(PICKER_HEIGHT);
+      backdropAnim.setValue(0);
+
+      Animated.parallel([
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          damping: 20,
+          stiffness: 200,
+          mass: 0.8,
+          useNativeDriver: true,
+        }),
+        Animated.timing(backdropAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [activePicker, backdropAnim, slideAnim]);
+
+  const closePicker = () => {
     if (isClosing) return;
     setIsClosing(true);
 
-    applyPickerValues();
-    await animateClose();
-    closePickerForm();
+    if (activePicker === 'distance') {
+      setDistance(distanceValue);
+    } else if (activePicker === 'time') {
+      setHours(hourValue);
+      setMinutes(minuteValue);
+      setSeconds(secondValue);
+    }
+
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: PICKER_HEIGHT,
+        duration: 200,
+        easing: Easing.in(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished) {
+        setActivePicker(null);
+        setIsClosing(false);
+      }
+    });
   };
 
   if (!fontsLoaded) return null;
@@ -144,7 +154,12 @@ function StartRecord() {
         를 계산해드려요
       </Font>
 
-      <View style={styles.content}>
+      <View
+        style={{
+          flex: 0.9,
+          justifyContent: 'space-between',
+        }}
+      >
         <View>
           <FontAwesome5
             name='running'
@@ -190,18 +205,15 @@ function StartRecord() {
         </View>
 
         <View>
-          <Pressable onPress={handleSkip}>
-            <Font type='Body4' style={styles.next}>
-              건너뛰기
-            </Font>
-          </Pressable>
+          <Font type='Body4' style={styles.next}>
+            건너뛰기
+          </Font>
           <TouchableOpacity
-            style={[styles.nextBtn, isSubmitting && { opacity: 0.7 }]}
-            onPress={handleNext}
-            disabled={isSubmitting}
+            style={styles.nextBtn}
+            onPress={() => router.push('/profile')}
           >
             <Font type='MainButton' style={styles.nextBtnText}>
-              {isSubmitting ? '계산 중...' : '다음으로'}
+              다음으로
             </Font>
           </TouchableOpacity>
         </View>
@@ -209,10 +221,7 @@ function StartRecord() {
 
       <Modal visible={activePicker !== null} transparent animationType='none'>
         <View style={styles.pickerModalContainer}>
-          <Pressable
-            style={StyleSheet.absoluteFill}
-            onPress={handleClosePicker}
-          >
+          <Pressable style={StyleSheet.absoluteFill} onPress={closePicker}>
             <Animated.View
               style={[styles.pickerBackdrop, { opacity: backdropAnim }]}
             />
@@ -230,7 +239,7 @@ function StartRecord() {
                   {activePicker === 'distance' ? '거리' : '시간'}
                 </Font>
                 <Pressable
-                  onPress={handleClosePicker}
+                  onPress={closePicker}
                   hitSlop={10}
                   style={styles.pickerDoneBtn}
                 >
@@ -265,6 +274,7 @@ function StartRecord() {
                         itemTextStyle={styles.pickerItemText}
                       />
                     </View>
+
                     <View style={styles.timePickerSection}>
                       <Font type='Body4' style={styles.timeLabel}>
                         분
@@ -278,6 +288,7 @@ function StartRecord() {
                         itemTextStyle={styles.pickerItemText}
                       />
                     </View>
+
                     <View style={styles.timePickerSection}>
                       <Font type='Body4' style={styles.timeLabel}>
                         초
@@ -306,10 +317,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: NEUTRAL.BACKGROUND,
-  },
-  content: {
-    flex: 0.93,
-    justifyContent: 'space-between',
   },
   title: {
     color: NEUTRAL.WHITE,
@@ -383,7 +390,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     justifyContent: 'center',
     lineHeight: 50,
-    marginTop: 10,
     color: NEUTRAL.BACKGROUND,
   },
   nextBtnText: {
