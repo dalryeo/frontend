@@ -1,6 +1,5 @@
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { router } from 'expo-router';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -11,9 +10,7 @@ import type { ComponentProps } from 'react';
 import { NEUTRAL } from '../constants/Colors';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
-type MaterialCommunityIconName = ComponentProps<
-  typeof MaterialCommunityIcons
->['name'];
+type MaterialIconName = ComponentProps<typeof MaterialIcons>['name'];
 
 type TabItemProps =
   | {
@@ -25,8 +22,8 @@ type TabItemProps =
     }
   | {
       label: string;
-      iconType: 'MaterialCommunityIcons';
-      icon: MaterialCommunityIconName;
+      iconType: 'MaterialIcons';
+      icon: MaterialIconName;
       focused: boolean;
       onPress: () => void;
     };
@@ -45,9 +42,9 @@ export default function CustomTabBar({ state }: BottomTabBarProps) {
     <View style={styles.wrapper}>
       <View style={styles.container}>
         <TabItem
-          label='기록'
-          iconType='MaterialCommunityIcons'
-          icon='clipboard-text-outline'
+          label='분석'
+          iconType='MaterialIcons'
+          icon='insert-chart-outlined'
           focused={currentRouteName === 'analysis/index'}
           onPress={() => router.push('/(tabs)/analysis')}
         />
@@ -67,11 +64,7 @@ export default function CustomTabBar({ state }: BottomTabBarProps) {
         activeOpacity={0.9}
         hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
       >
-        <FontAwesome5
-          style={{ color: NEUTRAL.GRAY_900 }}
-          name='running'
-          size={32}
-        />
+        <Ionicons style={{ color: NEUTRAL.GRAY_900 }} name='walk' size={34} />
         <Font type='Caption' style={styles.centerText}>
           START
         </Font>
@@ -95,13 +88,13 @@ function TabItem(props: TabItemProps) {
           size={24}
           color={focused ? NEUTRAL.GRAY_200 : NEUTRAL.GRAY_700}
         />
-      ) : props.iconType === 'MaterialCommunityIcons' ? (
-        <MaterialCommunityIcons
+      ) : (
+        <MaterialIcons
           name={props.icon}
           size={24}
           color={focused ? NEUTRAL.GRAY_200 : NEUTRAL.GRAY_700}
         />
-      ) : null}
+      )}
 
       <Font
         type='Caption'
