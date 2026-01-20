@@ -1,6 +1,8 @@
+import { workoutModule, WorkoutSessionState } from '@/modules/workout';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   Animated,
   Easing,
   StyleSheet,
@@ -8,19 +10,24 @@ import {
   View,
 } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
+import { useAuth } from '../../contexts/AuthContext';
 import { useAppFonts } from '../../hooks/useAppFonts';
-import { Font } from '../Font';
-
-import { workoutModule, WorkoutSessionState } from '@/modules/workout';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useWorkout } from '../../hooks/useWorkout';
+import { useWorkoutActions } from '../../hooks/useWorkoutActions';
+import { RunningRecordService } from '../../services/runningRecordService';
+import { formatPace, formatTime } from '../../utils/formatters';
+import { Font } from '../Font';
 
 type ControlState = 'paused' | 'playing' | 'sheet';
 
 function Record() {
   const [fontsLoaded] = useAppFonts();
   const [controlState, setControlState] = useState<ControlState>('paused');
+  const [isSaving, setIsSaving] = useState(false);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const router = useRouter();
 
+  const { getAccessToken } = useAuth();
   const {
     metrics,
     sessionState,
@@ -28,6 +35,13 @@ function Record() {
     isRequesting,
     requestPermissions,
   } = useWorkout();
+
+  const {
+    handleStart,
+    handlePause,
+    handleResume,
+    handleEnd: workoutEnd,
+  } = useWorkoutActions();
 
   const sheetAnim = useRef(new Animated.Value(1)).current;
 
@@ -56,73 +70,41 @@ function Record() {
 
   if (!fontsLoaded) return null;
 
-  const handleStart = async () => {
-    if (!hasAllPermissions) {
-      Alert.alert(
-        '권한 필요',
-        '운동 기록을 위해 Health와 위치 권한이 필요합니다.',
-        [
-          {
-            text: '권한 허용',
-            onPress: requestPermissions,
-          },
-          { text: '취소', style: 'cancel' },
-        ],
-      );
-      return;
-    }
-
-    const result = await workoutModule.start();
-    if (!result.success) {
-      Alert.alert('오류', result.error.message);
-    }
-  };
-
-  const handlePause = async () => {
-    const result = await workoutModule.pause();
-    if (!result.success) {
-      Alert.alert('오류', result.error.message);
-    }
-  };
-
-  const handleResume = async () => {
-    const result = await workoutModule.resume();
-    if (!result.success) {
-      Alert.alert('오류', result.error.message);
-    } else {
-      setControlState('playing');
-    }
-  };
-
-  const handleEnd = async () => {
-    const result = await workoutModule.end();
-    if (!result.success) {
-      Alert.alert('오류', result.error.message);
-    } else {
-      await workoutModule.reset();
-      setControlState('paused');
-    }
-  };
+  const onStartSuccess = () => setStartTime(new Date());
+  const onResumeSuccess = () => setControlState('playing');
 
   const handlePress = () => {
     if (controlState === 'paused') {
-      handleStart();
+      handleStart(hasAllPermissions, requestPermissions, onStartSuccess);
     } else if (controlState === 'playing') {
       handlePause();
     }
   };
 
-  const formatTime = (seconds: number): string => {
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  const saveRecord = async (): Promise<boolean> => {
+    setIsSaving(true);
+    try {
+      const success = await RunningRecordService.saveRecord(
+        metrics,
+        startTime!,
+        getAccessToken,
+      );
+
+      if (success) {
+        workoutModule.reset();
+        router.back();
+      }
+      return success;
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const formatPace = (pace: number): string => {
-    if (!pace || pace <= 0) return '00\'00"';
-    const mins = Math.floor(pace);
-    const secs = Math.round((pace - mins) * 60);
-    return `${mins.toString().padStart(2, '0')}'${secs.toString().padStart(2, '0')}"`;
+  const handleEndClick = async () => {
+    const saveSuccess = await saveRecord();
+    if (saveSuccess) {
+      await workoutEnd();
+    }
   };
 
   const sheetTranslateY = sheetAnim.interpolate({
@@ -237,9 +219,13 @@ function Record() {
 
             <View style={styles.bottomSheetContainer}>
               <TouchableOpacity
-                style={styles.recordEndButton}
-                onPress={handleEnd}
+                style={[
+                  styles.recordEndButton,
+                  isSaving && styles.disabledButton,
+                ]}
+                onPress={handleEndClick}
                 activeOpacity={0.8}
+                disabled={isSaving}
               >
                 <View style={styles.iconWrapper}>
                   <View style={styles.recordEndIcon}>
@@ -250,14 +236,18 @@ function Record() {
                   </View>
                 </View>
                 <Font type='Body1' style={{ color: NEUTRAL.BACKGROUND }}>
-                  러닝 완료
+                  {isSaving ? '저장 중...' : '러닝 완료'}
                 </Font>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.recordEndButton}
-                onPress={handleResume}
+                style={[
+                  styles.recordEndButton,
+                  isSaving && styles.disabledButton,
+                ]}
+                onPress={() => handleResume(onResumeSuccess)}
                 activeOpacity={0.8}
+                disabled={isSaving}
               >
                 <View style={styles.iconWrapper}>
                   <FontAwesome5
@@ -387,6 +377,9 @@ const styles = StyleSheet.create({
     top: 3,
     transform: [{ rotate: '45deg' }],
     backgroundColor: NEUTRAL.MAIN,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 });
 

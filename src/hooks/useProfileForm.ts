@@ -70,7 +70,6 @@ export const useProfileForm = () => {
     }
 
     if (value.trim()) {
-      setNicknameError('확인 중...');
       setIsCheckingNickname(true);
 
       timeoutId = setTimeout(() => {

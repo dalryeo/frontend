@@ -55,7 +55,7 @@ export default function TierDetail({
             <View style={styles.profileImg} />
 
             {tierData.sections.map((section, index) => (
-              <View key={index} style={styles.section}>
+              <View key={index}>
                 <Font type='Head5' style={styles.sectionTitle}>
                   {section.icon} {section.title}
                 </Font>
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   title: {
     color: NEUTRAL.WHITE,
     marginTop: 15,
-    marginBottom: 15,
+    marginBottom: 10,
     alignSelf: 'center',
   },
 
@@ -126,22 +126,19 @@ const styles = StyleSheet.create({
     borderRadius: 80,
     backgroundColor: NEUTRAL.GRAY_800,
     marginTop: 10,
+    marginBottom: 30,
     alignSelf: 'center',
-  },
-
-  section: {
-    marginTop: 20,
   },
 
   sectionTitle: {
     color: NEUTRAL.WHITE,
-    marginBottom: 5,
+    marginTop: 5,
   },
 
   listSection: {
-    backgroundColor: NEUTRAL.GRAY_900,
     borderRadius: 20,
-    padding: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
   },
 
   listItem: {
