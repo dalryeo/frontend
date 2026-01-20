@@ -31,21 +31,34 @@ export default function TierRecommend() {
       PANDA: 'panda',
       DUCK: 'duck',
       TURTLE: 'turtle',
+      치타: 'cheetah',
+      사슴: 'deer',
+      허스키: 'husky',
+      여우: 'fox',
+      고라니: 'gorani',
+      양: 'sheep',
+      토끼: 'rabbit',
+      판다: 'panda',
+      오리: 'duck',
+      거북이: 'turtle',
     };
-
     return tierCodeMap[tierCode] || 'husky';
   };
 
   const [tierKey, setTierKey] = useState<keyof typeof tiers>(() => {
-    if (userTierData?.tierCode) {
-      return getTierKeyFromCode(userTierData.tierCode);
+    const tierIdentifier = userTierData?.displayName || userTierData?.tierCode;
+
+    if (tierIdentifier) {
+      return getTierKeyFromCode(tierIdentifier);
     }
     return 'husky';
   });
 
   useEffect(() => {
-    if (userTierData?.tierCode) {
-      const newTierKey = getTierKeyFromCode(userTierData.tierCode);
+    const tierIdentifier = userTierData?.displayName || userTierData?.tierCode;
+
+    if (tierIdentifier) {
+      const newTierKey = getTierKeyFromCode(tierIdentifier);
       setTierKey(newTierKey);
     }
   }, [userTierData]);

@@ -22,6 +22,15 @@ export interface TierData {
   score: number;
 }
 
+export interface OnboardingData {
+  nickname: string;
+  gender: string;
+  birth: string;
+  height: number;
+  weight: number;
+  profileImage?: string;
+}
+
 interface AuthContextValue {
   user: User | null;
   setUser: (user: User | null) => Promise<void>;
@@ -30,13 +39,15 @@ interface AuthContextValue {
     user: User,
     accessToken: string,
     refreshToken: string,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   logout: () => Promise<void>;
   tierData: TierData | null;
   setTierData: (tierData: TierData | null) => void;
   getAccessToken: () => Promise<string | null>;
   isOnboardingComplete: boolean;
   setOnboardingComplete: (completed: boolean) => void;
+  onboardingData: OnboardingData | null;
+  checkOnboardingStatus: () => Promise<void>;
   refreshAccessToken: () => Promise<string | null>;
   forceLogout: () => Promise<void>;
 }
@@ -48,43 +59,24 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [tierData, setTierData] = useState<TierData | null>(null);
   const [isOnboardingComplete, setIsOnboardingCompleteState] = useState(false);
+  const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(
+    null,
+  );
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [hasInitializedRouting, setHasInitializedRouting] = useState(false);
   const router = useRouter();
-
-  const checkAuthStatus = useCallback(async () => {
-    try {
-      const [storedUser, accessToken, storedTierData, onboardingStatus] =
-        await AsyncStorage.multiGet([
-          'user',
-          'accessToken',
-          'tierData',
-          'onboardingComplete',
-        ]);
-
-      if (storedUser[1] && accessToken[1]) {
-        const parsedUser = JSON.parse(storedUser[1]);
-        setUserState(parsedUser);
-      }
-
-      if (storedTierData[1]) {
-        setTierData(JSON.parse(storedTierData[1]));
-      }
-
-      if (onboardingStatus[1] === 'true') {
-        setIsOnboardingCompleteState(true);
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   const forceLogout = useCallback(async () => {
     try {
-      await AsyncStorage.multiRemove(['user', 'accessToken', 'refreshToken']);
+      await AsyncStorage.multiRemove([
+        'user',
+        'accessToken',
+        'refreshToken',
+        'onboardingComplete',
+        'onboardingData',
+      ]);
       setUserState(null);
+      setOnboardingData(null);
+      setIsOnboardingCompleteState(false);
 
       setTimeout(() => {
         router.replace('/login');
@@ -133,7 +125,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         await AsyncStorage.multiSet(updates);
-
         return accessToken;
       } else {
         await forceLogout();
@@ -181,6 +172,145 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [refreshAccessToken]);
 
+  const checkOnboardingStatus = useCallback(async () => {
+    try {
+      const accessToken = await getAccessToken();
+      if (!accessToken) return false;
+
+      const response = await fetch(`${BASE_URL}/onboarding`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.code === 'AC-006') {
+          console.log('refreshToken 만료 - 자동 로그아웃 처리');
+          await forceLogout();
+          return false;
+        }
+
+        if (result.success && result.data) {
+          const hasNickname =
+            result.data.nickname && result.data.nickname.trim() !== '';
+
+          setOnboardingData(result.data);
+          setIsOnboardingCompleteState(hasNickname);
+
+          if (hasNickname) {
+            try {
+              const storedUser = await AsyncStorage.getItem('user');
+              if (storedUser) {
+                const currentUser = JSON.parse(storedUser);
+                const updatedUser = {
+                  ...currentUser,
+                  nickname: result.data.nickname,
+                  email: result.data.email || currentUser.email,
+                };
+
+                await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+                setUserState(updatedUser);
+              }
+            } catch (userUpdateError) {
+              console.error('사용자 정보 업데이트 실패:', userUpdateError);
+            }
+
+            await AsyncStorage.setItem('onboardingComplete', 'true');
+            await AsyncStorage.setItem(
+              'onboardingData',
+              JSON.stringify(result.data),
+            );
+          } else {
+            await AsyncStorage.removeItem('onboardingComplete');
+            await AsyncStorage.removeItem('onboardingData');
+          }
+
+          return hasNickname;
+        } else {
+          setIsOnboardingCompleteState(false);
+          setOnboardingData(null);
+          await AsyncStorage.removeItem('onboardingComplete');
+          await AsyncStorage.removeItem('onboardingData');
+          return false;
+        }
+      } else {
+        setIsOnboardingCompleteState(false);
+        setOnboardingData(null);
+        return false;
+      }
+    } catch (error) {
+      console.error('온보딩 상태 확인 오류:', error);
+      setIsOnboardingCompleteState(false);
+      setOnboardingData(null);
+      return false;
+    }
+  }, [getAccessToken, forceLogout]);
+
+  const login = useCallback(
+    async (user: User, accessToken: string, refreshToken: string) => {
+      try {
+        await AsyncStorage.multiSet([
+          ['user', JSON.stringify(user)],
+          ['accessToken', accessToken],
+          ['refreshToken', refreshToken],
+        ]);
+        setUserState(user);
+
+        const isComplete = await checkOnboardingStatus();
+        return isComplete;
+      } catch (error) {
+        console.error('Login save failed:', error);
+        throw error;
+      }
+    },
+    [checkOnboardingStatus],
+  );
+
+  const checkAuthStatus = useCallback(async () => {
+    try {
+      const [
+        storedUser,
+        accessToken,
+        storedTierData,
+        onboardingStatus,
+        storedOnboardingData,
+      ] = await AsyncStorage.multiGet([
+        'user',
+        'accessToken',
+        'tierData',
+        'onboardingComplete',
+        'onboardingData',
+      ]);
+
+      if (storedUser[1] && accessToken[1]) {
+        const parsedUser = JSON.parse(storedUser[1]);
+        setUserState(parsedUser);
+
+        await checkOnboardingStatus();
+      }
+
+      if (storedTierData[1]) {
+        setTierData(JSON.parse(storedTierData[1]));
+      }
+
+      if (onboardingStatus[1] === 'true') {
+        setIsOnboardingCompleteState(true);
+      }
+
+      if (storedOnboardingData[1]) {
+        setOnboardingData(JSON.parse(storedOnboardingData[1]));
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [checkOnboardingStatus]);
+
   const setUser = useCallback(async (userData: User | null) => {
     try {
       if (userData) {
@@ -195,23 +325,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const login = useCallback(
-    async (user: User, accessToken: string, refreshToken: string) => {
-      try {
-        await AsyncStorage.multiSet([
-          ['user', JSON.stringify(user)],
-          ['accessToken', accessToken],
-          ['refreshToken', refreshToken],
-        ]);
-        setUserState(user);
-      } catch (error) {
-        console.error('Login save failed:', error);
-        throw error;
-      }
-    },
-    [],
-  );
-
   const logout = useCallback(async () => {
     try {
       await AsyncStorage.multiRemove([
@@ -220,10 +333,12 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         'refreshToken',
         'tierData',
         'onboardingComplete',
+        'onboardingData',
       ]);
       setUserState(null);
       setTierData(null);
       setIsOnboardingCompleteState(false);
+      setOnboardingData(null);
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -242,44 +357,28 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setOnboardingComplete = useCallback(async (completed: boolean) => {
-    try {
-      if (completed) {
-        await AsyncStorage.setItem('onboardingComplete', 'true');
-      } else {
-        await AsyncStorage.removeItem('onboardingComplete');
+  const setOnboardingComplete = useCallback(
+    async (completed: boolean) => {
+      try {
+        if (completed) {
+          await AsyncStorage.setItem('onboardingComplete', 'true');
+          await checkOnboardingStatus();
+        } else {
+          await AsyncStorage.removeItem('onboardingComplete');
+          await AsyncStorage.removeItem('onboardingData');
+          setOnboardingData(null);
+        }
+        setIsOnboardingCompleteState(completed);
+      } catch (error) {
+        console.error('Save onboarding status failed:', error);
       }
-      setIsOnboardingCompleteState(completed);
-    } catch (error) {
-      console.error('Save onboarding status failed:', error);
-    }
-  }, []);
+    },
+    [checkOnboardingStatus],
+  );
 
   useEffect(() => {
     checkAuthStatus();
   }, [checkAuthStatus]);
-
-  useEffect(() => {
-    if (!isLoading && !hasInitializedRouting) {
-      setHasInitializedRouting(true);
-
-      if (!user) {
-        router.replace('/login');
-      } else if (!isOnboardingComplete) {
-        router.replace('/startRecord');
-      } else {
-        router.replace('/(tabs)');
-      }
-    }
-  }, [isLoading, user, isOnboardingComplete, hasInitializedRouting, router]);
-
-  useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        router.replace('/login');
-      }
-    }
-  }, [user, isLoading, router]);
 
   return (
     <AuthContext.Provider
@@ -294,6 +393,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         getAccessToken,
         isOnboardingComplete,
         setOnboardingComplete,
+        onboardingData,
+        checkOnboardingStatus,
         refreshAccessToken,
         forceLogout,
       }}

@@ -1,5 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
+import { useCallback } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -23,25 +25,52 @@ import { generateGradientSegments } from '../../utils/gradientUtils';
 function MainScreen() {
   const [fontsLoaded] = useAppFonts();
   const router = useRouter();
-  const { user } = useAuth();
-  const { weeklyRecord, loading, error } = useWeeklyRecord();
+  const { user, tierData } = useAuth();
+  const { weeklyRecord, loading, error, refetch } = useWeeklyRecord();
 
   const commentMessage = useRandomMessage();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (refetch) {
+        refetch();
+      } else {
+        console.error('refetch 함수가 undefined입니다!');
+      }
+    }, [refetch]),
+  );
+
+  const getCurrentTierDisplay = () => {
+    if (!hasRecord || !weeklyRecord?.currentTier) {
+      return '-';
+    }
+
+    return getTierEmoji(weeklyRecord.currentTier);
+  };
+
+  const hasEstimatedTier = tierData && tierData.tierCode;
+
+  const handleInfoClick = () => {
+    if (hasEstimatedTier) {
+      router.push('/tierOverView');
+    } else {
+      router.push('/startRecord');
+    }
+  };
 
   if (!fontsLoaded) return null;
 
   const displayName = getDisplayName(user);
   const gradientSegments = generateGradientSegments();
 
-  const hasRecord =
-    weeklyRecord &&
-    typeof weeklyRecord === 'object' &&
-    !('code' in weeklyRecord) &&
-    weeklyRecord.weeklyCount > 0;
+  const hasRecord = weeklyRecord && weeklyRecord.weeklyCount > 0;
 
-  // console.log('🔍 MainScreen - 현재 사용자:', user);
-  // console.log('🔍 MainScreen - 주간 기록:', weeklyRecord);
-  // console.log('🔍 MainScreen - 기록 존재 여부:', hasRecord);
+  console.log('🔍 hasRecord 계산:', {
+    weeklyRecord: weeklyRecord ? '존재' : '없음',
+    weeklyCount: weeklyRecord?.weeklyCount,
+    hasRecord,
+    currentTier: weeklyRecord?.currentTier,
+  });
 
   return (
     <View style={styles.container}>
@@ -99,6 +128,7 @@ function MainScreen() {
             </View>
           ) : (
             <>
+              {/* 현재 티어 */}
               <View style={styles.recordItem}>
                 <Font
                   type='Head2'
@@ -107,13 +137,14 @@ function MainScreen() {
                     hasRecord ? {} : { color: NEUTRAL.GRAY_100 },
                   ]}
                 >
-                  {hasRecord ? getTierEmoji(weeklyRecord.currentTier) : '-'}
+                  {getCurrentTierDisplay()}
                 </Font>
                 <Font type='Body4' style={styles.recordItemBottom}>
                   현재 티어
                 </Font>
               </View>
 
+              {/* 평균 페이스 */}
               <View style={styles.recordItem}>
                 <Font
                   type='Head2'
@@ -133,6 +164,7 @@ function MainScreen() {
                 </Font>
               </View>
 
+              {/* 러닝 횟수 */}
               <View style={styles.recordItem}>
                 <Font
                   type='Head2'
@@ -152,24 +184,30 @@ function MainScreen() {
         </View>
       </View>
 
-      <View style={styles.info}>
-        <Font type='Head1'>🐆</Font>
+      <TouchableOpacity style={styles.info} onPress={handleInfoClick}>
+        <Font type='Head1'>{hasEstimatedTier ? '🐆' : '🤔'}</Font>
 
         <View style={styles.infoText}>
           <Font type='Body1' style={{ marginBottom: 3 }}>
-            달려의 티어를 소개합니다
+            {hasEstimatedTier
+              ? '달려의 티어를 소개합니다'
+              : '내 러닝 실력, 무슨 티어일까?'}
           </Font>
           <Font type='Body7' style={{ color: NEUTRAL.GRAY_600 }}>
-            티어는 월요일마다 새로 시작돼요
+            {hasEstimatedTier
+              ? '티어는 월요일마다 새로 시작돼요'
+              : '달리기 전 예상 티어를 확인할 수 있어요'}
           </Font>
         </View>
 
-        <MaterialIcons
-          style={[styles.navigateNext, { color: NEUTRAL.GRAY_600 }]}
-          name='navigate-next'
-          size={34}
-        />
-      </View>
+        <View style={{ alignSelf: 'center', marginLeft: 65 }}>
+          <MaterialIcons
+            style={[styles.navigateNext, { color: NEUTRAL.GRAY_600 }]}
+            name='navigate-next'
+            size={34}
+          />
+        </View>
+      </TouchableOpacity>
 
       <View style={styles.commentWrapper}>
         <Font type='SubButton' style={styles.comment}>
@@ -281,11 +319,11 @@ const styles = StyleSheet.create({
   },
   navigateNext: {
     alignSelf: 'center',
-    marginLeft: 65,
+    marginLeft: 25,
   },
   commentWrapper: {
     alignItems: 'center',
-    marginTop: '36%',
+    marginTop: '38%',
   },
   comment: {
     alignSelf: 'center',

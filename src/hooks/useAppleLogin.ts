@@ -11,7 +11,7 @@ interface CustomJwtPayload extends JwtPayload {
 }
 
 export function useAppleLogin() {
-  const { login: authLogin, isOnboardingComplete } = useAuth();
+  const { login: authLogin } = useAuth();
 
   const login = async () => {
     try {
@@ -37,11 +37,13 @@ export function useAppleLogin() {
         email: decoded.email || undefined,
       };
 
-      await authLogin(user, accessToken, refreshToken);
+      const isOnboardingComplete = await authLogin(
+        user,
+        accessToken,
+        refreshToken,
+      );
 
-      if (!user.nickname || user.nickname.trim() === '') {
-        router.replace('/startRecord');
-      } else if (isOnboardingComplete) {
+      if (isOnboardingComplete) {
         router.replace('/(tabs)');
       } else {
         router.replace('/startRecord');

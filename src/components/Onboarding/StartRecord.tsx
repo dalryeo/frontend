@@ -33,7 +33,7 @@ import { useRunRecordForm } from '../../hooks/useRunRecordForm';
 function StartRecord() {
   const [fontsLoaded] = useAppFonts();
   const router = useRouter();
-  const { setTierData, getAccessToken } = useAuth();
+  const { setTierData, getAccessToken, isOnboardingComplete } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -63,34 +63,65 @@ function StartRecord() {
     closePicker: animateClose,
   } = usePickerAnimation(activePicker);
 
+  const validateInputs = () => {
+    if (!distance || distance === 0) {
+      Alert.alert('입력 필요', '거리를 입력해주세요.');
+      return false;
+    }
+
+    if (hours === null || minutes === null || seconds === null) {
+      Alert.alert('입력 필요', '시간을 입력해주세요.');
+      return false;
+    }
+
+    if (hours === 0 && minutes === 0 && seconds === 0) {
+      Alert.alert('입력 오류', '시간은 0보다 커야 합니다.');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleNext = async () => {
     if (isSubmitting) return;
+
+    if (!validateInputs()) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      if (distance && hours !== null && minutes !== null && seconds !== null) {
-        const accessToken = await getAccessToken();
-        if (!accessToken) {
-          Alert.alert('오류', '인증 토큰이 없습니다.');
-          return;
-        }
-
-        const paceSecPerKm = calculatePaceSecPerKm(
-          hours,
-          minutes,
-          seconds,
-          distance,
-        );
-        const tierResult = await estimateTier(
-          distance,
-          paceSecPerKm,
-          accessToken,
-        );
-        await setTierData(tierResult);
-      } else {
-        await setTierData(null);
+      const accessToken = await getAccessToken();
+      if (!accessToken) {
+        Alert.alert('오류', '인증 토큰이 없습니다.');
+        return;
       }
-      router.push('/profile');
+
+      if (hours === null || minutes === null || seconds === null || !distance) {
+        Alert.alert('입력 오류', '모든 값을 입력해주세요.');
+        return;
+      }
+
+      const paceSecPerKm = calculatePaceSecPerKm(
+        hours,
+        minutes,
+        seconds,
+        distance,
+      );
+
+      const tierResult = await estimateTier(
+        distance,
+        paceSecPerKm,
+        accessToken,
+      );
+      await setTierData(tierResult);
+
+      if (isOnboardingComplete) {
+        router.push('/tierRecommend');
+      } else {
+        router.push('/profile');
+      }
     } catch (error) {
       console.error('티어 계산 오류:', error);
       Alert.alert('오류', '티어 계산 중 문제가 발생했습니다.');
@@ -101,14 +132,45 @@ function StartRecord() {
 
   const handleSkip = async () => {
     if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      await setTierData(null);
-      router.push('/profile');
-    } catch (error) {
-      console.error('건너뛰기 오류:', error);
-    } finally {
-      setIsSubmitting(false);
+
+    const skipMessage = isOnboardingComplete
+      ? '러닝 기록을 건너뛰시겠습니까?\n예상 티어 확인 없이 메인 화면으로 돌아갑니다.'
+      : '러닝 기록을 건너뛰시겠습니까?\n예상 티어 계산 없이 진행됩니다.';
+
+    Alert.alert('건너뛰기', skipMessage, [
+      {
+        text: '취소',
+        style: 'cancel',
+      },
+      {
+        text: '건너뛰기',
+        style: 'destructive',
+        onPress: async () => {
+          setIsSubmitting(true);
+          try {
+            await setTierData(null);
+
+            if (isOnboardingComplete) {
+              router.replace('/(tabs)');
+            } else {
+              router.push('/profile');
+            }
+          } catch (error) {
+            console.error('건너뛰기 오류:', error);
+            Alert.alert('오류', '진행 중 문제가 발생했습니다.');
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleBack = () => {
+    if (isOnboardingComplete) {
+      router.replace('/(tabs)');
+    } else {
+      router.back();
     }
   };
 
@@ -129,7 +191,7 @@ function StartRecord() {
         name='chevron-back'
         size={24}
         style={[styles.back, { color: NEUTRAL.WHITE }]}
-        onPress={() => router.back()}
+        onPress={handleBack}
       />
 
       <Font type='Head2' style={styles.title}>
@@ -190,8 +252,11 @@ function StartRecord() {
         </View>
 
         <View>
-          <Pressable onPress={handleSkip}>
-            <Font type='Body4' style={styles.next}>
+          <Pressable onPress={handleSkip} disabled={isSubmitting}>
+            <Font
+              type='Body4'
+              style={[styles.next, isSubmitting && { opacity: 0.5 }]}
+            >
               건너뛰기
             </Font>
           </Pressable>
@@ -383,7 +448,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     justifyContent: 'center',
     lineHeight: 50,
-    marginTop: 10,
+    marginTop: 15,
     color: NEUTRAL.BACKGROUND,
   },
   nextBtnText: {

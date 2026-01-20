@@ -3,7 +3,7 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -13,7 +13,7 @@ import {
 } from 'react-native-safe-area-context';
 
 import { useColorScheme } from '@/src/components/useColorScheme';
-import { AuthProvider } from '@/src/contexts/AuthContext';
+import { AuthProvider, useAuth } from '@/src/contexts/AuthContext';
 import { useAppFonts } from '@/src/hooks/useAppFonts';
 
 export { ErrorBoundary } from 'expo-router';
@@ -44,6 +44,43 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
+function AuthenticatedLayout() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
+    return null;
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+      <Stack.Screen name='login' options={{ headerShown: false }} />
+      <Stack.Screen name='startRecord/index' options={{ headerShown: false }} />
+      <Stack.Screen name='profile/index' options={{ headerShown: false }} />
+      <Stack.Screen
+        name='tierRecommend/index'
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name='healthPermission/index'
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name='locationPermission/index'
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
+    </Stack>
+  );
+}
+
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
@@ -53,31 +90,7 @@ function RootLayoutNav() {
         <ThemeProvider
           value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
         >
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-            <Stack.Screen name='login' options={{ headerShown: false }} />
-            <Stack.Screen
-              name='startRecord/index'
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name='profile/index'
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name='tierRecommend/index'
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name='healthPermission/index'
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name='locationPermission/index'
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
-          </Stack>
+          <AuthenticatedLayout />
         </ThemeProvider>
       </SafeAreaProvider>
     </AuthProvider>

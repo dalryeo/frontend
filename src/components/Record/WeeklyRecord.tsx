@@ -1,14 +1,26 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
+import { useAuth } from '../../contexts/AuthContext';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
 
 function WeeklyRecord() {
   const [fontsLoaded] = useAppFonts();
   const router = useRouter();
+  const { tierData } = useAuth();
+
+  const hasEstimatedTier = tierData && tierData.tierCode;
+
+  const handleInfoClick = () => {
+    if (hasEstimatedTier) {
+      router.push('/tierOverView');
+    } else {
+      router.push('/startRecord');
+    }
+  };
 
   const recordData = [
     {
@@ -36,6 +48,9 @@ function WeeklyRecord() {
 
   if (!fontsLoaded) return null;
 
+  console.log('🔍 WeeklyRecord - 예상 티어 데이터:', tierData);
+  console.log('🔍 WeeklyRecord - 예상 티어 계산 완료:', hasEstimatedTier);
+
   return (
     <View style={styles.container}>
       <View style={styles.top}>
@@ -53,17 +68,21 @@ function WeeklyRecord() {
         </View>
       </View>
 
-      <View style={styles.info}>
+      <TouchableOpacity style={styles.info} onPress={handleInfoClick}>
         <View>
-          <Font type='Head1'>🐆</Font>
+          <Font type='Head1'>{hasEstimatedTier ? '🐆' : '🤔'}</Font>
         </View>
 
         <View style={styles.infoText}>
           <Font type='Body1' style={styles.infoTextTop}>
-            달려의 티어를 소개합니다
+            {hasEstimatedTier
+              ? '달려의 티어를 소개합니다'
+              : '내 러닝 실력, 무슨 티어일까?'}
           </Font>
           <Font type='Body7' style={styles.infoTextBottom}>
-            티어는 월요일마다 새로 시작돼요
+            {hasEstimatedTier
+              ? '티어는 월요일마다 새로 시작돼요'
+              : '달리기 전 예상 티어를 확인할 수 있어요'}
           </Font>
         </View>
 
@@ -72,7 +91,7 @@ function WeeklyRecord() {
           name='navigate-next'
           size={34}
         />
-      </View>
+      </TouchableOpacity>
 
       {recordData.map((item) => (
         <View key={item.id} style={styles.recordList}>
