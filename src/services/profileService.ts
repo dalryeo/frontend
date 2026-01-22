@@ -9,6 +9,55 @@ interface ProfileData {
   profileImage: number | null;
 }
 
+interface OnboardingData {
+  nickname: string;
+  gender: 'M' | 'F';
+  birth: string;
+  height: number;
+  weight: number;
+  profileImage: string;
+}
+
+interface OnboardingResponse {
+  success: boolean;
+  data: OnboardingData;
+}
+
+export const getOnboardingData = async (
+  token: string,
+): Promise<OnboardingData> => {
+  try {
+    const response = await fetch(`${BASE_URL}/onboarding`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const result: OnboardingResponse = await response.json();
+
+    if (!result.success) {
+      throw new Error('프로필 정보를 가져오는데 실패했습니다.');
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('❌ Get onboarding data error:', error);
+
+    if (
+      error instanceof TypeError &&
+      error.message.includes('Network request failed')
+    ) {
+      throw new Error(
+        '네트워크 연결을 확인해주세요. 서버에 연결할 수 없습니다.',
+      );
+    }
+
+    throw error;
+  }
+};
+
 export const submitProfileData = async (
   profileData: ProfileData,
   token: string,

@@ -49,8 +49,11 @@ function AuthenticatedLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.replace('/login');
+    if (!isLoading) {
+      if (!user) {
+        console.log('👤 사용자 없음 - 로그인 화면으로');
+        router.replace('/login');
+      }
     }
   }, [user, isLoading, router]);
 
@@ -64,6 +67,8 @@ function AuthenticatedLayout() {
       <Stack.Screen name='login' options={{ headerShown: false }} />
       <Stack.Screen name='startRecord/index' options={{ headerShown: false }} />
       <Stack.Screen name='profile/index' options={{ headerShown: false }} />
+      <Stack.Screen name='profileEdit/index' options={{ headerShown: false }} />
+      <Stack.Screen name='userGuide/index' options={{ headerShown: false }} />
       <Stack.Screen
         name='tierRecommend/index'
         options={{ headerShown: false }}

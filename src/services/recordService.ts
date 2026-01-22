@@ -5,26 +5,68 @@ import {
   WeeklyRecordResponse,
 } from '../types/record';
 
+type RefreshTokenCallback = () => Promise<string | null>;
+
+let refreshTokenCallback: RefreshTokenCallback | null = null;
+
+export const setRefreshTokenCallback = (callback: RefreshTokenCallback) => {
+  refreshTokenCallback = callback;
+};
+
+async function fetchWithTokenRefresh(
+  url: string,
+  options: RequestInit,
+  retryCount = 0,
+): Promise<Response> {
+  const response = await fetch(url, options);
+  const result = await response.json();
+
+  if (
+    result.data?.code === 'AC-006' ||
+    result.data?.message?.includes('refreshToken 만료') ||
+    result.data?.message?.includes('토큰') ||
+    result.message?.includes('토큰') ||
+    response.status === 401
+  ) {
+    if (retryCount < 1 && refreshTokenCallback) {
+      const newToken = await refreshTokenCallback();
+
+      if (newToken) {
+        const newOptions = {
+          ...options,
+          headers: {
+            ...options.headers,
+            Authorization: `Bearer ${newToken}`,
+          },
+        };
+        return fetchWithTokenRefresh(url, newOptions, retryCount + 1);
+      }
+    }
+
+    throw new Error('TOKEN_EXPIRED');
+  }
+
+  return new Response(JSON.stringify(result), {
+    status: response.status,
+    headers: response.headers,
+  });
+}
+
 export const recordService = {
   async getWeeklyRecordSummary(token: string): Promise<WeeklyRecordResponse> {
     try {
-      const response = await fetch(`${BASE_URL}/records/summary`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const response = await fetchWithTokenRefresh(
+        `${BASE_URL}/records/summary`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       const result = await response.json();
-
-      if (
-        result.data?.code === 'AC-006' ||
-        result.data?.message?.includes('refreshToken 만료') ||
-        result.data?.message?.includes('토큰')
-      ) {
-        throw new Error('TOKEN_EXPIRED');
-      }
 
       if (!result.success) {
         throw new Error(result.error?.message ?? 'WEEKLY_RECORD_FETCH_FAILED');
@@ -101,7 +143,7 @@ export const recordService = {
         throw new Error(`데이터 검증 실패: ${validationErrors.join(', ')}`);
       }
 
-      const response = await fetch(`${BASE_URL}/records`, {
+      const response = await fetchWithTokenRefresh(`${BASE_URL}/records`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,15 +160,6 @@ export const recordService = {
       } catch (parseError) {
         console.error('Parse error:', parseError);
         throw new Error(`서버 응답 파싱 실패: ${responseText}`);
-      }
-
-      if (
-        result.data?.code === 'AC-006' ||
-        result.data?.message?.includes('refreshToken 만료') ||
-        result.data?.message?.includes('토큰') ||
-        result.message?.includes('토큰')
-      ) {
-        throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
       }
 
       if (!response.ok) {
@@ -159,7 +192,10 @@ export const recordService = {
           throw new Error('서버 응답 형식이 올바르지 않습니다.');
         }
 
-        if (error.message.includes('토큰이 만료')) {
+        if (
+          error.message.includes('토큰이 만료') ||
+          error.message === 'TOKEN_EXPIRED'
+        ) {
           console.error('토큰 만료 - 재로그인 필요');
           throw error;
         } else if (error.message.includes('HTTP 400')) {
@@ -179,13 +215,16 @@ export const recordService = {
 
   async getWeeklyRecords(token: string): Promise<WeeklyRecordResponse> {
     try {
-      const response = await fetch(`${BASE_URL}/records/weekly`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const response = await fetchWithTokenRefresh(
+        `${BASE_URL}/records/weekly`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       const result = await response.json();
 

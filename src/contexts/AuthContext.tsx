@@ -8,6 +8,7 @@ import React, {
   useState,
 } from 'react';
 import { BASE_URL } from '../config/api';
+import { setRefreshTokenCallback } from '../services/recordService';
 
 export interface User {
   id: string;
@@ -375,6 +376,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [checkOnboardingStatus],
   );
+
+  useEffect(() => {
+    setRefreshTokenCallback(refreshAccessToken);
+  }, [refreshAccessToken]);
 
   useEffect(() => {
     checkAuthStatus();

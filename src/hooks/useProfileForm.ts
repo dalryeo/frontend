@@ -8,6 +8,7 @@ export type GenderType = 'male' | 'female' | null;
 export const useProfileForm = () => {
   const [gender, setGender] = useState<GenderType>(null);
   const [nickname, setNickname] = useState('');
+  const [originalNickname, setOriginalNickname] = useState('');
   const [nicknameError, setNicknameError] = useState<string | null>(null);
   const [birth, setBirth] = useState('');
   const [birthDate, setBirthDate] = useState<Date>(new Date(2000, 0, 1));
@@ -17,6 +18,7 @@ export const useProfileForm = () => {
 
   const [isCheckingNickname, setIsCheckingNickname] = useState(false);
   const [nicknameChecked, setNicknameChecked] = useState(false);
+  const [showNicknameValidation, setShowNicknameValidation] = useState(false);
 
   const { getAccessToken } = useAuth();
 
@@ -25,8 +27,17 @@ export const useProfileForm = () => {
   const checkNicknameDuplication = async (nicknameToCheck: string) => {
     if (!nicknameToCheck.trim()) return;
 
+    if (nicknameToCheck.trim() === originalNickname) {
+      setNicknameError(null);
+      setNicknameChecked(true);
+      setIsCheckingNickname(false);
+      setShowNicknameValidation(false);
+      return;
+    }
+
     setIsCheckingNickname(true);
     setNicknameChecked(false);
+    setShowNicknameValidation(true);
 
     try {
       const token = await getAccessToken();
@@ -62,15 +73,25 @@ export const useProfileForm = () => {
 
     if (timeoutId) clearTimeout(timeoutId);
 
+    if (value.trim() === originalNickname) {
+      setNicknameError(null);
+      setNicknameChecked(true);
+      setIsCheckingNickname(false);
+      setShowNicknameValidation(false);
+      return;
+    }
+
     const basicError = validateNickname(value);
     if (basicError) {
       setNicknameError(basicError);
       setIsCheckingNickname(false);
+      setShowNicknameValidation(true);
       return;
     }
 
     if (value.trim()) {
       setIsCheckingNickname(true);
+      setShowNicknameValidation(true);
 
       timeoutId = setTimeout(() => {
         checkNicknameDuplication(value);
@@ -78,7 +99,16 @@ export const useProfileForm = () => {
     } else {
       setNicknameError(null);
       setIsCheckingNickname(false);
+      setShowNicknameValidation(false);
     }
+  };
+
+  const setInitialNickname = (value: string) => {
+    setNickname(value);
+    setOriginalNickname(value);
+    setNicknameError(null);
+    setNicknameChecked(true);
+    setShowNicknameValidation(false);
   };
 
   const isFormValid =
@@ -103,8 +133,10 @@ export const useProfileForm = () => {
     isFormValid,
     isCheckingNickname,
     nicknameChecked,
+    showNicknameValidation,
     setGender,
     handleNicknameChange,
+    setInitialNickname,
     setBirth,
     setBirthDate,
     setHeight,
