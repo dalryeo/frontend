@@ -82,10 +82,12 @@ function MainScreen() {
           />
         </TouchableOpacity>
 
-        <Image
-          source={require('../../../assets/images/Main/accountIcon.png')}
-          style={styles.accountIcon}
-        />
+        <TouchableOpacity onPress={() => router.push('/myPage')}>
+          <Image
+            source={require('../../../assets/images/Main/accountIcon.png')}
+            style={styles.accountIcon}
+          />
+        </TouchableOpacity>
       </View>
 
       <Font type='Head2' style={styles.title}>
@@ -185,7 +187,7 @@ function MainScreen() {
       </View>
 
       <TouchableOpacity style={styles.info} onPress={handleInfoClick}>
-        <Font type='Head1'>{hasEstimatedTier ? '🐆' : '🤔'}</Font>
+        <Font type='Head1'>{hasEstimatedTier ? '🐆' : '🐆'}</Font>
 
         <View style={styles.infoText}>
           <Font type='Body1' style={{ marginBottom: 3 }}>

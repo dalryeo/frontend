@@ -70,7 +70,7 @@ function WeeklyRecord() {
 
       <TouchableOpacity style={styles.info} onPress={handleInfoClick}>
         <View>
-          <Font type='Head1'>{hasEstimatedTier ? '🐆' : '🤔'}</Font>
+          <Font type='Head1'>{hasEstimatedTier ? '🐆' : '🐆'}</Font>
         </View>
 
         <View style={styles.infoText}>
