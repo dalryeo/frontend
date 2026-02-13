@@ -6,6 +6,21 @@ import {
   RankingType,
   TierMyRecord,
 } from '../types/ranking.types';
+import { formatPace } from './formatUtils';
+
+interface RankingApiData {
+  rank: number;
+  nickname: string;
+  weeklyAvgPace: number;
+  weeklyDistance: number;
+}
+
+interface MyRankingApiData {
+  scoreRank?: number;
+  distanceRank?: number;
+  weeklyAvgPace: number;
+  weeklyDistance: number;
+}
 
 export function getRankingConfig(type: RankingType): RankingConfig {
   const configs: Record<RankingType, RankingConfig> = {
@@ -34,10 +49,64 @@ export function getMyRecordValue(type: RankingType, record: MyRecord): string {
   return (record as DistanceMyRecord).distance || '-';
 }
 
-export function isMultiLineNickname(
-  nickname: string,
-  maxLength: number = 6,
-): boolean {
-  const cleanNickname = nickname.replace(/\s/g, '');
-  return cleanNickname.length > maxLength;
+export function transformScoreRankingToItems(apiData: RankingApiData[]) {
+  if (!apiData || !Array.isArray(apiData)) return [];
+
+  return apiData.map((item) => ({
+    rank: item.rank || 0,
+    isFirst: item.rank === 1,
+    nickname: item.nickname || '알 수 없음',
+    time: formatPace(item.weeklyAvgPace),
+    distance: `${item.weeklyDistance || 0}km`,
+  }));
+}
+
+export function transformDistanceRankingToItems(apiData: RankingApiData[]) {
+  if (!apiData || !Array.isArray(apiData)) return [];
+
+  return apiData.map((item) => ({
+    rank: item.rank || 0,
+    isFirst: item.rank === 1,
+    nickname: item.nickname || '알 수 없음',
+    time: formatPace(item.weeklyAvgPace),
+    distance: `${item.weeklyDistance || 0}km`,
+  }));
+}
+
+export function transformMyRankingToRecord(
+  apiData: MyRankingApiData,
+  type: 'tier' | 'distance',
+) {
+  if (!apiData) return null;
+
+  if (type === 'tier') {
+    const scoreRank = apiData.scoreRank;
+    if (scoreRank === undefined || scoreRank === null) return null;
+
+    return {
+      averagePace: formatPace(apiData.weeklyAvgPace),
+      rank: `${scoreRank.toString()}위`,
+      percentage: `${Math.round((scoreRank / 100) * 100)}%`,
+    };
+  } else {
+    const distanceRank = apiData.distanceRank;
+    if (distanceRank === undefined || distanceRank === null) return null;
+
+    return {
+      distance: `${apiData.weeklyDistance || 0}km`,
+      rank: `${distanceRank.toString()}위`,
+      percentage: `${Math.round((distanceRank / 100) * 100)}%`,
+    };
+  }
+}
+
+export function transformToRankingListItems(apiData: RankingApiData[]) {
+  if (!apiData || !Array.isArray(apiData)) return [];
+
+  return apiData.map((item) => ({
+    rank: item.rank || 0,
+    nickname: item.nickname || '알 수 없음',
+    time: formatPace(item.weeklyAvgPace),
+    distance: `${item.weeklyDistance || 0}km`,
+  }));
 }

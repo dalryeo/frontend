@@ -1,10 +1,10 @@
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import WheelPicker from '@quidone/react-native-wheel-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -27,15 +27,19 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
 
-import { formatDate, formatDateForAPI } from '../../utils/dateFormat';
 import {
   getDefaultValue,
   heightData,
   weightData,
-} from '../../utils/profileData';
+} from '../../utils/dataConstants';
+import { formatDate, formatLocalDate } from '../../utils/dateUtils';
 
-import { getOnboardingData } from '../../services/profileService';
+import {
+  getOnboardingData,
+  updateOnboardingData,
+} from '../../services/profileService';
 
+import { genderToAPI } from '@/src/utils/commonUtils';
 import { usePickerModal } from '../../hooks/usePickerModal';
 import { useProfileForm } from '../../hooks/useProfileForm';
 
@@ -51,6 +55,7 @@ function ProfileEdit() {
   const [fontsLoaded] = useAppFonts();
   const [open, setOpen] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [originalData, setOriginalData] = useState({
     nickname: '',
     gender: '',
@@ -93,15 +98,47 @@ function ProfileEdit() {
     closePicker,
   } = usePickerModal();
 
-  const isDataChanged =
-    nickname !== originalData.nickname ||
-    (gender === 'male' ? 'M' : 'F') !== originalData.gender ||
-    formatDateForAPI(birthDate) !== originalData.birth ||
-    height !== originalData.height ||
-    weight !== originalData.weight ||
-    selectedImg !== originalData.selectedImg;
+  const handleGenderChange = useCallback(
+    (newGender: 'male' | 'female' | 'other') => {
+      setGender(newGender);
+    },
+    [setGender],
+  );
+
+  const handleImageChange = useCallback(
+    (index: number) => {
+      setSelectedImg(index);
+    },
+    [setSelectedImg],
+  );
+
+  const isDataChanged = (() => {
+    const nicknameChanged = nickname !== originalData.nickname;
+    const genderCode: 'M' | 'F' | 'O' =
+      gender === 'male' ? 'M' : gender === 'female' ? 'F' : 'O';
+    const genderChanged = genderCode !== originalData.gender;
+    const birthChanged = formatLocalDate(birthDate) !== originalData.birth;
+    const heightChanged = height !== originalData.height;
+    const weightChanged = weight !== originalData.weight;
+    const imgChanged = selectedImg !== originalData.selectedImg;
+
+    const changed =
+      nicknameChanged ||
+      genderChanged ||
+      birthChanged ||
+      heightChanged ||
+      weightChanged ||
+      imgChanged;
+
+    return changed;
+  })();
+
+  const hasLoadedRef = useRef(false);
 
   useEffect(() => {
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
+
     const loadProfileData = async () => {
       try {
         const token = await getAccessToken();
@@ -114,7 +151,13 @@ function ProfileEdit() {
         const data = await getOnboardingData(token);
 
         setInitialNickname(data.nickname);
-        setGender(data.gender === 'M' ? 'male' : 'female');
+        setGender(
+          data.gender === 'M'
+            ? 'male'
+            : data.gender === 'F'
+              ? 'female'
+              : 'other',
+        );
 
         const birthDateObj = new Date(data.birth);
         setBirthDate(birthDateObj);
@@ -122,13 +165,12 @@ function ProfileEdit() {
 
         setHeight(data.height);
         setWeight(data.weight);
-
         setSelectedImg(0);
 
         setOriginalData({
           nickname: data.nickname,
           gender: data.gender,
-          birth: formatDateForAPI(birthDateObj),
+          birth: formatLocalDate(new Date(data.birth)),
           height: data.height,
           weight: data.weight,
           selectedImg: 0,
@@ -150,14 +192,68 @@ function ProfileEdit() {
   }, [
     getAccessToken,
     router,
-    setInitialNickname,
-    setGender,
-    setBirthDate,
     setBirth,
+    setBirthDate,
+    setGender,
     setHeight,
-    setWeight,
+    setInitialNickname,
     setSelectedImg,
+    setWeight,
   ]);
+
+  const handleUpdateProfile = async () => {
+    if (!isFormValid || isDataLoading || !isDataChanged || isUpdating) {
+      return;
+    }
+
+    try {
+      setIsUpdating(true);
+
+      const token = await getAccessToken();
+      if (!token) {
+        Alert.alert('오류', '인증 토큰이 없습니다. 다시 로그인해주세요.');
+        return;
+      }
+
+      const updateData = {
+        nickname: nickname.trim(),
+        birth: formatLocalDate(birthDate),
+        gender: genderToAPI(gender)!,
+        height: height || 0,
+        weight: weight || 0,
+      };
+
+      const response = await updateOnboardingData(token, updateData);
+
+      if (response.success) {
+        Alert.alert('성공', '프로필이 성공적으로 수정되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => router.back(),
+          },
+        ]);
+
+        setOriginalData({
+          nickname: nickname.trim(),
+          gender: genderToAPI(gender)!,
+          birth: formatLocalDate(birthDate),
+          height: height || 0,
+          weight: weight || 0,
+          selectedImg: selectedImg || 0,
+        });
+      } else {
+        Alert.alert(
+          '오류',
+          response.error?.message || '프로필 수정에 실패했습니다.',
+        );
+      }
+    } catch (error) {
+      console.error('프로필 업데이트 오류:', error);
+      Alert.alert('오류', '네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const handleOpenPicker = (type: 'height' | 'weight' | 'date') => {
     if (type === 'date') {
@@ -182,17 +278,31 @@ function ProfileEdit() {
     closePicker(onApply);
   };
 
-  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (selectedDate) {
-      setBirthDate(selectedDate);
-      setBirth(formatDate(selectedDate));
-    }
-  };
+  // 날짜 변경 처리 개선
+  const onDateChange = useCallback(
+    (event: DateTimePickerEvent, selectedDate?: Date) => {
+      if (Platform.OS === 'android') {
+        // Android에서는 선택 즉시 picker가 닫힘
+        closePicker(() => {});
+      }
+
+      if (selectedDate) {
+        setBirthDate(selectedDate);
+        setBirth(formatDate(selectedDate));
+      }
+    },
+    [setBirthDate, setBirth, closePicker],
+  );
+
+  // iOS에서 날짜 picker 완료 처리
+  const handleDatePickerDone = useCallback(() => {
+    closePicker(() => {});
+  }, [closePicker]);
 
   if (!fontsLoaded || isDataLoading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size='large' color={NEUTRAL.MAIN} />
+        <ActivityIndicator size='small' color={NEUTRAL.MAIN} />
       </View>
     );
   }
@@ -226,7 +336,9 @@ function ProfileEdit() {
             <View style={styles.profileImg}></View>
             <MaterialIcons
               name='edit'
-              onPress={() => setOpen(true)}
+              onPress={() => {
+                setOpen(true);
+              }}
               style={styles.imgIcon}
               size={20}
             />
@@ -248,7 +360,7 @@ function ProfileEdit() {
                   {[...Array(6)].map((_, index) => (
                     <TouchableOpacity
                       key={index}
-                      onPress={() => setSelectedImg(index)}
+                      onPress={() => handleImageChange(index)}
                       style={[
                         styles.profileImgModal,
                         selectedImg === index && {
@@ -322,7 +434,7 @@ function ProfileEdit() {
                 styles.genderButton,
                 gender === 'male' && styles.genderSelected,
               ]}
-              onPress={() => setGender('male')}
+              onPress={() => handleGenderChange('male')}
             >
               <Font
                 type='Body4'
@@ -340,7 +452,7 @@ function ProfileEdit() {
                 styles.genderButton,
                 gender === 'female' && styles.genderSelected,
               ]}
-              onPress={() => setGender('female')}
+              onPress={() => handleGenderChange('female')}
             >
               <Font
                 type='Body4'
@@ -350,6 +462,24 @@ function ProfileEdit() {
                 ]}
               >
                 여자
+              </Font>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.genderButton,
+                gender === 'other' && styles.genderSelected,
+              ]}
+              onPress={() => handleGenderChange('other')}
+            >
+              <Font
+                type='Body4'
+                style={[
+                  styles.genderText,
+                  gender === 'other' && styles.genderSelected,
+                ]}
+              >
+                그 외
               </Font>
             </TouchableOpacity>
           </View>
@@ -369,7 +499,7 @@ function ProfileEdit() {
                 >
                   {birth || '00/00/00'}
                 </Font>
-                <FontAwesome6
+                <FontAwesome5
                   style={[styles.unit, { color: NEUTRAL.GRAY_500 }]}
                   name='calendar'
                   size={16}
@@ -423,31 +553,46 @@ function ProfileEdit() {
       </TouchableWithoutFeedback>
 
       <View style={styles.fixedButtonContainer}>
-        <View
+        <TouchableOpacity
           style={[
             styles.nextBtn,
-            (!isFormValid || isDataLoading || !isDataChanged) &&
+            (!isFormValid || isDataLoading || !isDataChanged || isUpdating) &&
               styles.nextBtnDisabled,
           ]}
+          onPress={handleUpdateProfile}
+          disabled={
+            !isFormValid || isDataLoading || !isDataChanged || isUpdating
+          }
         >
-          <Font
-            type='MainButton'
-            style={[
-              styles.nextBtnText,
-              (!isFormValid || isDataLoading || !isDataChanged) &&
-                styles.nextBtnTextDisabled,
-            ]}
-          >
-            수정완료
-          </Font>
-        </View>
+          {isUpdating ? (
+            <ActivityIndicator size='small' color={NEUTRAL.WHITE} />
+          ) : (
+            <Font
+              type='MainButton'
+              style={[
+                styles.nextBtnText,
+                (!isFormValid ||
+                  isDataLoading ||
+                  !isDataChanged ||
+                  isUpdating) &&
+                  styles.nextBtnTextDisabled,
+              ]}
+            >
+              수정완료
+            </Font>
+          )}
+        </TouchableOpacity>
       </View>
 
       <Modal visible={activePicker !== null} transparent animationType='none'>
         <View style={styles.pickerModalContainer}>
           <Pressable
             style={StyleSheet.absoluteFill}
-            onPress={handleClosePicker}
+            onPress={
+              activePicker === 'date' && Platform.OS === 'ios'
+                ? handleDatePickerDone
+                : handleClosePicker
+            }
           >
             <Animated.View
               style={[styles.pickerBackdrop, { opacity: backdropAnim }]}
@@ -470,7 +615,11 @@ function ProfileEdit() {
                       : '생년월일'}
                 </Font>
                 <Pressable
-                  onPress={handleClosePicker}
+                  onPress={
+                    activePicker === 'date' && Platform.OS === 'ios'
+                      ? handleDatePickerDone
+                      : handleClosePicker
+                  }
                   hitSlop={10}
                   style={styles.pickerDoneBtn}
                 >
@@ -499,10 +648,10 @@ function ProfileEdit() {
                   activePicker && (
                     <WheelPicker
                       data={activePicker === 'height' ? heightData : weightData}
-                      value={pickerValue}
-                      onValueChanged={({ item: { value } }) =>
-                        setPickerValue(value)
-                      }
+                      value={pickerValue ?? 0}
+                      onValueChanged={({ item: { value } }) => {
+                        setPickerValue(value);
+                      }}
                       itemTextStyle={styles.pickerItemText}
                     />
                   )
@@ -657,7 +806,7 @@ const styles = StyleSheet.create({
   },
   genderContainer: {
     flexDirection: 'row',
-    width: '50%',
+    width: '70%',
     marginLeft: 20,
     marginTop: 12,
   },

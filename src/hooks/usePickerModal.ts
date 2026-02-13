@@ -7,7 +7,7 @@ type PickerType = 'height' | 'weight' | 'date' | null;
 
 export const usePickerModal = () => {
   const [activePicker, setActivePicker] = useState<PickerType>(null);
-  const [pickerValue, setPickerValue] = useState<number>(170);
+  const [pickerValue, setPickerValue] = useState<number | null>(null);
   const [isClosing, setIsClosing] = useState(false);
 
   const slideAnim = useRef(new Animated.Value(PICKER_HEIGHT)).current;
@@ -33,20 +33,16 @@ export const usePickerModal = () => {
         }),
       ]).start();
     }
-  }, [activePicker, backdropAnim, slideAnim]);
+  }, [activePicker, slideAnim, backdropAnim]);
 
   const openPicker = (
     type: 'height' | 'weight' | 'date',
     currentValue?: number,
   ) => {
-    if (type === 'date') {
-      setActivePicker('date');
-      return;
-    }
-
-    if (currentValue !== undefined) {
+    if (type !== 'date' && currentValue !== undefined) {
       setPickerValue(currentValue);
     }
+
     setActivePicker(type);
   };
 
@@ -54,8 +50,11 @@ export const usePickerModal = () => {
     if (isClosing) return;
     setIsClosing(true);
 
-    // 값 적용
-    if (onApply && (activePicker === 'height' || activePicker === 'weight')) {
+    if (
+      onApply &&
+      pickerValue !== null &&
+      (activePicker === 'height' || activePicker === 'weight')
+    ) {
       onApply(pickerValue);
     }
 

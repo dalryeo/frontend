@@ -64,14 +64,12 @@ export const useWorkoutActions = () => {
       const result = await workoutModule.end();
       if (!result.success) {
         if (result.error.message.includes('진행 중인 운동이 없습니다')) {
-          console.warn('⚠️ 이미 종료되었거나 시작되지 않은 워크아웃입니다.');
           return true;
         }
 
         console.error('워크아웃 종료 실패:', result.error.message);
         return false;
       }
-      console.log('✅ 워크아웃 정상 종료');
       return true;
     } catch (error) {
       console.error('워크아웃 종료 중 예외 발생:', error);
@@ -104,7 +102,6 @@ export const useWorkoutActions = () => {
       if (status?.isActive || status?.isRunning) {
         return await handleEnd();
       } else {
-        console.log('ℹ️ 진행 중인 워크아웃이 없어 종료를 스킵합니다.');
         return true;
       }
     } catch (error) {

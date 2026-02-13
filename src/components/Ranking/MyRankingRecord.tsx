@@ -1,4 +1,4 @@
-import { useMemo } from 'react'; // 🆕 추가
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
 import { RANKING_LAYOUT } from '../../constants/RankingLayout';

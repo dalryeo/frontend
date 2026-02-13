@@ -1,25 +1,70 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
 import { LAYOUT } from '../../constants/Layout';
-import { getMockRankingData } from '../../data/mockRankingData'; // 🆕
 import { useAppFonts } from '../../hooks/useAppFonts';
+import {
+  fetchDistanceRanking,
+  fetchScoreRanking,
+} from '../../services/rankingService';
+import { RankingItem } from '../../types/ranking.types';
+import {
+  transformDistanceRankingToItems,
+  transformScoreRankingToItems,
+} from '../../utils/rankingUtils';
 import { EmptyRanking } from './EmptyRanking';
 import { RankingHeader } from './RankingHeader';
 import { WeeklyRanking } from './WeeklyRanking';
 
 export function Ranking() {
   const [fontsLoaded] = useAppFonts();
+  const [tierData, setTierData] = useState<RankingItem[]>([]);
+  const [distanceData, setDistanceData] = useState<RankingItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (!fontsLoaded) return null;
+  useEffect(() => {
+    async function loadRankingData() {
+      try {
+        const [scoreResponse, distanceResponse] = await Promise.all([
+          fetchScoreRanking(),
+          fetchDistanceRanking(),
+        ]);
 
-  const hasRankingData = true;
+        if (scoreResponse.success) {
+          setTierData(transformScoreRankingToItems(scoreResponse.data));
+        }
 
-  const tierData = getMockRankingData('tier').rankings;
-  const distanceData = getMockRankingData('distance').rankings;
+        if (distanceResponse.success) {
+          setDistanceData(
+            transformDistanceRankingToItems(distanceResponse.data),
+          );
+        }
+      } catch (error) {
+        console.error('랭킹 데이터 로드 실패:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadRankingData();
+  }, []);
+
+  if (!fontsLoaded || loading) {
+    return (
+      <View style={styles.container}>
+        <RankingHeader />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size='small' color={NEUTRAL.MAIN} />
+        </View>
+      </View>
+    );
+  }
+
+  const hasRankingData = tierData.length > 0 || distanceData.length > 0;
 
   return (
     <View style={styles.container}>
-      <RankingHeader showAccountIcon={hasRankingData} />
+      <RankingHeader />
 
       <ScrollView
         style={styles.scrollContainer}
@@ -56,5 +101,10 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: LAYOUT.SPACER.MEDIUM,
+  },
+  loadingContainer: {
+    flex: 0.8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

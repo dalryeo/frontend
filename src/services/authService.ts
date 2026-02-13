@@ -76,7 +76,7 @@ export const refreshAccessToken = async (
 
     return result.data;
   } catch (error) {
-    console.error('❌ Token refresh error:', error);
+    console.error('Token refresh error:', error);
 
     if (
       error instanceof TypeError &&
@@ -107,7 +107,7 @@ export const logout = async (token: string): Promise<void> => {
       throw new Error('로그아웃에 실패했습니다.');
     }
   } catch (error) {
-    console.error('❌ Logout error:', error);
+    console.error('Logout error:', error);
 
     if (
       error instanceof TypeError &&
@@ -138,7 +138,7 @@ export const withdraw = async (token: string): Promise<void> => {
       throw new Error('회원탈퇴에 실패했습니다.');
     }
   } catch (error) {
-    console.error('❌ Withdraw error:', error);
+    console.error('Withdraw error:', error);
 
     if (
       error instanceof TypeError &&

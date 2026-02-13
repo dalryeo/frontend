@@ -8,7 +8,9 @@ import React, {
   useState,
 } from 'react';
 import { BASE_URL } from '../config/api';
+import { setAnalysisRefreshTokenCallback } from '../services/analysisService';
 import { setRefreshTokenCallback } from '../services/recordService';
+import { setWeeklyRefreshTokenCallback } from '../services/weeklyService';
 
 export interface User {
   id: string;
@@ -378,12 +380,14 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    setRefreshTokenCallback(refreshAccessToken);
-  }, [refreshAccessToken]);
-
-  useEffect(() => {
     checkAuthStatus();
   }, [checkAuthStatus]);
+
+  useEffect(() => {
+    setRefreshTokenCallback(refreshAccessToken);
+    setAnalysisRefreshTokenCallback(refreshAccessToken);
+    setWeeklyRefreshTokenCallback(refreshAccessToken);
+  }, [refreshAccessToken]);
 
   return (
     <AuthContext.Provider

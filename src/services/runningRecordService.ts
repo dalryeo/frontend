@@ -1,5 +1,5 @@
 import { Alert } from 'react-native';
-import { createRecordData } from '../utils/runningCalculations';
+import { createRecordData } from '../utils/calculationUtils';
 import { recordService } from './recordService';
 
 interface RunningMetrics {
@@ -39,7 +39,7 @@ export class RunningRecordService {
 
       return true;
     } catch (error) {
-      console.error('❌ 러닝 기록 저장 실패:', error);
+      console.error('러닝 기록 저장 실패:', error);
       return false;
     }
   }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -41,11 +42,21 @@ function MyPage() {
     {
       id: 1,
       title: '달려 이용 가이드',
-      type: 'navigate',
-      route: '/userGuide' as const,
+      type: 'external',
+      url: 'https://spotty-currant-308.notion.site/2f272f995237806a8fd9f8f1f14c5115',
     },
-    { id: 2, title: '서비스 이용약관', type: 'navigate', route: null },
-    { id: 3, title: '개인정보 처리 방침', type: 'navigate', route: null },
+    {
+      id: 2,
+      title: '서비스 이용약관',
+      type: 'external',
+      url: 'https://spotty-currant-308.notion.site/2f272f99523780d1845cd813739ac506',
+    },
+    {
+      id: 3,
+      title: '개인정보 처리 방침',
+      type: 'external',
+      url: 'https://spotty-currant-308.notion.site/2f272f9952378054b22cca4c0d8156ee',
+    },
     { id: 4, title: '버전 정보', type: 'version', version: currentVersion },
     { id: 5, title: '로그아웃', type: 'logout' },
     { id: 6, title: '회원탈퇴', type: 'withdraw' },
@@ -56,7 +67,6 @@ function MyPage() {
       try {
         const token = await getAccessToken();
         if (!token) {
-          console.error('토큰이 없습니다.');
           setIsLoading(false);
           return;
         }
@@ -73,9 +83,15 @@ function MyPage() {
     loadUserData();
   }, [getAccessToken]);
 
-  const handleMenuPress = (item: (typeof menuList)[0]) => {
-    if (item.type === 'navigate' && item.route) {
-      router.push(item.route);
+  const handleMenuPress = async (item: (typeof menuList)[0]) => {
+    if (item.type === 'external' && item.url) {
+      const supported = await Linking.canOpenURL(item.url);
+
+      if (supported) {
+        await Linking.openURL(item.url);
+      } else {
+        Alert.alert('오류', '링크를 열 수 없습니다.');
+      }
     } else if (item.type === 'version') {
       setVersionModalVisible(true);
     } else if (item.type === 'logout') {
@@ -192,7 +208,7 @@ function MyPage() {
             </Font>
           </View>
 
-          {item.type === 'navigate' && (
+          {(item.type === 'navigate' || item.type === 'external') && (
             <MaterialIcons
               style={{ color: NEUTRAL.GRAY_500 }}
               name='navigate-next'

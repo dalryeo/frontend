@@ -19,13 +19,14 @@ import { useAppFonts } from '../../hooks/useAppFonts';
 import { estimateTier } from '../../services/authService';
 import { Font } from '../Font';
 
+import { calculatePaceSecPerKm } from '../../utils/calculationUtils';
 import {
   distanceData,
   hourData,
   minuteData,
   secondData,
-} from '../../utils/pickerData';
-import { calculatePaceSecPerKm, formatTime } from '../../utils/timeFormat';
+} from '../../utils/dataConstants';
+import { formatTime } from '../../utils/formatUtils';
 
 import { usePickerAnimation } from '../../hooks/usePickerAnimation';
 import { useRunRecordForm } from '../../hooks/useRunRecordForm';
@@ -219,9 +220,12 @@ function StartRecord() {
           >
             <Font
               type='Head2'
-              style={[styles.distanceText, !distance && styles.placeholder]}
+              style={[
+                styles.distanceText,
+                distance === null && styles.placeholder,
+              ]}
             >
-              {distance ? distance.toFixed(1) : '5.00'}
+              {distance !== null ? distance.toFixed(1) : '5.00'}
             </Font>
             <Font type='Head2' style={styles.unit}>
               km
@@ -241,11 +245,14 @@ function StartRecord() {
               type='Head2'
               style={[
                 styles.timeText,
-                !hours && !minutes && !seconds && styles.placeholder,
+                hours === null &&
+                  minutes === null &&
+                  seconds === null &&
+                  styles.placeholder,
               ]}
             >
               {hours !== null && minutes !== null && seconds !== null
-                ? formatTime(hours, minutes, seconds)
+                ? formatTime({ hours, minutes, seconds })
                 : '00:40:00'}
             </Font>
           </Pressable>

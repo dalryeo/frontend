@@ -33,7 +33,6 @@ const styles = StyleSheet.create({
     height: LAYOUT.EMPTY.IMAGE_SIZE,
     backgroundColor: '#242424',
     marginBottom: LAYOUT.EMPTY.MARGIN_BOTTOM_IMAGE,
-    borderRadius: 20,
   },
   title: {
     color: NEUTRAL.WHITE,
