@@ -15,19 +15,40 @@ export interface RankingListItem {
   distance: string;
 }
 
+export interface ScoreRankingItem {
+  rank: number;
+  nickname: string;
+  weeklyAvgPace: number;
+  weeklyDistance: number;
+}
+
+export interface DistanceRankingItem {
+  rank: number;
+  nickname: string;
+  weeklyAvgPace: number;
+  weeklyDistance: number;
+}
+
 export interface TierMyRecord {
   averagePace: string;
-  rank: string;
   percentage: string;
+  rank?: string;
 }
 
 export interface DistanceMyRecord {
   distance: string;
-  rank: string;
   percentage: string;
+  rank?: string;
 }
 
 export type MyRecord = TierMyRecord | DistanceMyRecord | null;
+
+export interface MyRankingData {
+  scoreRank?: number;
+  distanceRank?: number;
+  weeklyAvgPace: number;
+  weeklyDistance: number;
+}
 
 export interface MyRecordConfig {
   label: string;

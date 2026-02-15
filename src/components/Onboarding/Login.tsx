@@ -1,4 +1,5 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { NEUTRAL } from '../../constants/Colors';
@@ -9,12 +10,29 @@ import { Font } from '../Font';
 function Login() {
   const [fontsLoaded] = useAppFonts();
   const { login } = useAppleLogin();
+  const [isLogging, setIsLogging] = useState(false);
 
   if (!fontsLoaded) return null;
 
+  const handleLogin = async () => {
+    if (isLogging) return;
+
+    setIsLogging(true);
+    try {
+      await login();
+    } catch (error) {
+      console.error('로그인 실패:', error);
+      setIsLogging(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <Pressable style={styles.buttonContainer} onPress={login}>
+      <Pressable
+        style={styles.buttonContainer}
+        onPress={handleLogin}
+        disabled={isLogging}
+      >
         <AntDesign
           name='apple'
           size={24}

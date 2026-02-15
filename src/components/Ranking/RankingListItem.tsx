@@ -5,7 +5,7 @@ import {
   RankingListItem as RankingListItemType,
   RankingType,
 } from '../../types/ranking.types';
-import { formatNickname } from '../../utils/formatNickname';
+import { formatNickname } from '../../utils/formatUtils';
 import { Font } from '../Font';
 
 interface RankingListItemProps {
@@ -127,11 +127,11 @@ const styles = StyleSheet.create({
   },
   recordWrapper: {
     justifyContent: 'center',
-    alignItems: 'flex-end',
+    alignItems: 'center',
   },
   recordText: {
     flexDirection: 'column',
-    alignItems: 'flex-end',
+    alignItems: 'center',
   },
   primaryText: {
     color: NEUTRAL.MAIN,

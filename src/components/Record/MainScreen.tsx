@@ -1,4 +1,3 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
@@ -15,17 +14,20 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { useWeeklyRecord } from '../../hooks/useWeeklyRecord';
 import { Font } from '../Font';
-
-import { getDisplayName } from '../../utils/displayUtils';
-import { formatPace, getTierEmoji } from '../../utils/paceFormat';
+import { TierInfoCard } from './TierInfoCard';
 
 import { useRandomMessage } from '../../hooks/useRandomMessage';
-import { generateGradientSegments } from '../../utils/gradientUtils';
+import {
+  generateGradientSegments,
+  getDisplayName,
+  getTierEmoji,
+} from '../../utils/commonUtils';
+import { formatPace } from '../../utils/formatUtils';
 
 function MainScreen() {
   const [fontsLoaded] = useAppFonts();
   const router = useRouter();
-  const { user, tierData } = useAuth();
+  const { user } = useAuth();
   const { weeklyRecord, loading, error, refetch } = useWeeklyRecord();
 
   const commentMessage = useRandomMessage();
@@ -44,44 +46,18 @@ function MainScreen() {
     if (!hasRecord || !weeklyRecord?.currentTier) {
       return '-';
     }
-
-    return getTierEmoji(weeklyRecord.currentTier);
-  };
-
-  const hasEstimatedTier = tierData && tierData.tierCode;
-
-  const handleInfoClick = () => {
-    if (hasEstimatedTier) {
-      router.push('/tierOverView');
-    } else {
-      router.push('/startRecord');
-    }
+    return `${getTierEmoji(weeklyRecord.currentTier)}`;
   };
 
   if (!fontsLoaded) return null;
 
   const displayName = getDisplayName(user);
   const gradientSegments = generateGradientSegments();
-
   const hasRecord = weeklyRecord && weeklyRecord.weeklyCount > 0;
-
-  console.log('🔍 hasRecord 계산:', {
-    weeklyRecord: weeklyRecord ? '존재' : '없음',
-    weeklyCount: weeklyRecord?.weeklyCount,
-    hasRecord,
-    currentTier: weeklyRecord?.currentTier,
-  });
 
   return (
     <View style={styles.container}>
       <View style={styles.Icon}>
-        <TouchableOpacity onPress={() => router.push('/weeklyRecord')}>
-          <Image
-            source={require('../../../assets/images/Main/record.png')}
-            style={styles.recordIcon}
-          />
-        </TouchableOpacity>
-
         <TouchableOpacity onPress={() => router.push('/myPage')}>
           <Image
             source={require('../../../assets/images/Main/accountIcon.png')}
@@ -94,7 +70,10 @@ function MainScreen() {
         {displayName}님,{'\n'}이번 주도 달려볼까요?
       </Font>
 
-      <View style={styles.weeklyRecord}>
+      <TouchableOpacity
+        onPress={() => router.push('/weeklyRecord')}
+        style={styles.weeklyRecord}
+      >
         <View style={styles.weeklyRecordTitle}>
           <Font type='SubButton' style={styles.weeklyRecordTitleText}>
             주간 기록
@@ -184,32 +163,9 @@ function MainScreen() {
             </>
           )}
         </View>
-      </View>
-
-      <TouchableOpacity style={styles.info} onPress={handleInfoClick}>
-        <Font type='Head1'>{hasEstimatedTier ? '🐆' : '🐆'}</Font>
-
-        <View style={styles.infoText}>
-          <Font type='Body1' style={{ marginBottom: 3 }}>
-            {hasEstimatedTier
-              ? '달려의 티어를 소개합니다'
-              : '내 러닝 실력, 무슨 티어일까?'}
-          </Font>
-          <Font type='Body7' style={{ color: NEUTRAL.GRAY_600 }}>
-            {hasEstimatedTier
-              ? '티어는 월요일마다 새로 시작돼요'
-              : '달리기 전 예상 티어를 확인할 수 있어요'}
-          </Font>
-        </View>
-
-        <View style={{ alignSelf: 'center', marginLeft: 65 }}>
-          <MaterialIcons
-            style={[styles.navigateNext, { color: NEUTRAL.GRAY_600 }]}
-            name='navigate-next'
-            size={34}
-          />
-        </View>
       </TouchableOpacity>
+
+      <TierInfoCard />
 
       <View style={styles.commentWrapper}>
         <Font type='SubButton' style={styles.comment}>
@@ -305,23 +261,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: NEUTRAL.DANGER,
-  },
-  info: {
-    flexDirection: 'row',
-    backgroundColor: NEUTRAL.GRAY_900,
-    borderColor: NEUTRAL.GRAY_800,
-    borderRadius: 30,
-    marginTop: 30,
-    marginHorizontal: 20,
-    padding: 20,
-  },
-  infoText: {
-    alignSelf: 'center',
-    marginLeft: 15,
-  },
-  navigateNext: {
-    alignSelf: 'center',
-    marginLeft: 25,
   },
   commentWrapper: {
     alignItems: 'center',

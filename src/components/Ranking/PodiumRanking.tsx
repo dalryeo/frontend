@@ -1,7 +1,7 @@
 import { Image, StyleSheet, View } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
 import { RANKING_LAYOUT } from '../../constants/RankingLayout';
-import { formatNickname } from '../../utils/formatNickname';
+import { formatNickname } from '../../utils/formatUtils';
 import { Font } from '../Font';
 import { RankingInfoBanner } from './RankingInfoBanner';
 

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Image,
   Modal,
   ScrollView,
@@ -8,26 +9,23 @@ import {
   View,
 } from 'react-native';
 
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { NEUTRAL } from '../../constants/Colors';
+import { SortType, useAnalysisRecords } from '../../hooks/useAnalysisRecords';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
 
 import Foundation from '@expo/vector-icons/Foundation';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-type PeriodType = 'weekly' | 'monthly' | 'yearly';
-type SortType = 'latest' | 'pace' | 'distance';
+import { getPeriodText } from '../../utils/dateUtils';
+import {
+  filterRecordsByPeriod,
+  groupRecordsByDate,
+  processRecord,
+} from '../../utils/recordUtils';
 
-interface RecordData {
-  id: string;
-  date: string;
-  tier: string;
-  pace: string;
-  distance: string;
-  duration: string;
-  heartRate: number;
-}
+type PeriodType = 'weekly' | 'monthly' | 'yearly';
 
 function Analysis() {
   const [fontsLoaded] = useAppFonts();
@@ -35,113 +33,69 @@ function Analysis() {
   const [sortType, setSortType] = useState<SortType>('latest');
   const [showBottomSheet, setShowBottomSheet] = useState(false);
 
-  const mockRecords: RecordData[] = [
-    {
-      id: '1',
-      date: '2026. 01. 16',
-      tier: '🦊',
-      pace: '05\'16"',
-      distance: '2.08km',
-      duration: '1:00:00',
-      heartRate: 148,
-    },
-    {
-      id: '2',
-      date: '2026. 01. 16',
-      tier: '🐰',
-      pace: '06\'32"',
-      distance: '1.85km',
-      duration: '35:20',
-      heartRate: 142,
-    },
-    {
-      id: '3',
-      date: '2026. 01. 14',
-      tier: '🦌',
-      pace: '04\'58"',
-      distance: '5.20km',
-      duration: '1:25:30',
-      heartRate: 145,
-    },
-    {
-      id: '4',
-      date: '2026. 01. 11',
-      tier: '🦊',
-      pace: '05\'45"',
-      distance: '3.50km',
-      duration: '1:15:00',
-      heartRate: 150,
-    },
-    {
-      id: '5',
-      date: '2026. 01. 09',
-      tier: '🐰',
-      pace: '06\'10"',
-      distance: '2.75km',
-      duration: '45:30',
-      heartRate: 144,
-    },
-    {
-      id: '6',
-      date: '2026. 01. 07',
-      tier: '🦌',
-      pace: '05\'20"',
-      distance: '4.80km',
-      duration: '1:35:00',
-      heartRate: 152,
-    },
-    {
-      id: '7',
-      date: '2026. 01. 05',
-      tier: '🦊',
-      pace: '05\'30"',
-      distance: '3.20km',
-      duration: '1:10:00',
-      heartRate: 149,
-    },
-    {
-      id: '8',
-      date: '2026. 01. 03',
-      tier: '🐰',
-      pace: '06\'05"',
-      distance: '2.95km',
-      duration: '50:15',
-      heartRate: 146,
-    },
-    {
-      id: '9',
-      date: '2026. 01. 01',
-      tier: '🦌',
-      pace: '04\'45"',
-      distance: '6.10km',
-      duration: '1:45:20',
-      heartRate: 155,
-    },
-    {
-      id: '10',
-      date: '2026. 01. 20',
-      tier: '🦊',
-      pace: '05\'25"',
-      distance: '3.60km',
-      duration: '1:12:30',
-      heartRate: 149,
-    },
-    {
-      id: '11',
-      date: '2026. 01. 22',
-      tier: '🐰',
-      pace: '06\'08"',
-      distance: '2.90km',
-      duration: '48:15',
-      heartRate: 144,
-    },
-  ];
+  const { records, loading, fetchRecords } = useAnalysisRecords();
+
+  const { groupedRecords, periodText } = useMemo(() => {
+    if (!Array.isArray(records)) {
+      return {
+        filteredRecords: [],
+        groupedRecords: [],
+        periodText: getPeriodText(selectedPeriod),
+      };
+    }
+
+    const processedRecords = records.map(processRecord);
+
+    const sortedRecords = [...processedRecords].sort((a, b) => {
+      switch (sortType) {
+        case 'latest':
+          return (
+            new Date(b.originalDate).getTime() -
+            new Date(a.originalDate).getTime()
+          );
+        case 'pace':
+          const aRecord = records.find((r) => r.recordId.toString() === a.id);
+          const bRecord = records.find((r) => r.recordId.toString() === b.id);
+          return (
+            (aRecord?.avgPaceSecPerKm || 0) - (bRecord?.avgPaceSecPerKm || 0)
+          );
+        case 'distance':
+          const aRecordDist = records.find(
+            (r) => r.recordId.toString() === a.id,
+          );
+          const bRecordDist = records.find(
+            (r) => r.recordId.toString() === b.id,
+          );
+          return (
+            (bRecordDist?.distanceKm || 0) - (aRecordDist?.distanceKm || 0)
+          );
+        default:
+          return 0;
+      }
+    });
+
+    const filtered = filterRecordsByPeriod(sortedRecords, selectedPeriod);
+
+    const grouped = groupRecordsByDate(filtered);
+    const text = getPeriodText(selectedPeriod);
+
+    return {
+      filteredRecords: filtered,
+      groupedRecords: grouped,
+      periodText: text,
+    };
+  }, [records, selectedPeriod, sortType]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchRecords();
+    }, [fetchRecords]),
+  );
 
   if (!fontsLoaded) return null;
 
   const handlePeriodPress = (period: PeriodType) => {
     setSelectedPeriod(period);
-    console.log('선택된 기간:', period);
   };
 
   const handleSortPress = () => {
@@ -151,7 +105,6 @@ function Analysis() {
   const handleSortSelect = (sort: SortType) => {
     setSortType(sort);
     setShowBottomSheet(false);
-    console.log('선택된 정렬:', sort);
   };
 
   const getSortLabel = (sort: SortType) => {
@@ -167,148 +120,49 @@ function Analysis() {
     }
   };
 
-  const paceToSeconds = (pace: string) => {
-    const match = pace.match(/(\d+)'(\d+)"/);
-    if (match) {
-      const minutes = parseInt(match[1]);
-      const seconds = parseInt(match[2]);
-      return minutes * 60 + seconds;
-    }
-    return 0;
-  };
-
-  const distanceToNumber = (distance: string) => {
-    return parseFloat(distance.replace('km', ''));
-  };
-
-  const getDateRange = (period: PeriodType) => {
-    const today = new Date();
-    let startDate: Date;
-    let endDate: Date = today;
-
-    switch (period) {
-      case 'weekly':
-        const dayOfWeek = today.getDay();
-        startDate = new Date(today);
-        startDate.setDate(today.getDate() - dayOfWeek);
-        endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 6);
-        break;
-
-      case 'monthly':
-        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        break;
-
-      case 'yearly':
-        startDate = new Date(today.getFullYear(), 0, 1);
-        endDate = new Date(today.getFullYear(), 11, 31);
-        break;
-
-      default:
-        startDate = today;
-        endDate = today;
-    }
-
-    return {
-      start: startDate,
-      end: endDate,
-      formatted: `${formatDate(startDate)} - ${formatDate(endDate)}`,
-    };
-  };
-
-  const formatDate = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}. ${month}. ${day}`;
-  };
-
-  const parseDate = (dateString: string) => {
-    const parts = dateString.split('. ');
-    const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1;
-    const day = parseInt(parts[2]);
-    return new Date(year, month, day);
-  };
-
-  const getFilteredRecords = () => {
-    const dateRange = getDateRange(selectedPeriod);
-
-    return mockRecords.filter((record) => {
-      const recordDate = parseDate(record.date);
-      return recordDate >= dateRange.start && recordDate <= dateRange.end;
-    });
-  };
-
-  const groupRecordsByDate = (records: RecordData[]) => {
-    let sortedRecords = [...records];
-
-    switch (sortType) {
-      case 'latest':
-        sortedRecords.sort((a, b) => {
-          const dateA = parseDate(a.date);
-          const dateB = parseDate(b.date);
-          return dateB.getTime() - dateA.getTime();
-        });
-        break;
-
-      case 'pace':
-        sortedRecords.sort((a, b) => {
-          return paceToSeconds(a.pace) - paceToSeconds(b.pace);
-        });
-        break;
-
-      case 'distance':
-        sortedRecords.sort((a, b) => {
-          return distanceToNumber(b.distance) - distanceToNumber(a.distance);
-        });
-        break;
-    }
-
-    const grouped: { [key: string]: RecordData[] } = {};
-
-    sortedRecords.forEach((record) => {
-      if (!grouped[record.date]) {
-        grouped[record.date] = [];
-      }
-      grouped[record.date].push(record);
-    });
-
-    const result: [string, RecordData[]][] = [];
-    const processedDates = new Set<string>();
-
-    sortedRecords.forEach((record) => {
-      if (!processedDates.has(record.date)) {
-        processedDates.add(record.date);
-        result.push([record.date, grouped[record.date]]);
-      }
-    });
-
-    return result;
-  };
-
   const renderRecordsByDate = () => {
-    const filteredRecords = getFilteredRecords();
-    const groupedRecords = groupRecordsByDate(filteredRecords);
+    if (loading) {
+      return (
+        <View style={{ marginTop: '50%', alignItems: 'center' }}>
+          <ActivityIndicator size='small' color={NEUTRAL.MAIN} />
+        </View>
+      );
+    }
 
     if (groupedRecords.length === 0) {
+      let periodLabel = '';
+      switch (selectedPeriod) {
+        case 'weekly':
+          periodLabel = '이번 주';
+          break;
+        case 'monthly':
+          periodLabel = '이번 달';
+          break;
+        case 'yearly':
+          periodLabel = '올해';
+          break;
+      }
+
       return (
-        <View style={styles.emptyContainer}>
-          <Font type='Body4' style={styles.emptyText}>
-            이 기간에 기록된 러닝이 없습니다
+        <View style={styles.noRecordContainer}>
+          <View style={styles.noRecordContent}></View>
+          <Font type='Head3' style={{ color: NEUTRAL.WHITE, marginTop: 30 }}>
+            {periodLabel}에 달린 기록이 없어요
+          </Font>
+          <Font type='Body4' style={{ color: NEUTRAL.GRAY_500, marginTop: 10 }}>
+            {periodLabel} 첫 러닝을 기록해보세요!
           </Font>
         </View>
       );
     }
 
-    return groupedRecords.map(([date, records]) => (
+    return groupedRecords.map(([date, recordsForDate]) => (
       <View key={date} style={styles.recordSection}>
         <Font type='Body4' style={styles.dateText}>
           {date}
         </Font>
 
-        {records.map((record, index) => (
+        {recordsForDate.map((record, index) => (
           <View
             key={record.id}
             style={[
@@ -317,7 +171,6 @@ function Analysis() {
             ]}
           >
             <View style={styles.recordTextContainerLeft}>
-              <Font type='Head2'>{record.tier}</Font>
               <Font type='Head2' style={styles.paceText}>
                 {record.pace}
               </Font>
@@ -330,12 +183,14 @@ function Analysis() {
               <Font type='Body4' style={styles.recordDetailText}>
                 {record.duration}
               </Font>
-              <View style={styles.heartRateContainer}>
-                <Foundation name='heart' size={18} color={NEUTRAL.DANGER} />
-                <Font type='Body4' style={styles.heartRateText}>
-                  {record.heartRate} BPM
-                </Font>
-              </View>
+              {record.heartRate > 0 && (
+                <View style={styles.heartRateContainer}>
+                  <Foundation name='heart' size={18} color={NEUTRAL.DANGER} />
+                  <Font type='Body4' style={styles.heartRateText}>
+                    {record.heartRate} BPM
+                  </Font>
+                </View>
+              )}
             </View>
           </View>
         ))}
@@ -343,15 +198,15 @@ function Analysis() {
     ));
   };
 
-  const currentDateRange = getDateRange(selectedPeriod);
-
   return (
     <View style={styles.container}>
       <View style={styles.Icon}>
-        <Image
-          source={require('../../../assets/images/Main/accountIcon.png')}
-          style={styles.accountIcon}
-        />
+        <TouchableOpacity onPress={() => router.push('/myPage')}>
+          <Image
+            source={require('../../../assets/images/Main/accountIcon.png')}
+            style={styles.accountIcon}
+          />
+        </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push('/(tabs)')}>
           <Image
@@ -419,7 +274,7 @@ function Analysis() {
 
       <View style={styles.periodInfo}>
         <Font type='Body2' style={styles.periodText}>
-          {currentDateRange.formatted}
+          {periodText}
         </Font>
         <TouchableOpacity style={styles.arrow} onPress={handleSortPress}>
           <MaterialIcons
@@ -523,6 +378,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: NEUTRAL.BACKGROUND,
+    paddingBottom: 80,
   },
   Icon: {
     flexDirection: 'row',
@@ -607,7 +463,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   paceText: {
-    marginLeft: 10,
     color: NEUTRAL.MAIN,
   },
   recordTextContainerRight: {
@@ -625,12 +480,17 @@ const styles = StyleSheet.create({
     color: NEUTRAL.GRAY_200,
     marginLeft: 5,
   },
-  emptyContainer: {
-    paddingVertical: 40,
+  noRecordContainer: {
+    marginTop: 100,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  emptyText: {
-    color: NEUTRAL.GRAY_500,
+  noRecordContent: {
+    width: 164,
+    height: 164,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#242424',
   },
   modalBackdrop: {
     flex: 1,

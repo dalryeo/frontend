@@ -2,19 +2,15 @@ import { router } from 'expo-router';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { LAYOUT } from '../../constants/Layout';
 
-interface RankingHeaderProps {
-  showAccountIcon?: boolean;
-}
-
-export function RankingHeader({ showAccountIcon = false }: RankingHeaderProps) {
+export function RankingHeader() {
   return (
     <View style={styles.container}>
-      {showAccountIcon && (
+      <TouchableOpacity onPress={() => router.push('/myPage')}>
         <Image
           source={require('../../../assets/images/Main/accountIcon.png')}
           style={styles.icon}
         />
-      )}
+      </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.push('/(tabs)')}>
         <Image

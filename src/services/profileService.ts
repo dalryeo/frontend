@@ -1,8 +1,9 @@
 import { BASE_URL } from '../config/api';
+import type { Gender } from '../utils/commonUtils';
 
 interface ProfileData {
   nickname: string;
-  gender: 'M' | 'F';
+  gender: Gender;
   birth: string;
   height: number;
   weight: number;
@@ -11,7 +12,7 @@ interface ProfileData {
 
 interface OnboardingData {
   nickname: string;
-  gender: 'M' | 'F';
+  gender: Gender;
   birth: string;
   height: number;
   weight: number;
@@ -21,6 +22,25 @@ interface OnboardingData {
 interface OnboardingResponse {
   success: boolean;
   data: OnboardingData;
+}
+
+// 온보딩 업데이트 요청 인터페이스 추가
+interface OnboardingUpdateRequest {
+  nickname: string;
+  birth: string;
+  gender: Gender;
+  height: number;
+  weight: number;
+}
+
+// 온보딩 업데이트 응답 인터페이스 추가
+interface OnboardingUpdateResponse {
+  success: boolean;
+  data: null;
+  error?: {
+    code: string;
+    message: string;
+  };
 }
 
 export const getOnboardingData = async (
@@ -43,7 +63,7 @@ export const getOnboardingData = async (
 
     return result.data;
   } catch (error) {
-    console.error('❌ Get onboarding data error:', error);
+    console.error('Get onboarding data error:', error);
 
     if (
       error instanceof TypeError &&
@@ -58,6 +78,49 @@ export const getOnboardingData = async (
   }
 };
 
+export const updateOnboardingData = async (
+  token: string,
+  onboardingData: OnboardingUpdateRequest,
+): Promise<OnboardingUpdateResponse> => {
+  try {
+    const response = await fetch(`${BASE_URL}/onboarding`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(onboardingData),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error('❌ HTTP 오류:', response.status, response.statusText);
+      throw new Error(
+        `HTTP ${response.status}: ${result.error?.message || response.statusText}`,
+      );
+    }
+
+    if (!result.success) {
+      throw new Error(result.error?.message ?? '프로필 수정에 실패했습니다.');
+    }
+
+    return result;
+  } catch (error) {
+    console.error('🚨 Update onboarding data error:', error);
+
+    if (
+      error instanceof TypeError &&
+      error.message.includes('Network request failed')
+    ) {
+      throw new Error(
+        '네트워크 연결을 확인해주세요. 서버에 연결할 수 없습니다.',
+      );
+    }
+
+    throw error;
+  }
+};
 export const submitProfileData = async (
   profileData: ProfileData,
   token: string,
@@ -80,7 +143,7 @@ export const submitProfileData = async (
 
     return result.data;
   } catch (error) {
-    console.error('❌ Profile submission error:', error);
+    console.error('Profile submission error:', error);
 
     if (
       error instanceof TypeError &&
@@ -119,7 +182,7 @@ export const checkNicknameAvailability = async (
 
     return result.data;
   } catch (error) {
-    console.error('❌ 닉네임 체크 실패:', error);
+    console.error('닉네임 체크 실패:', error);
 
     if (
       error instanceof TypeError &&

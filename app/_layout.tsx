@@ -51,7 +51,6 @@ function AuthenticatedLayout() {
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        console.log('👤 사용자 없음 - 로그인 화면으로');
         router.replace('/login');
       }
     }

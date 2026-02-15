@@ -1,5 +1,7 @@
+import { useAuth } from '@/src/contexts/AuthContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -9,9 +11,24 @@ import {
 } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
 import { RANKING_LAYOUT } from '../../constants/RankingLayout';
-import { getMockRankingData } from '../../data/mockRankingData';
-import { RankingType } from '../../types/ranking.types';
-import { getRankingConfig } from '../../utils/rankingUtils';
+import {
+  fetchDistanceRankingDetail,
+  fetchMyRanking,
+  fetchScoreRankingDetail,
+} from '../../services/rankingService';
+import {
+  MyRecord,
+  RankingItem,
+  RankingListItem,
+  RankingType,
+} from '../../types/ranking.types';
+import {
+  getRankingConfig,
+  transformDistanceRankingToItems,
+  transformMyRankingToRecord,
+  transformScoreRankingToItems,
+  transformToRankingListItems,
+} from '../../utils/rankingUtils';
 import { Font } from '../Font';
 import { PodiumRanking } from './PodiumRanking';
 import { RankingList } from './RankingList';
@@ -19,18 +36,85 @@ import { RankingList } from './RankingList';
 export function WeeklyRankingDetail() {
   const params = useLocalSearchParams();
   const type = params.type as RankingType;
+  const isValidType = type === 'tier' || type === 'distance';
+  const { getAccessToken } = useAuth();
 
-  if (!type || (type !== 'tier' && type !== 'distance')) {
+  const [loading, setLoading] = useState(true);
+  const [myRecord, setMyRecord] = useState<MyRecord | null>(null);
+  const [podiumRankings, setPodiumRankings] = useState<RankingItem[]>([]);
+  const [allRankings, setAllRankings] = useState<RankingListItem[]>([]);
+
+  useEffect(() => {
+    if (!isValidType) {
+      setLoading(false);
+      return;
+    }
+
+    async function loadDetailData() {
+      try {
+        const accessToken = await getAccessToken();
+
+        if (!accessToken) {
+          console.log('액세스 토큰이 없습니다');
+          return;
+        }
+
+        const [myRankingResponse, rankingResponse] = await Promise.all([
+          fetchMyRanking(accessToken),
+          type === 'tier'
+            ? fetchScoreRankingDetail()
+            : fetchDistanceRankingDetail(),
+        ]);
+
+        if (
+          myRankingResponse.success &&
+          myRankingResponse.data &&
+          !('code' in myRankingResponse.data)
+        ) {
+          setMyRecord(transformMyRankingToRecord(myRankingResponse.data, type));
+        } else {
+          setMyRecord(null);
+        }
+
+        if (rankingResponse.success && rankingResponse.data) {
+          const transformedItems =
+            type === 'tier'
+              ? transformScoreRankingToItems(rankingResponse.data)
+              : transformDistanceRankingToItems(rankingResponse.data);
+
+          setPodiumRankings(transformedItems.slice(0, 3));
+          setAllRankings(transformToRankingListItems(rankingResponse.data));
+        }
+      } catch (error) {
+        console.error('상세 데이터 로드 실패:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDetailData();
+  }, [type, isValidType, getAccessToken]);
+
+  if (!isValidType) {
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
-          <ActivityIndicator size='large' color={NEUTRAL.MAIN} />
+          <ActivityIndicator size='small' color={NEUTRAL.MAIN} />
         </View>
       </View>
     );
   }
 
-  const data = getMockRankingData(type);
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <ActivityIndicator size='small' color={NEUTRAL.MAIN} />
+        </View>
+      </View>
+    );
+  }
+
   const config = getRankingConfig(type);
 
   const handleGoBack = () => {
@@ -58,12 +142,8 @@ export function WeeklyRankingDetail() {
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-        <PodiumRanking rankings={data.rankings} type={type} />
-        <RankingList
-          type={type}
-          myRecord={data.myRecord}
-          rankings={data.rankingList}
-        />
+        <PodiumRanking rankings={podiumRankings} type={type} />
+        <RankingList type={type} myRecord={myRecord} rankings={allRankings} />
       </ScrollView>
     </View>
   );

@@ -15,9 +15,7 @@ export function useAppleLogin() {
 
   const login = async () => {
     try {
-      console.log('🍎 Apple 로그인 시작');
       const response = await appleLogin();
-      console.log('🍎 응답:', response);
 
       const { accessToken, refreshToken, isNewUser } = response;
 
@@ -40,20 +38,16 @@ export function useAppleLogin() {
       };
 
       if (isNewUser) {
-        console.log('🆕 새로운 사용자 - startRecord로 이동');
         await authLogin(user, accessToken, refreshToken);
         router.replace('/startRecord');
         return;
       }
 
-      console.log('👤 기존 사용자 - 온보딩 상태 확인');
       const isOnboardingComplete = await authLogin(
         user,
         accessToken,
         refreshToken,
       );
-
-      console.log('✅ 온보딩 완료 여부:', isOnboardingComplete);
 
       if (isOnboardingComplete) {
         router.replace('/(tabs)');
@@ -61,7 +55,7 @@ export function useAppleLogin() {
         router.replace('/profile');
       }
     } catch (error) {
-      console.error('❌ Apple login error:', error);
+      console.error('Apple login error:', error);
 
       if (error && typeof error === 'object' && 'code' in error) {
         if (error.code === 'ERR_REQUEST_CANCELED') {
