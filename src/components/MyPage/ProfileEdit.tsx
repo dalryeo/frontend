@@ -143,7 +143,6 @@ function ProfileEdit() {
       try {
         const token = await getAccessToken();
         if (!token) {
-          Alert.alert('오류', '인증 토큰이 없습니다. 다시 로그인해주세요.');
           router.back();
           return;
         }
@@ -211,7 +210,6 @@ function ProfileEdit() {
 
       const token = await getAccessToken();
       if (!token) {
-        Alert.alert('오류', '인증 토큰이 없습니다. 다시 로그인해주세요.');
         return;
       }
 

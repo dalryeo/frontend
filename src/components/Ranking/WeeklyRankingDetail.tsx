@@ -55,7 +55,6 @@ export function WeeklyRankingDetail() {
         const accessToken = await getAccessToken();
 
         if (!accessToken) {
-          console.log('액세스 토큰이 없습니다');
           return;
         }
 

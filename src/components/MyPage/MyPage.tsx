@@ -105,7 +105,6 @@ function MyPage() {
     try {
       const token = await getAccessToken();
       if (!token) {
-        Alert.alert('오류', '인증 토큰이 없습니다.');
         return;
       }
 
@@ -128,7 +127,6 @@ function MyPage() {
     try {
       const token = await getAccessToken();
       if (!token) {
-        Alert.alert('오류', '인증 토큰이 없습니다.');
         return;
       }
 

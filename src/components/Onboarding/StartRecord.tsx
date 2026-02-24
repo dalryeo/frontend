@@ -95,7 +95,6 @@ function StartRecord() {
     try {
       const accessToken = await getAccessToken();
       if (!accessToken) {
-        Alert.alert('오류', '인증 토큰이 없습니다.');
         return;
       }
 

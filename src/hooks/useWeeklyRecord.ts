@@ -44,7 +44,6 @@ export const useWeeklyRecord = () => {
       const token = await getAccessToken();
 
       if (!token) {
-        console.log('토큰이 없어서 기록 조회 중단');
         setWeeklyRecord(null);
         return;
       }

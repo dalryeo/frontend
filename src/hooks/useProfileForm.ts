@@ -45,7 +45,6 @@ export const useProfileForm = () => {
       try {
         const token = await getAccessToken();
         if (!token) {
-          setNicknameError('인증 토큰이 없습니다');
           return;
         }
 

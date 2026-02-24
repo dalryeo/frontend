@@ -30,7 +30,6 @@ export const useWeeklyData = () => {
       const token = await getAccessToken();
 
       if (!token) {
-        console.log('토큰이 없어서 주간 데이터 조회 중단');
         setWeeklyDataList([]);
         return;
       }
