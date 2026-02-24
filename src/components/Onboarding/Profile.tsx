@@ -134,7 +134,6 @@ function Profile() {
       try {
         const token = await getAccessToken();
         if (!token) {
-          Alert.alert('오류', '인증 토큰이 없습니다. 다시 로그인해주세요.');
           return;
         }
 
@@ -159,7 +158,6 @@ function Profile() {
       const token = await getAccessToken();
 
       if (!token) {
-        Alert.alert('오류', '인증 토큰이 없습니다. 다시 로그인해주세요.');
         return;
       }
 

@@ -28,10 +28,6 @@ export class RunningRecordService {
 
       const token = await getAccessToken();
       if (!token) {
-        Alert.alert(
-          '토큰 오류',
-          '로그인 토큰이 없습니다. 다시 로그인해주세요.',
-        );
         return false;
       }
 

@@ -22,6 +22,7 @@ import { getPeriodText } from '../../utils/dateUtils';
 import {
   filterRecordsByPeriod,
   groupRecordsByDate,
+  ProcessedRecord,
   processRecord,
 } from '../../utils/recordUtils';
 
@@ -35,53 +36,82 @@ function Analysis() {
 
   const { records, loading, fetchRecords } = useAnalysisRecords();
 
-  const { groupedRecords, periodText } = useMemo(() => {
+  const { renderedData, periodText } = useMemo(() => {
     if (!Array.isArray(records)) {
       return {
-        filteredRecords: [],
-        groupedRecords: [],
+        renderedData: [],
         periodText: getPeriodText(selectedPeriod),
       };
     }
 
     const processedRecords = records.map(processRecord);
+    const filtered = filterRecordsByPeriod(processedRecords, selectedPeriod);
 
-    const sortedRecords = [...processedRecords].sort((a, b) => {
-      switch (sortType) {
-        case 'latest':
-          return (
-            new Date(b.originalDate).getTime() -
-            new Date(a.originalDate).getTime()
-          );
-        case 'pace':
-          const aRecord = records.find((r) => r.recordId.toString() === a.id);
-          const bRecord = records.find((r) => r.recordId.toString() === b.id);
-          return (
-            (aRecord?.avgPaceSecPerKm || 0) - (bRecord?.avgPaceSecPerKm || 0)
-          );
-        case 'distance':
-          const aRecordDist = records.find(
-            (r) => r.recordId.toString() === a.id,
-          );
-          const bRecordDist = records.find(
-            (r) => r.recordId.toString() === b.id,
-          );
-          return (
-            (bRecordDist?.distanceKm || 0) - (aRecordDist?.distanceKm || 0)
-          );
-        default:
-          return 0;
-      }
-    });
+    let renderedData;
 
-    const filtered = filterRecordsByPeriod(sortedRecords, selectedPeriod);
+    if (sortType === 'latest') {
+      // 최신순: 날짜별 그룹핑 후 최신 날짜부터
+      const sortedRecords = [...filtered].sort((a, b) => {
+        return (
+          new Date(b.originalDate).getTime() -
+          new Date(a.originalDate).getTime()
+        );
+      });
+      renderedData = groupRecordsByDate(sortedRecords);
+    } else {
+      // 페이스순/거리순: 개별 기록 정렬 후 연속된 같은 날짜끼리 그룹핑
+      const sortedRecords = [...filtered].sort((a, b) => {
+        switch (sortType) {
+          case 'pace':
+            const aRecord = records.find((r) => r.recordId.toString() === a.id);
+            const bRecord = records.find((r) => r.recordId.toString() === b.id);
+            return (
+              (aRecord?.avgPaceSecPerKm || 0) - (bRecord?.avgPaceSecPerKm || 0)
+            );
+          case 'distance':
+            const aRecordDist = records.find(
+              (r) => r.recordId.toString() === a.id,
+            );
+            const bRecordDist = records.find(
+              (r) => r.recordId.toString() === b.id,
+            );
+            return (
+              (bRecordDist?.distanceKm || 0) - (aRecordDist?.distanceKm || 0)
+            );
+          default:
+            return 0;
+        }
+      });
 
-    const grouped = groupRecordsByDate(filtered);
+      const grouped: [string, ProcessedRecord[]][] = [];
+      let currentDate = '';
+      let currentGroup: ProcessedRecord[] = [];
+
+      sortedRecords.forEach((record, index) => {
+        if (record.date !== currentDate) {
+          if (currentGroup.length > 0) {
+            grouped.push([currentDate, currentGroup]);
+          }
+          currentDate = record.date;
+          currentGroup = [record];
+        } else {
+          // 같은 날짜면 현재 그룹에 추가
+          currentGroup.push(record);
+        }
+
+        // 마지막 그룹 처리
+        if (index === sortedRecords.length - 1) {
+          grouped.push([currentDate, currentGroup]);
+        }
+      });
+
+      renderedData = grouped;
+    }
+
     const text = getPeriodText(selectedPeriod);
 
     return {
-      filteredRecords: filtered,
-      groupedRecords: grouped,
+      renderedData,
       periodText: text,
     };
   }, [records, selectedPeriod, sortType]);
@@ -129,7 +159,7 @@ function Analysis() {
       );
     }
 
-    if (groupedRecords.length === 0) {
+    if (renderedData.length === 0) {
       let periodLabel = '';
       switch (selectedPeriod) {
         case 'weekly':
@@ -156,8 +186,8 @@ function Analysis() {
       );
     }
 
-    return groupedRecords.map(([date, recordsForDate]) => (
-      <View key={date} style={styles.recordSection}>
+    return renderedData.map(([date, recordsForDate], groupIndex) => (
+      <View key={`${date}-${groupIndex}`} style={styles.recordSection}>
         <Font type='Body4' style={styles.dateText}>
           {date}
         </Font>

@@ -147,7 +147,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       let accessToken = await AsyncStorage.getItem('accessToken');
 
       if (!accessToken) {
-        console.log('AccessToken이 없음');
         return null;
       }
 
