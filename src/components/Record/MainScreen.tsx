@@ -1,4 +1,5 @@
 import { useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import {
@@ -23,6 +24,45 @@ import {
   getTierEmoji,
 } from '../../utils/commonUtils';
 import { formatPace } from '../../utils/formatUtils';
+
+const BORDER_RADIUS = 30;
+const BORDER_WIDTH = 1;
+
+function GradientBorderCard({
+  children,
+  onPress,
+  style,
+}: {
+  children: React.ReactNode;
+  onPress?: () => void;
+  style?: object;
+}) {
+  return (
+    <View style={[styles.shadowWrapper, style]}>
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.8}
+        style={styles.gradientWrapper}
+      >
+        <LinearGradient
+          colors={[
+            'rgba(118,118,118,1)',
+            'rgba(91,91,91,1)',
+            'rgba(91,91,91,0.15)',
+            'rgba(91,91,91,0.30)',
+            'rgba(118,118,118,1)',
+          ]}
+          locations={[0, 0.12, 0.39, 0.71, 1.0]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradientBorder}
+        >
+          <View style={styles.gradientInner}>{children}</View>
+        </LinearGradient>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 function MainScreen() {
   const [fontsLoaded] = useAppFonts();
@@ -70,9 +110,9 @@ function MainScreen() {
         {displayName}님,{'\n'}이번 주도 달려볼까요?
       </Font>
 
-      <TouchableOpacity
+      <GradientBorderCard
         onPress={() => router.push('/weeklyRecord')}
-        style={styles.weeklyRecord}
+        style={styles.weeklyRecordWrapper}
       >
         <View style={styles.weeklyRecordTitle}>
           <Font type='SubButton' style={styles.weeklyRecordTitleText}>
@@ -109,7 +149,6 @@ function MainScreen() {
             </View>
           ) : (
             <>
-              {/* 현재 티어 */}
               <View style={styles.recordItem}>
                 <Font
                   type='Head2'
@@ -125,7 +164,6 @@ function MainScreen() {
                 </Font>
               </View>
 
-              {/* 평균 페이스 */}
               <View style={styles.recordItem}>
                 <Font
                   type='Head2'
@@ -145,7 +183,6 @@ function MainScreen() {
                 </Font>
               </View>
 
-              {/* 러닝 횟수 */}
               <View style={styles.recordItem}>
                 <Font
                   type='Head2'
@@ -163,7 +200,7 @@ function MainScreen() {
             </>
           )}
         </View>
-      </TouchableOpacity>
+      </GradientBorderCard>
 
       <TierInfoCard />
 
@@ -190,10 +227,6 @@ const styles = StyleSheet.create({
     marginTop: 70,
     marginRight: 20,
   },
-  recordIcon: {
-    width: 32,
-    height: 32,
-  },
   accountIcon: {
     width: 32,
     height: 32,
@@ -205,12 +238,28 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     lineHeight: 35,
   },
-  weeklyRecord: {
-    backgroundColor: NEUTRAL.BLACK,
-    borderRadius: 30,
-    padding: 20,
+  weeklyRecordWrapper: {
     marginTop: 50,
     marginHorizontal: 20,
+  },
+  shadowWrapper: {
+    borderRadius: BORDER_RADIUS,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+  },
+  gradientWrapper: {
+    borderRadius: BORDER_RADIUS,
+    overflow: 'hidden',
+  },
+  gradientBorder: {
+    padding: BORDER_WIDTH,
+  },
+  gradientInner: {
+    backgroundColor: NEUTRAL.BLACK,
+    borderRadius: BORDER_RADIUS - BORDER_WIDTH,
+    padding: 20,
   },
   weeklyRecordTitle: {
     alignSelf: 'center',
@@ -232,7 +281,7 @@ const styles = StyleSheet.create({
   },
   recordItem: {
     flexDirection: 'column',
-    marginTop: 15,
+    marginHorizontal: 24,
   },
   recordItemTop: {
     alignSelf: 'center',
@@ -264,7 +313,7 @@ const styles = StyleSheet.create({
   },
   commentWrapper: {
     alignItems: 'center',
-    marginTop: '38%',
+    marginTop: '40%',
   },
   comment: {
     alignSelf: 'center',
