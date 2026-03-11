@@ -483,6 +483,8 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingVertical: 25,
     paddingHorizontal: 30,
+    borderWidth: 1,
+    borderColor: NEUTRAL.GRAY_800,
     backgroundColor: NEUTRAL.BLACK,
   },
   additionalRecordMargin: {

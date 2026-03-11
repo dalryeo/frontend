@@ -28,6 +28,23 @@ function WeeklyRecord() {
     return `${min}'${sec.toString().padStart(2, '0')}"`;
   };
 
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+
+  const filteredList = weeklyDataList.filter((item) => {
+    const weekStart = new Date(item.weekStart);
+    const weekEnd = new Date(item.weekEnd);
+
+    const startInMonth =
+      weekStart.getMonth() === currentMonth &&
+      weekStart.getFullYear() === currentYear;
+    const endInMonth =
+      weekEnd.getMonth() === currentMonth &&
+      weekEnd.getFullYear() === currentYear;
+
+    return startInMonth || endInMonth;
+  });
+
   if (!fontsLoaded || loading) {
     return (
       <View
@@ -61,11 +78,11 @@ function WeeklyRecord() {
       </View>
 
       {/* TierInfoCard는 기록이 있을 때만 보여줌 */}
-      {weeklyDataList.length > 0 && <TierInfoCard />}
+      {filteredList.length > 0 && <TierInfoCard />}
 
       {/* 주간 기록 카드 */}
-      {weeklyDataList.length > 0 ? (
-        weeklyDataList.map((item, idx) => {
+      {filteredList.length > 0 ? (
+        filteredList.map((item, idx) => {
           const periodText = `${formatDateForDisplay(item.weekStart)} ~ ${formatDateForDisplay(item.weekEnd)}`;
 
           return (
@@ -131,12 +148,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 20,
+    borderWidth: 1,
+    borderColor: NEUTRAL.GRAY_700,
     backgroundColor: NEUTRAL.BLACK,
     marginHorizontal: 20,
     borderRadius: 20,
     padding: 20,
   },
-  recordListIcon: { marginRight: 20 },
+  recordListIcon: { marginRight: 20, fontSize: 40 },
   recordListItem: { flexDirection: 'column' },
   noRecordContainer: {
     flex: 0.9,
