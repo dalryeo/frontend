@@ -498,7 +498,10 @@ const styles = StyleSheet.create({
     color: NEUTRAL.MAIN,
   },
   recordTextContainerRight: {
-    alignItems: 'center',
+    width: '25%',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    minHeight: 55,
     gap: 2,
   },
   recordDetailText: {
