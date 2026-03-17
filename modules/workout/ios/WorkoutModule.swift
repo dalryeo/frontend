@@ -4,7 +4,7 @@ import CoreLocation
 
 public class WorkoutModule: Module {
     @MainActor private var workoutManager: WorkoutControlling?
-    private var isInitializing = false
+    @MainActor private var initializationTask: Task<WorkoutControlling, Never>?
     
     public func definition() -> ModuleDefinition {
         Name("Workout")
@@ -18,15 +18,18 @@ public class WorkoutModule: Module {
         
         OnCreate {
             Task { @MainActor in
-                await self.initializeProvider()
+                await self.ensureProvider()
             }
         }
         
         OnDestroy {
             Task { @MainActor in
+                // 인스턴스 및 태스크 정리
+                self.initializationTask = nil
                 self.workoutManager?.onMetricsUpdate = nil
                 self.workoutManager?.onWorkoutStateChange = nil
                 self.workoutManager?.onLocationAuthorizationChange = nil
+                self.workoutManager = nil
             }
         }
         
@@ -67,13 +70,9 @@ public class WorkoutModule: Module {
                     try await manager.startWorkout()
                     promise.resolve(nil)
                 } catch WorkoutError.watchNotReachable {
-                    await self.fallbackToiPhoneMode()
-                    do {
-                        try await self.workoutManager?.startWorkout()
-                        promise.resolve(nil)
-                    } catch let error as WorkoutError {
-                        self.rejectAndEmit(promise, error, code: WorkoutErrorCode.startFailed)
-                    }
+                    let manager = self.fallbackToiPhoneMode()
+                    try await manager.startWorkout()
+                    promise.resolve(nil)
                 } catch let error as WorkoutError {
                     self.rejectAndEmit(promise, error, code: WorkoutErrorCode.startFailed)
                 }
@@ -132,29 +131,43 @@ public class WorkoutModule: Module {
     // MARK: - Provider 초기화
     
     @MainActor
-    private func initializeProvider() async {
-        if let manager = workoutManager, manager.isWorkoutActive {
-            return
+    private func ensureProvider() async -> WorkoutControlling {
+        // 1. 이미 인스턴스가 있다면 즉시 반환
+        if let manager = workoutManager {
+            return manager
         }
         
-        isInitializing = true
-        workoutManager = await DeviceManager.shared.createWorkoutManager()
-        setupObservers()
-        emitInitialState()
-        isInitializing = false
+        // 2. 이미 초기화 태스크가 진행 중이라면 그 태스크의 결과를 기다림
+        if let existingTask = initializationTask {
+            return await existingTask.value
+        }
+        
+        // 3. 진행 중인 태스크가 없다면 새로운 초기화 태스크 생성 및 저장
+        let newTask = Task { @MainActor in
+            WorkoutLogger.debug("매니저 초기화 시작")
+            let manager = await DeviceManager.shared.createWorkoutManager()
+            
+            self.workoutManager = manager
+            setupObservers()
+            emitInitialState()
+            
+            return manager
+        }
+        
+        self.initializationTask = newTask
+        
+        return await newTask.value
     }
     
     @MainActor
-    private func ensureProvider() async -> WorkoutControlling {
-        await initializeProvider()
-        return workoutManager!
-    }
-    
-    @MainActor
-    private func fallbackToiPhoneMode() async {
+    private func fallbackToiPhoneMode() -> WorkoutControlling {
         WorkoutLogger.debug("워치 연결 실패 → 아이폰 모드로 전환")
-        workoutManager = DeviceManager.shared.createFallbackManager()
+        let manager = DeviceManager.shared.createFallbackManager()
+        
+        self.workoutManager = manager
         setupObservers()
+        
+        return manager
     }
     
     // MARK: - Observers
@@ -228,3 +241,4 @@ extension Promise {
         self.reject(error.toException(code: code))
     }
 }
+

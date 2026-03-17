@@ -3,13 +3,18 @@ import WatchKit
 import HealthKit
 
 class WatchAppDelegate: NSObject, WKExtensionDelegate {
-  func handle(_ workoutConfiguration: HKWorkoutConfiguration) {
-    WorkoutManager.shared.resetWorkout()
-    
-    Task { @MainActor in
-      try await WorkoutManager.shared.startWorkout()
+    func handle(_ workoutConfiguration: HKWorkoutConfiguration) {
+        Task { @MainActor in
+            do {
+                WorkoutManager.shared.resetWorkout()
+                try await WorkoutManager.shared.prepareWorkout(with: workoutConfiguration)                
+                try await WorkoutManager.shared.startWorkout()
+                
+            } catch {
+                WorkoutLogger.error("WatchAppDelegate 핸들링 에러: \(error.localizedDescription)")
+            }
+        }
     }
-  }
 }
 
 @main
