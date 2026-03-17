@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import { NEUTRAL } from '../../constants/Colors';
+import { UserGuideKey } from '../../data/userGuideData';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
 import { ConfirmModal } from './ConfirmModal';
@@ -21,6 +22,7 @@ import {
   logout as logoutAPI,
   withdraw as withdrawAPI,
 } from '../../services/authService';
+
 import { getOnboardingData } from '../../services/profileService';
 
 function MyPage() {
@@ -40,15 +42,19 @@ function MyPage() {
   const menuList = [
     {
       id: 1,
-      title: '달려 이용 가이드',
+      title: '서비스 이용약관',
       type: 'navigate',
-      route: '/userGuide' as const,
+      guideKey: 'terms' as UserGuideKey,
     },
-    { id: 2, title: '서비스 이용약관', type: 'navigate', route: null },
-    { id: 3, title: '개인정보 처리 방침', type: 'navigate', route: null },
-    { id: 4, title: '버전 정보', type: 'version', version: currentVersion },
-    { id: 5, title: '로그아웃', type: 'logout' },
-    { id: 6, title: '회원탈퇴', type: 'withdraw' },
+    {
+      id: 2,
+      title: '개인정보 처리 방침',
+      type: 'navigate',
+      guideKey: 'privacy' as UserGuideKey,
+    },
+    { id: 3, title: '버전 정보', type: 'version', version: currentVersion },
+    { id: 4, title: '로그아웃', type: 'logout' },
+    { id: 5, title: '회원탈퇴', type: 'withdraw' },
   ];
 
   useEffect(() => {
@@ -56,7 +62,6 @@ function MyPage() {
       try {
         const token = await getAccessToken();
         if (!token) {
-          console.error('토큰이 없습니다.');
           setIsLoading(false);
           return;
         }
@@ -74,8 +79,11 @@ function MyPage() {
   }, [getAccessToken]);
 
   const handleMenuPress = (item: (typeof menuList)[0]) => {
-    if (item.type === 'navigate' && item.route) {
-      router.push(item.route);
+    if (item.type === 'navigate' && item.guideKey) {
+      router.push({
+        pathname: '/userGuide',
+        params: { guideKey: item.guideKey },
+      });
     } else if (item.type === 'version') {
       setVersionModalVisible(true);
     } else if (item.type === 'logout') {
@@ -89,7 +97,6 @@ function MyPage() {
     try {
       const token = await getAccessToken();
       if (!token) {
-        Alert.alert('오류', '인증 토큰이 없습니다.');
         return;
       }
 
@@ -112,7 +119,6 @@ function MyPage() {
     try {
       const token = await getAccessToken();
       if (!token) {
-        Alert.alert('오류', '인증 토큰이 없습니다.');
         return;
       }
 
@@ -217,8 +223,8 @@ function MyPage() {
           <Font type='Body4' style={{ color: NEUTRAL.GRAY_300 }}>
             불편하신 점이 있나요?{'\n'}오픈카톡으로 빠르게 도와드릴게요!
           </Font>
-          <Font type='Caption' style={{ color: '#2D73FF' }}>
-            오픈카톡방 링크, 다듬은 후 링크 드릴게요
+          <Font type='Body7' style={{ color: '#2D73FF' }}>
+            https://open.kakao.com/o/sgQw0dhi
           </Font>
         </View>
       </View>
@@ -325,7 +331,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     marginHorizontal: 20,
-    marginTop: 80,
+    marginTop: 130,
     marginBottom: 40,
     paddingHorizontal: 20,
     backgroundColor: NEUTRAL.GRAY_800,

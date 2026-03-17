@@ -4,11 +4,8 @@ import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
 import { RANKING_LAYOUT } from '../../constants/RankingLayout';
 import { RankingItem, RankingType } from '../../types/ranking.types';
-import { formatNickname } from '../../utils/formatNickname';
-import {
-  getRankingConfig,
-  isMultiLineNickname,
-} from '../../utils/rankingUtils';
+import { formatNickname, isMultiLineNickname } from '../../utils/formatUtils';
+import { getRankingConfig } from '../../utils/rankingUtils';
 import { Font } from '../Font';
 
 interface WeeklyRankingProps {

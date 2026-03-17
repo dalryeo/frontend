@@ -15,7 +15,7 @@ import { useAppFonts } from '../../hooks/useAppFonts';
 import { useWorkout } from '../../hooks/useWorkout';
 import { useWorkoutActions } from '../../hooks/useWorkoutActions';
 import { RunningRecordService } from '../../services/runningRecordService';
-import { formatPace, formatTime } from '../../utils/formatters';
+import { formatElapsedTime, formatPace } from '../../utils/formatUtils';
 import { Font } from '../Font';
 
 type ControlState = 'paused' | 'playing' | 'sheet';
@@ -92,7 +92,7 @@ function Record() {
 
       if (success) {
         workoutModule.reset();
-        router.back();
+        router.replace('/analysis');
       }
       return success;
     } finally {
@@ -139,7 +139,7 @@ function Record() {
             label: 'BPM',
           },
           {
-            value: formatTime(metrics.elapsedTime),
+            value: formatElapsedTime(metrics.elapsedTime),
             label: '시간',
           },
         ].map((item, idx) => (

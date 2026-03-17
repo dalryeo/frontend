@@ -1,4 +1,5 @@
-import { useMemo } from 'react'; // 🆕 추가
+import { LinearGradient } from 'expo-linear-gradient';
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
 import { RANKING_LAYOUT } from '../../constants/RankingLayout';
@@ -10,6 +11,9 @@ interface MyRankingRecordProps {
   type: RankingType;
   myRecord: MyRecord;
 }
+
+const BORDER_RADIUS = RANKING_LAYOUT.MY_RECORD.BORDER_RADIUS;
+const BORDER_WIDTH = 1;
 
 export function MyRankingRecord({ type, myRecord }: MyRankingRecordProps) {
   const config = getRankingConfig(type);
@@ -40,57 +44,73 @@ export function MyRankingRecord({ type, myRecord }: MyRankingRecordProps) {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <Font type='SubButton' style={styles.title}>
-        내 기록
-      </Font>
-
-      <View style={styles.gradientBorder}>{gradientSegments}</View>
-
-      <View style={styles.content}>
-        <View style={styles.profileWrapper}>
-          <View style={styles.profileImg} />
-          <Font type='Body2' style={styles.foxEmoji}>
-            🦊
+    <View style={styles.shadowWrapper}>
+      <LinearGradient
+        colors={[
+          'rgba(118,118,118,1)',
+          'rgba(91,91,91,1)',
+          'rgba(91,91,91,0.15)',
+          'rgba(91,91,91,0.30)',
+          'rgba(118,118,118,1)',
+        ]}
+        locations={[0, 0.12, 0.39, 0.71, 1.0]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.gradientBorder}
+      >
+        <View style={styles.container}>
+          <Font type='SubButton' style={styles.title}>
+            내 기록
           </Font>
+
+          <View style={styles.divider}>{gradientSegments}</View>
+
+          <View style={styles.content}>
+            <View style={styles.profileWrapper}>
+              <View style={styles.profileImg} />
+              <Font type='Body2' style={styles.foxEmoji}>
+                🦊
+              </Font>
+            </View>
+
+            <View style={styles.stat}>
+              <Font type='Body7' style={styles.statTitle}>
+                {config.myRecordLabel}
+              </Font>
+              <Font
+                type='Head4'
+                style={[styles.statValue, !myRecord && styles.statValueEmpty]}
+              >
+                {primaryValue}
+              </Font>
+            </View>
+
+            <View style={styles.stat}>
+              <Font type='Body7' style={styles.statTitle}>
+                내 순위
+              </Font>
+              <Font
+                type='Head4'
+                style={[styles.statValue, !myRecord && styles.statValueEmpty]}
+              >
+                {myRecord?.rank || '-'}
+              </Font>
+            </View>
+
+            <View style={styles.stat}>
+              <Font type='Body7' style={styles.statTitle}>
+                상위
+              </Font>
+              <Font
+                type='Head4'
+                style={[styles.statValue, !myRecord && styles.statValueEmpty]}
+              >
+                {myRecord?.percentage || '-'}
+              </Font>
+            </View>
+          </View>
         </View>
-
-        <View style={styles.stat}>
-          <Font type='Body7' style={styles.statTitle}>
-            {config.myRecordLabel}
-          </Font>
-          <Font
-            type='Head4'
-            style={[styles.statValue, !myRecord && styles.statValueEmpty]}
-          >
-            {primaryValue}
-          </Font>
-        </View>
-
-        <View style={styles.stat}>
-          <Font type='Body7' style={styles.statTitle}>
-            내 순위
-          </Font>
-          <Font
-            type='Head4'
-            style={[styles.statValue, !myRecord && styles.statValueEmpty]}
-          >
-            {myRecord?.rank || '-'}
-          </Font>
-        </View>
-
-        <View style={styles.stat}>
-          <Font type='Body7' style={styles.statTitle}>
-            상위
-          </Font>
-          <Font
-            type='Head4'
-            style={[styles.statValue, !myRecord && styles.statValueEmpty]}
-          >
-            {myRecord?.percentage || '-'}
-          </Font>
-        </View>
-      </View>
+      </LinearGradient>
     </View>
   );
 }
@@ -98,10 +118,22 @@ export function MyRankingRecord({ type, myRecord }: MyRankingRecordProps) {
 const { MY_RECORD } = RANKING_LAYOUT;
 
 const styles = StyleSheet.create({
-  container: {
+  shadowWrapper: {
     marginTop: MY_RECORD.MARGIN_TOP,
     marginHorizontal: MY_RECORD.MARGIN_HORIZONTAL,
-    borderRadius: MY_RECORD.BORDER_RADIUS,
+    borderRadius: BORDER_RADIUS,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+  },
+  gradientBorder: {
+    borderRadius: BORDER_RADIUS,
+    padding: BORDER_WIDTH,
+    overflow: 'hidden',
+  },
+  container: {
+    borderRadius: BORDER_RADIUS - BORDER_WIDTH,
     padding: MY_RECORD.PADDING,
     backgroundColor: NEUTRAL.BLACK,
     alignItems: 'center',
@@ -109,7 +141,7 @@ const styles = StyleSheet.create({
   title: {
     color: NEUTRAL.GRAY_500,
   },
-  gradientBorder: {
+  divider: {
     flexDirection: 'row',
     marginTop: MY_RECORD.GRADIENT_MARGIN_TOP,
     width: '100%',

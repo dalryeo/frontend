@@ -1,4 +1,4 @@
-import { formatDateForAPI } from './formatters';
+import { formatLocalDateTime } from './dateUtils';
 
 interface RunningMetrics {
   distance: number;
@@ -7,6 +7,7 @@ interface RunningMetrics {
   heartRate?: number;
 }
 
+// 페이스 계산
 export const calculatePace = (
   metricPace: number | undefined,
   distanceKm: number,
@@ -21,10 +22,23 @@ export const calculatePace = (
   }
 };
 
+// km당 페이스 계산
+export const calculatePaceSecPerKm = (
+  hours: number,
+  minutes: number,
+  seconds: number,
+  distance: number,
+): number => {
+  const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+  return Math.round(totalSeconds / distance);
+};
+
+// 칼로리 계산
 export const calculateCalories = (distanceKm: number): number => {
   return Math.max(1, Math.round(distanceKm * 70 * 1.036));
 };
 
+// 운동 기록 데이터 생성
 export const createRecordData = (
   metrics: RunningMetrics,
   startTime: Date,
@@ -44,7 +58,7 @@ export const createRecordData = (
     avgPaceSecPerKm: Math.max(60, avgPaceSecPerKm),
     avgHeartRate: metrics.heartRate ? Math.round(metrics.heartRate) : 0,
     caloriesKcal: calculateCalories(distanceKm),
-    startAt: formatDateForAPI(startTime),
-    endAt: formatDateForAPI(endTime),
+    startAt: formatLocalDateTime(startTime),
+    endAt: formatLocalDateTime(endTime),
   };
 };

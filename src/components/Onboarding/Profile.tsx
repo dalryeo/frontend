@@ -26,14 +26,17 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
 
-import { formatDate, formatDateForAPI } from '../../utils/dateFormat';
 import {
   getDefaultValue,
   heightData,
   weightData,
-} from '../../utils/profileData';
+} from '../../utils/dataConstants';
+import { formatDate, formatLocalDate } from '../../utils/dateUtils';
 
-import { submitProfileData } from '../../services/profileService';
+import {
+  checkNicknameAvailability,
+  submitProfileData,
+} from '../../services/profileService';
 
 import { usePickerModal } from '../../hooks/usePickerModal';
 import { useProfileForm } from '../../hooks/useProfileForm';
@@ -51,8 +54,7 @@ function Profile() {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { getAccessToken, tierData, setOnboardingComplete, user, setUser } =
-    useAuth();
+  const { getAccessToken, tierData, user, setUser } = useAuth();
 
   const {
     gender,
@@ -64,6 +66,7 @@ function Profile() {
     weight,
     selectedImg,
     isFormValid,
+    nicknameChecked,
     setGender,
     handleNicknameChange,
     setBirth,
@@ -92,10 +95,21 @@ function Profile() {
     const defaultVal = getDefaultValue(gender, type);
     const currentValue =
       type === 'height' ? (height ?? defaultVal) : (weight ?? defaultVal);
+
     openPicker(type, currentValue);
   };
 
   const handleClosePicker = () => {
+    if (activePicker === 'date') {
+      if (!birth) {
+        const defaultDate = new Date(2001, 0, 1);
+        setBirthDate(defaultDate);
+        setBirth(formatDate(defaultDate));
+      }
+      closePicker();
+      return;
+    }
+
     const onApply = (value: number) => {
       if (activePicker === 'height') {
         setHeight(value);
@@ -103,6 +117,7 @@ function Profile() {
         setWeight(value);
       }
     };
+
     closePicker(onApply);
   };
 
@@ -114,21 +129,43 @@ function Profile() {
   };
 
   const handleSubmit = async () => {
+    // 닉네임 중복 체크가 완료되지 않았으면 먼저 체크
+    if (!nicknameChecked && nickname.trim()) {
+      try {
+        const token = await getAccessToken();
+        if (!token) {
+          return;
+        }
+
+        const result = await checkNicknameAvailability(nickname.trim(), token);
+        if (!result.available) {
+          Alert.alert(
+            '닉네임 중복',
+            '이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.',
+          );
+          return;
+        }
+      } catch (error) {
+        console.error('닉네임 확인 오류:', error);
+        Alert.alert('오류', '닉네임 확인 중 오류가 발생했습니다.');
+        return;
+      }
+    }
+
     setIsLoading(true);
 
     try {
       const token = await getAccessToken();
 
       if (!token) {
-        Alert.alert('오류', '인증 토큰이 없습니다. 다시 로그인해주세요.');
         return;
       }
 
       await submitProfileData(
         {
           nickname: nickname.trim(),
-          gender: gender === 'male' ? 'M' : 'F',
-          birth: formatDateForAPI(birthDate),
+          gender: gender === 'male' ? 'M' : gender === 'female' ? 'F' : 'O',
+          birth: formatLocalDate(birthDate),
           height: height!,
           weight: weight!,
           profileImage: selectedImg,
@@ -143,8 +180,6 @@ function Profile() {
         };
         await setUser(updatedUser);
       }
-
-      await setOnboardingComplete(true);
 
       if (tierData) {
         router.replace('/tierRecommend');
@@ -330,6 +365,24 @@ function Profile() {
                 여자
               </Font>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.genderButton,
+                gender === 'other' && styles.genderSelected,
+              ]}
+              onPress={() => setGender('other')}
+            >
+              <Font
+                type='Body4'
+                style={[
+                  styles.genderText,
+                  gender === 'other' && styles.genderSelected,
+                ]}
+              >
+                그외
+              </Font>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.stats}>
@@ -477,10 +530,10 @@ function Profile() {
                   activePicker && (
                     <WheelPicker
                       data={activePicker === 'height' ? heightData : weightData}
-                      value={pickerValue}
-                      onValueChanged={({ item: { value } }) =>
-                        setPickerValue(value)
-                      }
+                      value={pickerValue ?? 0}
+                      onValueChanged={({ item: { value } }) => {
+                        setPickerValue(value);
+                      }}
                       itemTextStyle={styles.pickerItemText}
                     />
                   )
@@ -623,7 +676,7 @@ const styles = StyleSheet.create({
   },
   genderContainer: {
     flexDirection: 'row',
-    width: '50%',
+    width: '75%', // 3개 버튼을 위해 너비 증가
     marginLeft: 20,
     marginTop: 12,
   },

@@ -2,8 +2,10 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useAppFonts } from '../hooks/useAppFonts';
 import { Font } from './Font';
 
@@ -33,47 +35,86 @@ type TabItemProps =
 
 export default function CustomTabBar({ state }: BottomTabBarProps) {
   const [fontsLoaded] = useAppFonts();
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      fadeAnim.setValue(1);
+      setIsTransitioning(false);
+    }, [fadeAnim]),
+  );
 
   if (!fontsLoaded) return null;
 
   const currentRouteName = state.routes[state.index]?.name;
 
+  const handleStartPress = () => {
+    if (isTransitioning) return;
+
+    setIsTransitioning(true);
+
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 700,
+      useNativeDriver: true,
+    }).start(() => {
+      router.push('/countDown');
+    });
+  };
+
   return (
-    <View style={styles.wrapper}>
-      <View style={styles.container}>
-        <TabItem
-          label='기록'
-          iconType='MaterialCommunityIcons'
-          icon='clipboard-text-outline'
-          focused={currentRouteName === 'analysis/index'}
-          onPress={() => router.push('/(tabs)/analysis')}
-        />
+    <>
+      <Animated.View
+        style={[
+          styles.dissolveOverlay,
+          {
+            opacity: Animated.subtract(1, fadeAnim),
+            pointerEvents: isTransitioning ? 'auto' : 'none',
+          },
+        ]}
+      />
 
-        <TabItem
-          label='랭킹'
-          iconType='Ionicons'
-          icon='trophy-outline'
-          focused={currentRouteName === 'ranking/index'}
-          onPress={() => router.push('/(tabs)/ranking')}
-        />
+      <View style={styles.wrapper}>
+        <View style={styles.container}>
+          <TabItem
+            label='기록'
+            iconType='MaterialCommunityIcons'
+            icon='clipboard-text-outline'
+            focused={currentRouteName === 'analysis/index'}
+            onPress={() => router.push('/(tabs)/analysis')}
+          />
+
+          <TabItem
+            label='랭킹'
+            iconType='Ionicons'
+            icon='trophy-outline'
+            focused={currentRouteName === 'ranking/index'}
+            onPress={() => router.push('/(tabs)/ranking')}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[
+            styles.centerButton,
+            isTransitioning && styles.centerButtonPressed,
+          ]}
+          onPress={handleStartPress}
+          activeOpacity={0.9}
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+          disabled={isTransitioning}
+        >
+          <FontAwesome5
+            style={{ color: NEUTRAL.GRAY_900 }}
+            name='running'
+            size={32}
+          />
+          <Font type='Caption' style={styles.centerText}>
+            START
+          </Font>
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={styles.centerButton}
-        onPress={() => router.push('/countDown')}
-        activeOpacity={0.9}
-        hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-      >
-        <FontAwesome5
-          style={{ color: NEUTRAL.GRAY_900 }}
-          name='running'
-          size={32}
-        />
-        <Font type='Caption' style={styles.centerText}>
-          START
-        </Font>
-      </TouchableOpacity>
-    </View>
+    </>
   );
 }
 
@@ -148,8 +189,21 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 0 },
   },
+  centerButtonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.95 }],
+  },
   centerText: {
     marginTop: 4,
     color: NEUTRAL.GRAY_900,
+  },
+  dissolveOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#000000',
+    zIndex: 9999,
   },
 });
