@@ -14,6 +14,7 @@ import {
 
 import { useColorScheme } from '@/src/components/useColorScheme';
 import { AuthProvider, useAuth } from '@/src/contexts/AuthContext';
+import { ToastProvider } from '@/src/contexts/ToastContext';
 import { useAppFonts } from '@/src/hooks/useAppFonts';
 
 export { ErrorBoundary } from 'expo-router';
@@ -61,27 +62,35 @@ function AuthenticatedLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-      <Stack.Screen name='login' options={{ headerShown: false }} />
-      <Stack.Screen name='startRecord/index' options={{ headerShown: false }} />
-      <Stack.Screen name='profile/index' options={{ headerShown: false }} />
-      <Stack.Screen name='profileEdit/index' options={{ headerShown: false }} />
-      <Stack.Screen name='userGuide/index' options={{ headerShown: false }} />
-      <Stack.Screen
-        name='tierRecommend/index'
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name='healthPermission/index'
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name='locationPermission/index'
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
-    </Stack>
+    <ToastProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+        <Stack.Screen name='login' options={{ headerShown: false }} />
+        <Stack.Screen
+          name='startRecord/index'
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name='profile/index' options={{ headerShown: false }} />
+        <Stack.Screen
+          name='profileEdit/index'
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name='userGuide/index' options={{ headerShown: false }} />
+        <Stack.Screen
+          name='tierRecommend/index'
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name='healthPermission/index'
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name='locationPermission/index'
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
+      </Stack>
+    </ToastProvider>
   );
 }
 

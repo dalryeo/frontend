@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { useWorkout } from '../../hooks/useWorkout';
 import { useWorkoutActions } from '../../hooks/useWorkoutActions';
@@ -26,6 +27,7 @@ function Record() {
   const [isSaving, setIsSaving] = useState(false);
   const [startTime, setStartTime] = useState<Date | null>(null);
   const router = useRouter();
+  const { showToast } = useToast();
 
   const { getAccessToken } = useAuth();
   const {
@@ -93,6 +95,7 @@ function Record() {
       if (success) {
         workoutModule.reset();
         router.replace('/analysis');
+        showToast('러닝이 완료되었어요');
       }
       return success;
     } finally {

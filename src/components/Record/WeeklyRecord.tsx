@@ -28,23 +28,6 @@ function WeeklyRecord() {
     return `${min}'${sec.toString().padStart(2, '0')}"`;
   };
 
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-
-  const filteredList = weeklyDataList.filter((item) => {
-    const weekStart = new Date(item.weekStart);
-    const weekEnd = new Date(item.weekEnd);
-
-    const startInMonth =
-      weekStart.getMonth() === currentMonth &&
-      weekStart.getFullYear() === currentYear;
-    const endInMonth =
-      weekEnd.getMonth() === currentMonth &&
-      weekEnd.getFullYear() === currentYear;
-
-    return startInMonth || endInMonth;
-  });
-
   if (!fontsLoaded || loading) {
     return (
       <View
@@ -78,11 +61,11 @@ function WeeklyRecord() {
       </View>
 
       {/* TierInfoCard는 기록이 있을 때만 보여줌 */}
-      {filteredList.length > 0 && <TierInfoCard />}
+      {weeklyDataList.length > 0 && <TierInfoCard />}
 
       {/* 주간 기록 카드 */}
-      {filteredList.length > 0 ? (
-        filteredList.map((item, idx) => {
+      {weeklyDataList.length > 0 ? (
+        weeklyDataList.map((item, idx) => {
           const periodText = `${formatDateForDisplay(item.weekStart)} ~ ${formatDateForDisplay(item.weekEnd)}`;
 
           return (
