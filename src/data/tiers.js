@@ -1,7 +1,7 @@
 export const tiers = {
   cheetah: {
     name: "치타",
-    iconSet: "🐆",
+    iconSet: "CHEETAH",
     title: "엘리트 스피드 러너",
     subtitle: "폭발적인 속도와 레이스 본능을 가진 최상위 러너 타입",
     sections: [
@@ -41,7 +41,7 @@ export const tiers = {
 
   deer: {
     name: "사슴",
-    iconSet: "🦌",
+    iconSet: "DEER",
     title: "균형 잡힌 고급 러너",
     subtitle: "경쾌한 리듬과 안정적인 페이스를 가진 성장형 상위 러너",
     sections: [
@@ -78,7 +78,7 @@ export const tiers = {
 
   husky: {
     name: "허스키",
-    iconSet: "🐕",
+    iconSet: "HUSKY",
     title: "지구력 기반 올라운더 러너",
     subtitle: "여유 있는 지속력과 흔들림 없는 완주력이 강점인 타입",
     sections: [
@@ -115,7 +115,7 @@ export const tiers = {
 
   fox: {
     name: "여우",
-    iconSet: "🦊",
+    iconSet: "FOX",
     title: "영리한 효율형 러너",
     subtitle: "영리하고 균형 잡힌 러닝 스타일을 가진 타입",
     sections: [
@@ -152,7 +152,7 @@ export const tiers = {
 
   gorani: {
     name: "고라니",
-    iconSet: "🦌",
+    iconSet: "WATERDEER",
     title: "잠재력 높은 성장형 러너",
     subtitle: "부드러운 스텝과 안정적인 기본기를 가진 성장 곡선 시작 타입",
     sections: [
@@ -189,7 +189,7 @@ export const tiers = {
 
   sheep: {
     name: "양",
-    iconSet: "🐑",
+    iconSet: "SHEEP",
     title: "리듬을 찾아가는 초중급 러너",
     subtitle: "천천히 적응하며 페이스 감각을 키워가는 구축기 타입",
     sections: [
@@ -226,7 +226,7 @@ export const tiers = {
 
   rabbit: {
     name: "토끼",
-    iconSet: "🐇",
+    iconSet: "RABBIT",
     title: "속도 감각을 익혀가는 러너",
     subtitle: "가볍게 시작해 러닝 감각을 만들어가는 초기 도전 타입",
     sections: [
@@ -263,7 +263,7 @@ export const tiers = {
 
   panda: {
     name: "판다",
-    iconSet: "🐼",
+    iconSet: "PANDA",
     title: "기초 체력을 쌓아가는 러너",
     subtitle: "편안한 페이스로 차근차근 기초 체력을 만드는 러너 타입",
     sections: [
@@ -300,7 +300,7 @@ export const tiers = {
 
   duck: {
     name: "오리",
-    iconSet: "🦆",
+    iconSet: "DUCK",
     title: "안전한 페이스를 지향하는 러너",
     subtitle: "안정 우선, 무리 없는 속도로 지속 가능성을 만드는 타입",
     sections: [
@@ -337,7 +337,7 @@ export const tiers = {
 
   turtle: {
     name: "거북이",
-    iconSet: "🐢",
+    iconSet: "TURTLE",
     title: "천천히 꾸준함을 만드는 러너",
     subtitle: "부담 없이 달리며 러닝 습관을 만들어가는 첫 단계",
     sections: [

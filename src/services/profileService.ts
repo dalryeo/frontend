@@ -7,7 +7,7 @@ interface ProfileData {
   birth: string;
   height: number;
   weight: number;
-  profileImage: number | null;
+  profileImage: string | null;
 }
 
 interface OnboardingData {
@@ -24,16 +24,15 @@ interface OnboardingResponse {
   data: OnboardingData;
 }
 
-// 온보딩 업데이트 요청 인터페이스 추가
 interface OnboardingUpdateRequest {
   nickname: string;
   birth: string;
   gender: Gender;
   height: number;
   weight: number;
+  profileImage: string;
 }
 
-// 온보딩 업데이트 응답 인터페이스 추가
 interface OnboardingUpdateResponse {
   success: boolean;
   data: null;
@@ -84,7 +83,7 @@ export const updateOnboardingData = async (
 ): Promise<OnboardingUpdateResponse> => {
   try {
     const response = await fetch(`${BASE_URL}/onboarding`, {
-      method: 'PUT',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,

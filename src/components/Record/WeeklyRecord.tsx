@@ -1,9 +1,9 @@
+import { getTierImage, IMAGES } from '@/src/constants/Images';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
-import { getTierIcon, TierCode } from '../../constants/Tiers';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { useWeeklyData } from '../../hooks/useWeeklyData';
 import { formatDateForDisplay } from '../../utils/dateUtils';
@@ -70,9 +70,11 @@ function WeeklyRecord() {
 
           return (
             <View key={idx} style={styles.recordList}>
-              <Font type='Head1' style={styles.recordListIcon}>
-                {getTierIcon(item.tierCode as TierCode)}
-              </Font>
+              <Image
+                source={getTierImage(item.tierCode)}
+                style={styles.recordListIcon}
+                resizeMode='contain'
+              />
               <View style={styles.recordListItem}>
                 <Font type='Body4' style={{ color: NEUTRAL.WHITE }}>
                   {`러닝 ${item.runCount}회`}
@@ -90,6 +92,10 @@ function WeeklyRecord() {
       ) : (
         <View style={styles.noRecordContainer}>
           <View style={styles.noRecordContent}></View>
+          <Image
+            source={IMAGES.EMPTY.TURTLE_EMPTY()}
+            style={styles.turtleImg}
+          />
           <Font type='Head3' style={{ color: NEUTRAL.WHITE, marginTop: 30 }}>
             이번 달에 달린 기록이 없어요
           </Font>
@@ -138,7 +144,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
   },
-  recordListIcon: { marginRight: 20, fontSize: 40 },
+  recordListIcon: {
+    width: 40,
+    height: 40,
+    marginRight: 20,
+  },
   recordListItem: { flexDirection: 'column' },
   noRecordContainer: {
     flex: 0.9,
@@ -146,11 +156,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   noRecordContent: {
-    width: 164,
-    height: 164,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#242424',
+  },
+  turtleImg: {
+    height: 180,
+    resizeMode: 'contain',
   },
   noRecordButton: {
     marginTop: 20,

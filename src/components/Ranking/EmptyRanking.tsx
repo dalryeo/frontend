@@ -1,12 +1,13 @@
-import { StyleSheet, View } from 'react-native';
+import { IMAGES } from '@/src/constants/Images';
+import { LAYOUT } from '@/src/constants/Layout';
+import { Image, StyleSheet, View } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
-import { LAYOUT } from '../../constants/Layout';
 import { Font } from '../Font';
 
 export function EmptyRanking() {
   return (
     <View style={styles.container}>
-      <View style={styles.imageBox} />
+      <Image source={IMAGES.EMPTY.TURTLE_EMPTY()} style={styles.imageBox} />
 
       <Font type='Head3' style={styles.title}>
         이번 주의 기록이{'\n'}쌓이는 중이에요
@@ -26,13 +27,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingTop: LAYOUT.EMPTY.PADDING_TOP,
-    minHeight: 500,
   },
   imageBox: {
-    width: LAYOUT.EMPTY.IMAGE_SIZE,
-    height: LAYOUT.EMPTY.IMAGE_SIZE,
-    backgroundColor: '#242424',
-    marginBottom: LAYOUT.EMPTY.MARGIN_BOTTOM_IMAGE,
+    height: 180,
+    resizeMode: 'contain',
+    marginBottom: 10,
   },
   title: {
     color: NEUTRAL.WHITE,

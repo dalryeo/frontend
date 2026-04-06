@@ -1,7 +1,8 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
+import { IMAGES } from '@/src/constants/Images';
 import { NEUTRAL } from '../../constants/Colors';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { useAppleLogin } from '../../hooks/useAppleLogin';
@@ -28,6 +29,12 @@ function Login() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.loginContainer}>
+        <Image source={IMAGES.APP.LOGIN()} style={styles.login} />
+        <Font type='Title' style={{ color: NEUTRAL.MAIN }}>
+          DALRYEO
+        </Font>
+      </View>
       <Pressable
         style={styles.buttonContainer}
         onPress={handleLogin}
@@ -50,7 +57,16 @@ function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: NEUTRAL.BACKGROUND,
+  },
+  loginContainer: {
+    alignItems: 'center',
+  },
+  login: {
+    width: 230,
+    height: 180,
   },
   buttonContainer: {
     position: 'absolute',

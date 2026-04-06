@@ -1,3 +1,4 @@
+import { IMAGES } from '@/src/constants/Images';
 import { router } from 'expo-router';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { LAYOUT } from '../../constants/Layout';
@@ -6,17 +7,11 @@ export function RankingHeader() {
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={() => router.push('/myPage')}>
-        <Image
-          source={require('../../../assets/images/Main/accountIcon.png')}
-          style={styles.icon}
-        />
+        <Image source={IMAGES.MAIN.ACCOUNT_ICON()} style={styles.icon} />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.push('/(tabs)')}>
-        <Image
-          source={require('../../../assets/images/Ranking/home.png')}
-          style={styles.icon}
-        />
+        <Image source={IMAGES.MAIN.HOME()} style={styles.icon} />
       </TouchableOpacity>
     </View>
   );

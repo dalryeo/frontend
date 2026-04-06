@@ -14,23 +14,23 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   scheme: 'dalryeo',
   version: '1.0.0',
   orientation: 'portrait',
-  icon: './assets/images/icon.png',
+  icon: './assets/images/App/Dalryeo_AppIcon.png',
   userInterfaceStyle: 'automatic',
   newArchEnabled: true,
   splash: {
     image: './assets/images/splash-icon.png',
     resizeMode: 'contain',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'NEUTRAL.MAIN',
   },
   ios: {
     supportsTablet: false,
     bundleIdentifier: BUNDLE_ID.ios,
     usesAppleSignIn: true,
+    icon: './assets/images/App/Dalryeo_AppIcon.png',
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: './assets/images/adaptive-icon.png',
-      backgroundColor: '#ffffff',
+      foregroundImage: './assets/images/App/Dalryeo_AppIcon.png',
     },
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,

@@ -18,6 +18,7 @@ import { Font } from '../Font';
 import Foundation from '@expo/vector-icons/Foundation';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
+import { IMAGES } from '../../constants/Images';
 import { getPeriodText } from '../../utils/dateUtils';
 import {
   filterRecordsByPeriod,
@@ -175,8 +176,11 @@ function Analysis() {
 
       return (
         <View style={styles.noRecordContainer}>
-          <View style={styles.noRecordContent}></View>
-          <Font type='Head3' style={{ color: NEUTRAL.WHITE, marginTop: 30 }}>
+          <Image
+            source={IMAGES.EMPTY.TURTLE_EMPTY()}
+            style={styles.noRecordContent}
+          />
+          <Font type='Head3' style={{ color: NEUTRAL.WHITE }}>
             {periodLabel}에 달린 기록이 없어요
           </Font>
           <Font type='Body4' style={{ color: NEUTRAL.GRAY_500, marginTop: 10 }}>
@@ -233,16 +237,13 @@ function Analysis() {
       <View style={styles.Icon}>
         <TouchableOpacity onPress={() => router.push('/myPage')}>
           <Image
-            source={require('../../../assets/images/Main/accountIcon.png')}
+            source={IMAGES.MAIN.ACCOUNT_ICON()}
             style={styles.accountIcon}
           />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push('/(tabs)')}>
-          <Image
-            source={require('../../../assets/images/Ranking/home.png')}
-            style={styles.accountIcon}
-          />
+          <Image source={IMAGES.MAIN.HOME()} style={styles.accountIcon} />
         </TouchableOpacity>
       </View>
 
@@ -516,16 +517,15 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   noRecordContainer: {
-    marginTop: 100,
+    flex: 1,
+    marginTop: '30%',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 12,
   },
   noRecordContent: {
-    width: 164,
-    height: 164,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#242424',
+    height: 180,
+    resizeMode: 'contain',
   },
   modalBackdrop: {
     flex: 1,

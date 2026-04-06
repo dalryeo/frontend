@@ -1,13 +1,16 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
 
 import { NEUTRAL } from '../../constants/Colors';
+import { IMAGES, profileImageCodeToIndex } from '../../constants/Images';
 import { UserGuideKey } from '../../data/userGuideData';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
@@ -16,7 +19,6 @@ import { VersionModal } from './VersionModal';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { router } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   logout as logoutAPI,
@@ -28,7 +30,21 @@ import { getOnboardingData } from '../../services/profileService';
 function MyPage() {
   const [fontsLoaded] = useAppFonts();
   const [nickname, setNickname] = useState('');
+  const [profileImgIndex, setProfileImgIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  const PROFILE_IMAGES = [
+    IMAGES.TIER.CHEETAH,
+    IMAGES.TIER.DEER,
+    IMAGES.TIER.HUSKY,
+    IMAGES.TIER.FOX,
+    IMAGES.TIER.RABBIT,
+    IMAGES.TIER.PANDA,
+    IMAGES.TIER.DUCK,
+    IMAGES.TIER.TURTLE,
+    IMAGES.TIER.SHEEP,
+    IMAGES.TIER.WATERDEER,
+  ];
   const [versionModalVisible, setVersionModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
@@ -68,6 +84,7 @@ function MyPage() {
 
         const data = await getOnboardingData(token);
         setNickname(data.nickname);
+        setProfileImgIndex(profileImageCodeToIndex(data.profileImage));
       } catch (error) {
         console.error('사용자 정보 로드 실패:', error);
       } finally {
@@ -161,7 +178,13 @@ function MyPage() {
       </View>
 
       <View style={styles.profileContainer}>
-        <View style={styles.profileImg}></View>
+        <View style={styles.profileImg}>
+          <Image
+            source={PROFILE_IMAGES[profileImgIndex]()}
+            style={styles.profileImg}
+            resizeMode='contain'
+          />
+        </View>
         <TouchableOpacity
           style={{ alignItems: 'center', flexDirection: 'row' }}
           onPress={() => router.push('/profileEdit')}
@@ -302,8 +325,12 @@ const styles = StyleSheet.create({
   profileImg: {
     width: 110,
     height: 110,
-    borderRadius: 70,
-    backgroundColor: NEUTRAL.GRAY_900,
+    padding: 20,
+    borderRadius: 55,
+    backgroundColor: NEUTRAL.MAIN,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   profileText: {
     marginLeft: 25,

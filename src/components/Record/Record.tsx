@@ -28,7 +28,6 @@ function Record() {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const router = useRouter();
   const { showToast } = useToast();
-
   const { getAccessToken } = useAuth();
   const {
     metrics,
@@ -83,7 +82,7 @@ function Record() {
     }
   };
 
-  const saveRecord = async (): Promise<boolean> => {
+  const handleEndClick = async () => {
     setIsSaving(true);
     try {
       const success = await RunningRecordService.saveRecord(
@@ -93,20 +92,13 @@ function Record() {
       );
 
       if (success) {
+        await workoutEnd();
         workoutModule.reset();
-        router.replace('/analysis');
         showToast('러닝이 완료되었어요');
+        router.replace('/analysis');
       }
-      return success;
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleEndClick = async () => {
-    const saveSuccess = await saveRecord();
-    if (saveSuccess) {
-      await workoutEnd();
     }
   };
 

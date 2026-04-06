@@ -12,6 +12,7 @@ module.exports = defineConfig([
     ignores: ['dist/*', 'plugin/build/*'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
+      'import/no-unresolved': 'off',
     },
   },
 ]);

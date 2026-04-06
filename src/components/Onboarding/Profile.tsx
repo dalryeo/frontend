@@ -8,6 +8,7 @@ import { useState } from 'react';
 import {
   Alert,
   Animated,
+  Image,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -22,6 +23,7 @@ import {
 } from 'react-native';
 
 import { NEUTRAL } from '../../constants/Colors';
+import { IMAGES, profileImageIndexToCode } from '../../constants/Images';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
@@ -40,6 +42,7 @@ import {
 
 import { usePickerModal } from '../../hooks/usePickerModal';
 import { useProfileForm } from '../../hooks/useProfileForm';
+import { ProfileImageModal } from '../common/ProfileImageModal';
 
 type DateTimePickerEvent = {
   type: string;
@@ -168,7 +171,8 @@ function Profile() {
           birth: formatLocalDate(birthDate),
           height: height!,
           weight: weight!,
-          profileImage: selectedImg,
+          profileImage:
+            selectedImg !== null ? profileImageIndexToCode(selectedImg) : null,
         },
         token,
       );
@@ -207,6 +211,19 @@ function Profile() {
     }
   };
 
+  const PROFILE_IMAGES = [
+    IMAGES.TIER.CHEETAH,
+    IMAGES.TIER.DEER,
+    IMAGES.TIER.HUSKY,
+    IMAGES.TIER.FOX,
+    IMAGES.TIER.RABBIT,
+    IMAGES.TIER.PANDA,
+    IMAGES.TIER.DUCK,
+    IMAGES.TIER.TURTLE,
+    IMAGES.TIER.SHEEP,
+    IMAGES.TIER.WATERDEER,
+  ];
+
   if (!fontsLoaded) return null;
 
   return (
@@ -237,7 +254,13 @@ function Profile() {
             입력하신 닉네임과 프로필은 랭킹 화면에 표시돼요
           </Font>
 
-          <View style={[styles.profileImg, { marginTop: 50 }]}></View>
+          <View style={[styles.profileImg, { marginTop: 50 }]}>
+            <Image
+              source={PROFILE_IMAGES[selectedImg ?? 0]!()}
+              style={styles.profileImgInner}
+              resizeMode='contain'
+            />
+          </View>
           <MaterialIcons
             name='edit'
             onPress={() => setOpen(true)}
@@ -245,45 +268,12 @@ function Profile() {
             size={20}
           />
 
-          <Modal visible={open} transparent animationType='slide'>
-            <View style={styles.sheetBackground}>
-              <TouchableOpacity
-                style={{ flex: 1 }}
-                onPress={() => setOpen(false)}
-              />
-
-              <View style={styles.sheet}>
-                <Font type='Head4' style={styles.profileText}>
-                  프로필 이미지를 선택해주세요
-                </Font>
-
-                <View style={styles.sheetInner}>
-                  {[...Array(6)].map((_, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      onPress={() => setSelectedImg(index)}
-                      style={[
-                        styles.profileImgModal,
-                        selectedImg === index && {
-                          borderWidth: 2,
-                          borderColor: NEUTRAL.MAIN,
-                        },
-                      ]}
-                    />
-                  ))}
-                </View>
-
-                <TouchableOpacity
-                  onPress={() => setOpen(false)}
-                  style={styles.applyBtn}
-                >
-                  <Font type='SubButton' style={styles.applyBtnText}>
-                    적용하기
-                  </Font>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
+          <ProfileImageModal
+            visible={open}
+            selectedImg={selectedImg ?? 0}
+            onSelect={setSelectedImg}
+            onClose={() => setOpen(false)}
+          />
 
           <View style={styles.subtitleNick}>
             <Font type='Body4' style={styles.subtitle}>
@@ -606,53 +596,17 @@ const styles = StyleSheet.create({
   profileImg: {
     width: 110,
     height: 110,
-    borderRadius: 70,
-    backgroundColor: NEUTRAL.GRAY_900,
-    marginTop: 20,
+    borderRadius: 55,
+    backgroundColor: NEUTRAL.MAIN,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
     alignSelf: 'center',
   },
-  sheetBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: NEUTRAL.GRAY_900,
-    paddingBottom: 20,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-  },
-  sheetInner: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginTop: 20,
-    backgroundColor: NEUTRAL.GRAY_900,
-  },
-  profileImgModal: {
+  profileImgInner: {
     width: 110,
     height: 110,
-    borderRadius: 70,
-    backgroundColor: NEUTRAL.GRAY_800,
-    marginTop: 20,
-    alignSelf: 'center',
-  },
-  applyBtn: {
-    width: '100%',
-    backgroundColor: NEUTRAL.BLACK,
-    borderRadius: 30,
-    height: 60,
-    justifyContent: 'center',
-    marginTop: 25,
-  },
-  applyBtnText: {
-    color: NEUTRAL.WHITE,
-    textAlign: 'center',
-  },
-  profileText: {
-    color: NEUTRAL.WHITE,
+    padding: 20,
   },
   imgIcon: {
     position: 'absolute',

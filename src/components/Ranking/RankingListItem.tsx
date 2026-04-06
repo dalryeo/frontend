@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { getTierBaseImage } from '@/src/constants/Images';
+import { Image, StyleSheet, View } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
 import { RANKING_LAYOUT } from '../../constants/RankingLayout';
 import {
@@ -50,10 +51,11 @@ export function RankingListItem({ type, item }: RankingListItemProps) {
         </View>
 
         <View style={styles.profileWrapper}>
-          <View style={styles.profileImg} />
-          <Font type='Body2' style={styles.foxEmoji}>
-            🦊
-          </Font>
+          <Image
+            source={getTierBaseImage(item.tierCode)}
+            style={styles.profileImg}
+            resizeMode='contain'
+          />
         </View>
 
         <View style={styles.nicknameWrapper}>
@@ -97,20 +99,21 @@ const styles = StyleSheet.create({
   },
   profileWrapper: {
     position: 'relative',
-  },
-  profileImg: {
     width: LIST_ITEM.PROFILE.SIZE,
     height: LIST_ITEM.PROFILE.SIZE,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderRadius: LIST_ITEM.PROFILE.BORDER_RADIUS,
     borderWidth: LIST_ITEM.PROFILE.BORDER_WIDTH,
     borderColor: NEUTRAL.GRAY_600,
-    backgroundColor: NEUTRAL.GRAY_800,
+    backgroundColor: NEUTRAL.MAIN,
+  },
+  profileImg: {
+    width: 55,
+    height: 55,
   },
   foxEmoji: {
     position: 'absolute',
-    bottom: LIST_ITEM.PROFILE.EMOJI_BOTTOM,
-    right: LIST_ITEM.PROFILE.EMOJI_RIGHT,
-    fontSize: LIST_ITEM.PROFILE.EMOJI_SIZE,
     paddingHorizontal: 1,
     paddingVertical: 1,
   },
