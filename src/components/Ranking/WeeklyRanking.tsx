@@ -183,10 +183,12 @@ const styles = StyleSheet.create({
   profileImg: {
     width: PROFILE.FIRST.SIZE,
     height: PROFILE.FIRST.SIZE,
+    padding: PROFILE.FIRST.PADDING,
   },
   profileImgSecondThird: {
     width: PROFILE.OTHER.SIZE,
     height: PROFILE.OTHER.SIZE,
+    padding: PROFILE.OTHER.PADDING,
   },
   infoContainer: {
     alignItems: 'center',

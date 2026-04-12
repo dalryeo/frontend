@@ -25,7 +25,7 @@ import {
 
 import { NEUTRAL } from '../../constants/Colors';
 import {
-  IMAGES,
+  getProfileImageSource,
   profileImageCodeToIndex,
   profileImageIndexToCode,
 } from '../../constants/Images';
@@ -48,7 +48,7 @@ import {
 import { genderToAPI } from '@/src/utils/commonUtils';
 import { usePickerModal } from '../../hooks/usePickerModal';
 import { useProfileForm } from '../../hooks/useProfileForm';
-import { ProfileImageModal } from '../common/ProfileImageModal';
+// import { ProfileImageModal } from '../common/ProfileImageModal'; // MVP 출시 후 재활성화 예정
 
 type DateTimePickerEvent = {
   type: string;
@@ -60,16 +60,25 @@ type DateTimePickerEvent = {
 
 function ProfileEdit() {
   const [fontsLoaded] = useAppFonts();
-  const [open, setOpen] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [originalData, setOriginalData] = useState({
+  const [displayProfileImage, setDisplayProfileImage] = useState<string | null>(
+    null,
+  );
+  const [originalData, setOriginalData] = useState<{
+    nickname: string;
+    gender: string;
+    birth: string;
+    height: number;
+    weight: number;
+    selectedImg: number | null;
+  }>({
     nickname: '',
     gender: '',
     birth: '',
     height: 0,
     weight: 0,
-    selectedImg: 0,
+    selectedImg: null,
   });
   const router = useRouter();
   const { getAccessToken } = useAuth();
@@ -110,13 +119,6 @@ function ProfileEdit() {
       setGender(newGender);
     },
     [setGender],
-  );
-
-  const handleImageChange = useCallback(
-    (index: number) => {
-      setSelectedImg(index);
-    },
-    [setSelectedImg],
   );
 
   const isDataChanged = (() => {
@@ -171,7 +173,11 @@ function ProfileEdit() {
 
         setHeight(data.height);
         setWeight(data.weight);
-        const imgIndex = profileImageCodeToIndex(data.profileImage);
+        setDisplayProfileImage(data.displayProfileImage);
+        const imgIndex =
+          data.customProfileImage !== null
+            ? profileImageCodeToIndex(data.customProfileImage)
+            : null;
         setSelectedImg(imgIndex);
 
         setOriginalData({
@@ -227,7 +233,8 @@ function ProfileEdit() {
         gender: genderToAPI(gender)!,
         height: height || 0,
         weight: weight || 0,
-        profileImage: profileImageIndexToCode(selectedImg ?? 0),
+        profileImage:
+          selectedImg !== null ? profileImageIndexToCode(selectedImg) : null,
       };
 
       const response = await updateOnboardingData(token, updateData);
@@ -246,7 +253,7 @@ function ProfileEdit() {
           birth: formatLocalDate(birthDate),
           height: height || 0,
           weight: weight || 0,
-          selectedImg: selectedImg || 0,
+          selectedImg: selectedImg,
         });
       } else {
         Alert.alert(
@@ -306,19 +313,6 @@ function ProfileEdit() {
     closePicker(() => {});
   }, [closePicker]);
 
-  const PROFILE_IMAGES = [
-    IMAGES.TIER.CHEETAH,
-    IMAGES.TIER.DEER,
-    IMAGES.TIER.HUSKY,
-    IMAGES.TIER.FOX,
-    IMAGES.TIER.RABBIT,
-    IMAGES.TIER.PANDA,
-    IMAGES.TIER.DUCK,
-    IMAGES.TIER.TURTLE,
-    IMAGES.TIER.SHEEP,
-    IMAGES.TIER.WATERDEER,
-  ];
-
   if (!fontsLoaded || isDataLoading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
@@ -355,27 +349,30 @@ function ProfileEdit() {
           <View style={{ alignSelf: 'center', marginTop: 30 }}>
             <View style={styles.profileImg}>
               <Image
-                source={PROFILE_IMAGES[selectedImg ?? 0]()}
+                source={
+                  displayProfileImage
+                    ? getProfileImageSource(displayProfileImage)
+                    : undefined
+                }
                 style={styles.profileImgInner}
                 resizeMode='contain'
               />
             </View>
-            <MaterialIcons
+            {/* ProfileImageModal - MVP 출시 후 재활성화 예정 */}
+            {/* <MaterialIcons
               name='edit'
-              onPress={() => {
-                setOpen(true);
-              }}
+              onPress={() => setOpen(true)}
               style={styles.imgIcon}
               size={20}
-            />
+            /> */}
           </View>
 
-          <ProfileImageModal
+          {/* <ProfileImageModal
             visible={open}
             selectedImg={selectedImg ?? 0}
             onSelect={handleImageChange}
             onClose={() => setOpen(false)}
-          />
+          /> */}
 
           <View style={styles.subtitleNick}>
             <Font type='Body4' style={styles.subtitle}>

@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 
 import { NEUTRAL } from '../../constants/Colors';
-import { IMAGES, profileImageCodeToIndex } from '../../constants/Images';
+import { getProfileImageSource } from '../../constants/Images';
 import { UserGuideKey } from '../../data/userGuideData';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
@@ -30,21 +30,10 @@ import { getOnboardingData } from '../../services/profileService';
 function MyPage() {
   const [fontsLoaded] = useAppFonts();
   const [nickname, setNickname] = useState('');
-  const [profileImgIndex, setProfileImgIndex] = useState(0);
+  const [displayProfileImage, setDisplayProfileImage] = useState<string | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
-
-  const PROFILE_IMAGES = [
-    IMAGES.TIER.CHEETAH,
-    IMAGES.TIER.DEER,
-    IMAGES.TIER.HUSKY,
-    IMAGES.TIER.FOX,
-    IMAGES.TIER.RABBIT,
-    IMAGES.TIER.PANDA,
-    IMAGES.TIER.DUCK,
-    IMAGES.TIER.TURTLE,
-    IMAGES.TIER.SHEEP,
-    IMAGES.TIER.WATERDEER,
-  ];
   const [versionModalVisible, setVersionModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
@@ -73,27 +62,29 @@ function MyPage() {
     { id: 5, title: '회원탈퇴', type: 'withdraw' },
   ];
 
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        const token = await getAccessToken();
-        if (!token) {
+  useFocusEffect(
+    useCallback(() => {
+      const loadUserData = async () => {
+        try {
+          const token = await getAccessToken();
+          if (!token) {
+            setIsLoading(false);
+            return;
+          }
+
+          const data = await getOnboardingData(token);
+          setNickname(data.nickname);
+          setDisplayProfileImage(data.displayProfileImage);
+        } catch (error) {
+          console.error('사용자 정보 로드 실패:', error);
+        } finally {
           setIsLoading(false);
-          return;
         }
+      };
 
-        const data = await getOnboardingData(token);
-        setNickname(data.nickname);
-        setProfileImgIndex(profileImageCodeToIndex(data.profileImage));
-      } catch (error) {
-        console.error('사용자 정보 로드 실패:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadUserData();
-  }, [getAccessToken]);
+      loadUserData();
+    }, [getAccessToken]),
+  );
 
   const handleMenuPress = (item: (typeof menuList)[0]) => {
     if (item.type === 'navigate' && item.guideKey) {
@@ -180,7 +171,11 @@ function MyPage() {
       <View style={styles.profileContainer}>
         <View style={styles.profileImg}>
           <Image
-            source={PROFILE_IMAGES[profileImgIndex]()}
+            source={
+              displayProfileImage
+                ? getProfileImageSource(displayProfileImage)
+                : undefined
+            }
             style={styles.profileImg}
             resizeMode='contain'
           />

@@ -16,7 +16,8 @@ interface OnboardingData {
   birth: string;
   height: number;
   weight: number;
-  profileImage: string;
+  displayProfileImage: string;
+  customProfileImage: string | null;
 }
 
 interface OnboardingResponse {
@@ -30,7 +31,7 @@ interface OnboardingUpdateRequest {
   gender: Gender;
   height: number;
   weight: number;
-  profileImage: string;
+  profileImage: string | null;
 }
 
 interface OnboardingUpdateResponse {

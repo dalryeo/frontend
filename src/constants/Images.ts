@@ -184,6 +184,39 @@ export const getTierImage = (tierCode: string) => {
   return (map[tierCode] ?? IMAGES.TIER.TURTLE)();
 };
 
+const TIER_IMAGE_MAP: Record<string, () => number> = {
+  CHEETAH: IMAGES.TIER.CHEETAH,
+  DEER: IMAGES.TIER.DEER,
+  DUCK: IMAGES.TIER.DUCK,
+  FOX: IMAGES.TIER.FOX,
+  HUSKY: IMAGES.TIER.HUSKY,
+  PANDA: IMAGES.TIER.PANDA,
+  RABBIT: IMAGES.TIER.RABBIT,
+  SHEEP: IMAGES.TIER.SHEEP,
+  TURTLE: IMAGES.TIER.TURTLE,
+  WATERDEER: IMAGES.TIER.WATERDEER,
+  치타: IMAGES.TIER.CHEETAH,
+  사슴: IMAGES.TIER.DEER,
+  오리: IMAGES.TIER.DUCK,
+  여우: IMAGES.TIER.FOX,
+  허스키: IMAGES.TIER.HUSKY,
+  판다: IMAGES.TIER.PANDA,
+  토끼: IMAGES.TIER.RABBIT,
+  양: IMAGES.TIER.SHEEP,
+  거북이: IMAGES.TIER.TURTLE,
+  고라니: IMAGES.TIER.WATERDEER,
+};
+
+// displayProfileImage가 티어 코드면 로컬 이미지, URL이면 { uri }로 반환
+export const getProfileImageSource = (
+  displayProfileImage: string,
+): number | { uri: string } => {
+  if (TIER_IMAGE_MAP[displayProfileImage]) {
+    return TIER_IMAGE_MAP[displayProfileImage]();
+  }
+  return { uri: displayProfileImage };
+};
+
 export const getTierBaseImage = (tierCode: string) => {
   const map: Record<string, () => number> = {
     CHEETAH: IMAGES.TIER.CHEETAH,

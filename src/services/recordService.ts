@@ -4,6 +4,7 @@ import {
   RecordSaveResponse,
   WeeklyRecordResponse,
 } from '../types/record';
+import { fetchWithTokenRefresh } from './apiClient';
 
 type RefreshTokenCallback = () => Promise<string | null>;
 
@@ -13,57 +14,23 @@ export const setRefreshTokenCallback = (callback: RefreshTokenCallback) => {
   refreshTokenCallback = callback;
 };
 
-async function fetchWithTokenRefresh(
-  url: string,
-  options: RequestInit,
-  retryCount = 0,
-): Promise<Response> {
-  const response = await fetch(url, options);
-  const result = await response.json();
-
-  if (
-    result.data?.code === 'AC-006' ||
-    result.data?.message?.includes('refreshToken 만료') ||
-    result.data?.message?.includes('토큰') ||
-    result.message?.includes('토큰') ||
-    response.status === 401
-  ) {
-    if (retryCount < 1 && refreshTokenCallback) {
-      const newToken = await refreshTokenCallback();
-
-      if (newToken) {
-        const newOptions = {
-          ...options,
-          headers: {
-            ...options.headers,
-            Authorization: `Bearer ${newToken}`,
-          },
-        };
-        return fetchWithTokenRefresh(url, newOptions, retryCount + 1);
-      }
-    }
-  }
-
-  return new Response(JSON.stringify(result), {
-    status: response.status,
-    headers: response.headers,
-  });
-}
-
 export const recordService = {
-  async getWeeklyRecordSummary(
-    token: string,
-    weekStart?: string,
-  ): Promise<WeeklyRecordResponse> {
+  async getWeeklyRecordSummary(token: string): Promise<WeeklyRecordResponse> {
     const url = `${BASE_URL}/weekly/summary/current`;
 
-    const response = await fetchWithTokenRefresh(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+    const response = await fetchWithTokenRefresh(
+      url,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+      refreshTokenCallback,
+      0,
+      false,
+    );
 
     const result = await response.json();
 
@@ -120,14 +87,18 @@ export const recordService = {
         throw new Error(`데이터 검증 실패: ${validationErrors.join(', ')}`);
       }
 
-      const response = await fetchWithTokenRefresh(`${BASE_URL}/records`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const response = await fetchWithTokenRefresh(
+        `${BASE_URL}/records`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestData),
         },
-        body: JSON.stringify(requestData),
-      });
+        refreshTokenCallback,
+      );
 
       const responseText = await response.text();
 

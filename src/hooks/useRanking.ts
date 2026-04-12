@@ -10,20 +10,7 @@ import {
   MyRankingData,
   ScoreRankingItem,
 } from '../types/ranking.types';
-
-interface ErrorResponse {
-  code: string;
-  message: string;
-}
-
-const hasErrorCode = (data: unknown): data is ErrorResponse => {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    'code' in data &&
-    typeof (data as Record<string, unknown>).code === 'string'
-  );
-};
+import { hasErrorCode } from '../utils/typeGuards';
 
 export function useScoreRanking() {
   const [rankings, setRankings] = useState<ScoreRankingItem[]>([]);
