@@ -7,6 +7,7 @@ import { NEUTRAL } from '../../constants/Colors';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { useWeeklyData } from '../../hooks/useWeeklyData';
 import { formatDateForDisplay } from '../../utils/dateUtils';
+import { formatPace } from '../../utils/formatUtils';
 import { Font } from '../Font';
 import { TierInfoCard } from './TierInfoCard';
 
@@ -21,12 +22,6 @@ function WeeklyRecord() {
       refetch();
     }, [refetch]),
   );
-
-  const formatPace = (seconds: number) => {
-    const min = Math.floor(seconds / 60);
-    const sec = seconds % 60;
-    return `${min}'${sec.toString().padStart(2, '0')}"`;
-  };
 
   if (!fontsLoaded || loading) {
     return (

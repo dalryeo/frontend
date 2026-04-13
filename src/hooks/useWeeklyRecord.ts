@@ -2,20 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getWeeklyRecordSummary } from '../services/recordService';
 import { WeeklyRecordSummary } from '../types/record';
-
-interface ErrorResponse {
-  code: string;
-  message: string;
-}
-
-const hasErrorCode = (data: unknown): data is ErrorResponse => {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    'code' in data &&
-    typeof (data as Record<string, unknown>).code === 'string'
-  );
-};
+import { hasErrorCode } from '../utils/typeGuards';
 
 const isValidWeeklyRecord = (data: unknown): data is WeeklyRecordSummary => {
   return (

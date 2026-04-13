@@ -4,7 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import WheelPicker from '@quidone/react-native-wheel-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Animated,
@@ -23,7 +23,11 @@ import {
 } from 'react-native';
 
 import { NEUTRAL } from '../../constants/Colors';
-import { IMAGES, profileImageIndexToCode } from '../../constants/Images';
+import {
+  IMAGES,
+  getProfileImageSource,
+  profileImageIndexToCode,
+} from '../../constants/Images';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
@@ -37,12 +41,13 @@ import { formatDate, formatLocalDate } from '../../utils/dateUtils';
 
 import {
   checkNicknameAvailability,
+  getOnboardingData,
   submitProfileData,
 } from '../../services/profileService';
 
 import { usePickerModal } from '../../hooks/usePickerModal';
 import { useProfileForm } from '../../hooks/useProfileForm';
-import { ProfileImageModal } from '../common/ProfileImageModal';
+// import { ProfileImageModal } from '../common/ProfileImageModal'; // MVP 출시 후 재활성화 예정
 
 type DateTimePickerEvent = {
   type: string;
@@ -54,10 +59,26 @@ type DateTimePickerEvent = {
 
 function Profile() {
   const [fontsLoaded] = useAppFonts();
-  const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [displayProfileImage, setDisplayProfileImage] = useState<string | null>(
+    null,
+  );
   const router = useRouter();
   const { getAccessToken, tierData, user, setUser } = useAuth();
+
+  useEffect(() => {
+    const fetchDisplayImage = async () => {
+      try {
+        const token = await getAccessToken();
+        if (!token) return;
+        const data = await getOnboardingData(token);
+        setDisplayProfileImage(data.displayProfileImage);
+      } catch {
+        // 기본 이미지 유지
+      }
+    };
+    fetchDisplayImage();
+  }, [getAccessToken]);
 
   const {
     gender,
@@ -76,7 +97,6 @@ function Profile() {
     setBirthDate,
     setHeight,
     setWeight,
-    setSelectedImg,
   } = useProfileForm();
 
   const {
@@ -256,24 +276,29 @@ function Profile() {
 
           <View style={[styles.profileImg, { marginTop: 50 }]}>
             <Image
-              source={PROFILE_IMAGES[selectedImg ?? 0]!()}
+              source={
+                displayProfileImage
+                  ? getProfileImageSource(displayProfileImage)
+                  : PROFILE_IMAGES[7]!()
+              }
               style={styles.profileImgInner}
               resizeMode='contain'
             />
           </View>
-          <MaterialIcons
+
+          {/* ProfileImageModal - MVP 출시 후 재활성화 예정 */}
+          {/* <MaterialIcons
             name='edit'
             onPress={() => setOpen(true)}
             style={[styles.imgIcon, { color: NEUTRAL.GRAY_500 }]}
             size={20}
           />
-
           <ProfileImageModal
             visible={open}
             selectedImg={selectedImg ?? 0}
             onSelect={setSelectedImg}
             onClose={() => setOpen(false)}
-          />
+          /> */}
 
           <View style={styles.subtitleNick}>
             <Font type='Body4' style={styles.subtitle}>

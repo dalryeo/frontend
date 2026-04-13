@@ -7,10 +7,12 @@ export const RANKING_LAYOUT = {
   PROFILE: {
     FIRST: {
       SIZE: 88,
+      PADDING: 15,
       BORDER_RADIUS: 44,
     },
     OTHER: {
       SIZE: 75,
+      PADDING: 15,
       BORDER_RADIUS: 37.5,
     },
     BORDER_WIDTH: 2,

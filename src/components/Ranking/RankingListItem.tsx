@@ -111,6 +111,7 @@ const styles = StyleSheet.create({
   profileImg: {
     width: 55,
     height: 55,
+    padding: 12,
   },
   foxEmoji: {
     position: 'absolute',
