@@ -1,6 +1,7 @@
+import { IMAGES } from '@/src/constants/Images';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
 import { Font } from '../Font';
 
@@ -13,9 +14,10 @@ function TierInfoCard() {
 
   return (
     <TouchableOpacity style={styles.info} onPress={handleInfoClick}>
-      <View>
-        <Font type='Head1'>🐆</Font>
-      </View>
+      <Image
+        source={IMAGES.TIER.NEON.NEON_CHEETAH()}
+        style={{ width: 45, height: 45, resizeMode: 'contain' }}
+      />
 
       <View style={styles.infoText}>
         <Font type='Body1' style={styles.infoTextTop}>
@@ -25,7 +27,6 @@ function TierInfoCard() {
           티어는 월요일마다 새로 시작돼요
         </Font>
       </View>
-
       <MaterialIcons
         style={[styles.navigateNext, { color: NEUTRAL.GRAY_600 }]}
         name='navigate-next'
@@ -47,7 +48,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     alignSelf: 'center',
-    marginLeft: 15,
+    marginLeft: 20,
     flex: 1,
   },
   infoTextTop: {

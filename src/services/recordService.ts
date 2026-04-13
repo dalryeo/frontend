@@ -42,8 +42,6 @@ async function fetchWithTokenRefresh(
         return fetchWithTokenRefresh(url, newOptions, retryCount + 1);
       }
     }
-
-    throw new Error('TOKEN_EXPIRED');
   }
 
   return new Response(JSON.stringify(result), {

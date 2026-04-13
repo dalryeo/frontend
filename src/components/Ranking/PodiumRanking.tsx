@@ -1,5 +1,6 @@
 import { Image, StyleSheet, View } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
+import { IMAGES, getRankingTierImage } from '../../constants/Images';
 import { RANKING_LAYOUT } from '../../constants/RankingLayout';
 import { formatNickname } from '../../utils/formatUtils';
 import { Font } from '../Font';
@@ -9,6 +10,7 @@ interface RankingItem {
   rank: number;
   isFirst: boolean;
   nickname: string;
+  tierCode: string;
   time: string;
   distance: string;
 }
@@ -23,33 +25,29 @@ export function PodiumRanking({ rankings, type }: PodiumRankingProps) {
     return isFirst ? styles.profileImg : styles.profileImgSecondThird;
   };
 
-  const getFoxEmojiStyle = (isFirst: boolean) => {
-    return isFirst ? styles.foxEmojiFirst : styles.foxEmojiSecondThird;
-  };
-
   const getStageImage = (rank: number) => {
     switch (rank) {
       case 1:
-        return require('../../../assets/images/Ranking/firststage.png');
+        return IMAGES.RANKING.STAGE.FIRST();
       case 2:
-        return require('../../../assets/images/Ranking/secondstage.png');
+        return IMAGES.RANKING.STAGE.SECOND();
       case 3:
-        return require('../../../assets/images/Ranking/thirdstage.png');
+        return IMAGES.RANKING.STAGE.THIRD();
       default:
-        return require('../../../assets/images/Ranking/thirdstage.png');
+        return IMAGES.RANKING.STAGE.THIRD();
     }
   };
 
   const getRankImage = (rank: number) => {
     switch (rank) {
       case 1:
-        return require('../../../assets/images/Ranking/first.png');
+        return IMAGES.RANKING.MEDAL.FIRST();
       case 2:
-        return require('../../../assets/images/Ranking/second.png');
+        return IMAGES.RANKING.MEDAL.SECOND();
       case 3:
-        return require('../../../assets/images/Ranking/third.png');
+        return IMAGES.RANKING.MEDAL.THIRD();
       default:
-        return require('../../../assets/images/Ranking/third.png');
+        return IMAGES.RANKING.MEDAL.THIRD();
     }
   };
 
@@ -63,6 +61,19 @@ export function PodiumRanking({ rankings, type }: PodiumRankingProps) {
         return styles.rankImageThird;
       default:
         return styles.rankImageThird;
+    }
+  };
+
+  const getStageTextTop = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return STAGE.TEXT_TOP_PERCENT.FIRST;
+      case 2:
+        return STAGE.TEXT_TOP_PERCENT.SECOND;
+      case 3:
+        return STAGE.TEXT_TOP_PERCENT.THIRD;
+      default:
+        return STAGE.TEXT_TOP_PERCENT.THIRD;
     }
   };
 
@@ -105,16 +116,22 @@ export function PodiumRanking({ rankings, type }: PodiumRankingProps) {
     );
   };
 
+  const top3 = rankings.slice(0, 3).sort((a, b) => a.rank - b.rank);
+  const podiumOrder = top3.length === 3 ? [top3[1], top3[0], top3[2]] : top3;
+
   return (
     <View style={styles.podiumContainer}>
       <View style={styles.rankingRow}>
-        {rankings.map((item, index) => (
+        {podiumOrder.map((item, index) => (
           <View key={index} style={styles.rankingContainer}>
             <View style={styles.profileWrapper}>
-              <View style={getProfileImgStyle(item.isFirst)} />
-              <Font type='Body2' style={getFoxEmojiStyle(item.isFirst)}>
-                🦊
-              </Font>
+              <Image
+                source={
+                  getRankingTierImage(item.rank, item.tierCode) ?? undefined
+                }
+                style={getProfileImgStyle(item.isFirst)}
+                resizeMode='contain'
+              />
             </View>
 
             <View style={styles.nicknameContainer}>
@@ -136,7 +153,12 @@ export function PodiumRanking({ rankings, type }: PodiumRankingProps) {
                 resizeMode='contain'
               />
 
-              <View style={styles.stageTextContainer}>
+              <View
+                style={[
+                  styles.stageTextContainer,
+                  { top: getStageTextTop(item.rank) },
+                ]}
+              >
                 {renderStageText(item)}
               </View>
             </View>
@@ -149,7 +171,7 @@ export function PodiumRanking({ rankings, type }: PodiumRankingProps) {
   );
 }
 
-const { PODIUM, PROFILE, STAGE } = RANKING_LAYOUT;
+const { PODIUM, STAGE } = RANKING_LAYOUT;
 
 const styles = StyleSheet.create({
   podiumContainer: {
@@ -174,12 +196,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   profileImg: {
-    width: PROFILE.FIRST.SIZE,
-    height: PROFILE.FIRST.SIZE,
-    borderRadius: PROFILE.FIRST.BORDER_RADIUS,
-    borderWidth: PROFILE.BORDER_WIDTH,
-    borderColor: NEUTRAL.MAIN,
-    backgroundColor: NEUTRAL.GRAY_800,
+    width: 110,
+    height: 110,
     shadowColor: NEUTRAL.MAIN,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
@@ -187,33 +205,13 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   profileImgSecondThird: {
-    width: PROFILE.OTHER.SIZE,
-    height: PROFILE.OTHER.SIZE,
-    borderRadius: PROFILE.OTHER.BORDER_RADIUS,
-    borderWidth: PROFILE.BORDER_WIDTH,
-    borderColor: NEUTRAL.GRAY_600,
-    backgroundColor: NEUTRAL.GRAY_800,
+    width: 110,
+    height: 110,
     shadowColor: NEUTRAL.GRAY_600,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 9,
     elevation: 0,
-  },
-  foxEmojiFirst: {
-    position: 'absolute',
-    bottom: PROFILE.FIRST.EMOJI_BOTTOM,
-    right: PROFILE.FIRST.EMOJI_RIGHT,
-    fontSize: PROFILE.FIRST.EMOJI_SIZE,
-    paddingHorizontal: 3,
-    paddingVertical: 2,
-  },
-  foxEmojiSecondThird: {
-    position: 'absolute',
-    bottom: PROFILE.OTHER.EMOJI_BOTTOM,
-    right: PROFILE.OTHER.EMOJI_RIGHT,
-    fontSize: PROFILE.OTHER.EMOJI_SIZE,
-    paddingHorizontal: 2,
-    paddingVertical: 1,
   },
   nicknameContainer: {
     alignItems: 'center',
@@ -262,7 +260,6 @@ const styles = StyleSheet.create({
   },
   stageTextContainer: {
     position: 'absolute',
-    top: STAGE.TEXT_TOP_PERCENT,
     alignItems: 'center',
   },
   primaryText: {

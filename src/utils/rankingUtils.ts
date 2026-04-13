@@ -11,6 +11,8 @@ import { formatPace } from './formatUtils';
 interface RankingApiData {
   rank: number;
   nickname: string;
+  tierCode: string;
+  tierGrade: string | null;
   weeklyAvgPace: number;
   weeklyDistance: number;
 }
@@ -20,6 +22,7 @@ interface MyRankingApiData {
   distanceRank?: number;
   weeklyAvgPace: number;
   weeklyDistance: number;
+  tierCode?: string;
 }
 
 export function getRankingConfig(type: RankingType): RankingConfig {
@@ -56,6 +59,7 @@ export function transformScoreRankingToItems(apiData: RankingApiData[]) {
     rank: item.rank || 0,
     isFirst: item.rank === 1,
     nickname: item.nickname || '알 수 없음',
+    tierCode: item.tierCode || '',
     time: formatPace(item.weeklyAvgPace),
     distance: `${item.weeklyDistance || 0}km`,
   }));
@@ -68,6 +72,7 @@ export function transformDistanceRankingToItems(apiData: RankingApiData[]) {
     rank: item.rank || 0,
     isFirst: item.rank === 1,
     nickname: item.nickname || '알 수 없음',
+    tierCode: item.tierCode || '',
     time: formatPace(item.weeklyAvgPace),
     distance: `${item.weeklyDistance || 0}km`,
   }));
@@ -87,6 +92,7 @@ export function transformMyRankingToRecord(
       averagePace: formatPace(apiData.weeklyAvgPace),
       rank: `${scoreRank.toString()}위`,
       percentage: `${Math.round((scoreRank / 100) * 100)}%`,
+      tierCode: apiData.tierCode || '',
     };
   } else {
     const distanceRank = apiData.distanceRank;
@@ -96,6 +102,7 @@ export function transformMyRankingToRecord(
       distance: `${apiData.weeklyDistance || 0}km`,
       rank: `${distanceRank.toString()}위`,
       percentage: `${Math.round((distanceRank / 100) * 100)}%`,
+      tierCode: apiData.tierCode || '',
     };
   }
 }
@@ -106,6 +113,7 @@ export function transformToRankingListItems(apiData: RankingApiData[]) {
   return apiData.map((item) => ({
     rank: item.rank || 0,
     nickname: item.nickname || '알 수 없음',
+    tierCode: item.tierCode || '',
     time: formatPace(item.weeklyAvgPace),
     distance: `${item.weeklyDistance || 0}km`,
   }));

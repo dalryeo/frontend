@@ -34,9 +34,15 @@ export const useWeeklyRecord = () => {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { getAccessToken, forceLogout } = useAuth();
+  const { getAccessToken, forceLogout, user } = useAuth();
 
   const fetchWeeklyRecord = useCallback(async () => {
+    if (!user) {
+      setWeeklyRecord(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -77,13 +83,13 @@ export const useWeeklyRecord = () => {
         setWeeklyRecord(null);
       }
     } catch (err) {
-      console.error('주간 기록 조회 오류:', err);
+      console.error(err);
       setWeeklyRecord(null);
       setError(null);
     } finally {
       setLoading(false);
     }
-  }, [getAccessToken, forceLogout]);
+  }, [getAccessToken, forceLogout, user]);
 
   useEffect(() => {
     fetchWeeklyRecord();

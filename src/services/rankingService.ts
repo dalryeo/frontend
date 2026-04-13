@@ -9,6 +9,8 @@ interface ApiResponse<T> {
 interface RankingApiData {
   rank: number;
   nickname: string;
+  tierCode: string;
+  tierGrade: string | null;
   weeklyAvgPace: number;
   weeklyDistance: number;
 }
@@ -18,6 +20,7 @@ interface MyRankingApiData {
   distanceRank?: number;
   weeklyAvgPace: number;
   weeklyDistance: number;
+  tierCode?: string;
 }
 
 export async function fetchScoreRanking(): Promise<

@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
+import { getTierImage, IMAGES } from '../../constants/Images';
 import { tiers } from '../../data/tiers';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
@@ -59,7 +60,11 @@ export default function TierOverview() {
             style={styles.tiers}
             onPress={() => setSelectedTier(key)}
           >
-            <Font type='Head1'>{tier.iconSet}</Font>
+            <Image
+              source={getTierImage(tier.iconSet)}
+              style={{ width: 50, height: 50 }}
+              resizeMode='contain'
+            />
             <View style={styles.tierInfo}>
               <Font type='Body7' style={styles.tierName}>
                 {index + 1}위 {tier.name}
@@ -94,7 +99,7 @@ export default function TierOverview() {
 
         <View style={styles.tierInfoImgContainer}>
           <Image
-            source={require('../../../assets/images/Tier/TierInfo.png')}
+            source={IMAGES.TIER_DETAIL.TIER_INFO()}
             style={styles.tierInfoImg}
             resizeMode='contain'
           />

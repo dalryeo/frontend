@@ -1,6 +1,7 @@
+import { getTierBaseImage } from '@/src/constants/Images';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
 import { RANKING_LAYOUT } from '../../constants/RankingLayout';
 import { MyRecord, RankingType } from '../../types/ranking.types';
@@ -67,10 +68,11 @@ export function MyRankingRecord({ type, myRecord }: MyRankingRecordProps) {
 
           <View style={styles.content}>
             <View style={styles.profileWrapper}>
-              <View style={styles.profileImg} />
-              <Font type='Body2' style={styles.foxEmoji}>
-                🦊
-              </Font>
+              <Image
+                source={getTierBaseImage(myRecord?.tierCode || '')}
+                style={styles.profileImg}
+                resizeMode='contain'
+              />
             </View>
 
             <View style={styles.stat}>
@@ -157,22 +159,17 @@ const styles = StyleSheet.create({
   profileWrapper: {
     position: 'relative',
     justifyContent: 'center',
-  },
-  profileImg: {
+    alignItems: 'center',
     width: MY_RECORD.PROFILE.SIZE,
     height: MY_RECORD.PROFILE.SIZE,
     borderRadius: MY_RECORD.PROFILE.BORDER_RADIUS,
     borderWidth: MY_RECORD.PROFILE.BORDER_WIDTH,
     borderColor: NEUTRAL.GRAY_600,
-    backgroundColor: NEUTRAL.GRAY_800,
+    backgroundColor: NEUTRAL.MAIN,
   },
-  foxEmoji: {
-    position: 'absolute',
-    bottom: MY_RECORD.PROFILE.EMOJI_BOTTOM,
-    right: MY_RECORD.PROFILE.EMOJI_RIGHT,
-    fontSize: MY_RECORD.PROFILE.EMOJI_SIZE,
-    paddingHorizontal: 2,
-    paddingVertical: 1,
+  profileImg: {
+    width: 65,
+    height: 65,
   },
   stat: {
     alignItems: 'center',

@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Image,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -23,6 +24,11 @@ import {
 } from 'react-native';
 
 import { NEUTRAL } from '../../constants/Colors';
+import {
+  IMAGES,
+  profileImageCodeToIndex,
+  profileImageIndexToCode,
+} from '../../constants/Images';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
@@ -42,6 +48,7 @@ import {
 import { genderToAPI } from '@/src/utils/commonUtils';
 import { usePickerModal } from '../../hooks/usePickerModal';
 import { useProfileForm } from '../../hooks/useProfileForm';
+import { ProfileImageModal } from '../common/ProfileImageModal';
 
 type DateTimePickerEvent = {
   type: string;
@@ -164,7 +171,8 @@ function ProfileEdit() {
 
         setHeight(data.height);
         setWeight(data.weight);
-        setSelectedImg(0);
+        const imgIndex = profileImageCodeToIndex(data.profileImage);
+        setSelectedImg(imgIndex);
 
         setOriginalData({
           nickname: data.nickname,
@@ -172,7 +180,7 @@ function ProfileEdit() {
           birth: formatLocalDate(new Date(data.birth)),
           height: data.height,
           weight: data.weight,
-          selectedImg: 0,
+          selectedImg: imgIndex,
         });
       } catch (error) {
         console.error('Failed to load profile data:', error);
@@ -219,6 +227,7 @@ function ProfileEdit() {
         gender: genderToAPI(gender)!,
         height: height || 0,
         weight: weight || 0,
+        profileImage: profileImageIndexToCode(selectedImg ?? 0),
       };
 
       const response = await updateOnboardingData(token, updateData);
@@ -297,6 +306,19 @@ function ProfileEdit() {
     closePicker(() => {});
   }, [closePicker]);
 
+  const PROFILE_IMAGES = [
+    IMAGES.TIER.CHEETAH,
+    IMAGES.TIER.DEER,
+    IMAGES.TIER.HUSKY,
+    IMAGES.TIER.FOX,
+    IMAGES.TIER.RABBIT,
+    IMAGES.TIER.PANDA,
+    IMAGES.TIER.DUCK,
+    IMAGES.TIER.TURTLE,
+    IMAGES.TIER.SHEEP,
+    IMAGES.TIER.WATERDEER,
+  ];
+
   if (!fontsLoaded || isDataLoading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
@@ -331,7 +353,13 @@ function ProfileEdit() {
           </View>
 
           <View style={{ alignSelf: 'center', marginTop: 30 }}>
-            <View style={styles.profileImg}></View>
+            <View style={styles.profileImg}>
+              <Image
+                source={PROFILE_IMAGES[selectedImg ?? 0]()}
+                style={styles.profileImgInner}
+                resizeMode='contain'
+              />
+            </View>
             <MaterialIcons
               name='edit'
               onPress={() => {
@@ -342,45 +370,12 @@ function ProfileEdit() {
             />
           </View>
 
-          <Modal visible={open} transparent animationType='slide'>
-            <View style={styles.sheetBackground}>
-              <TouchableOpacity
-                style={{ flex: 1 }}
-                onPress={() => setOpen(false)}
-              />
-
-              <View style={styles.sheet}>
-                <Font type='Head4' style={styles.profileText}>
-                  프로필 이미지를 선택해주세요
-                </Font>
-
-                <View style={styles.sheetInner}>
-                  {[...Array(6)].map((_, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      onPress={() => handleImageChange(index)}
-                      style={[
-                        styles.profileImgModal,
-                        selectedImg === index && {
-                          borderWidth: 2,
-                          borderColor: NEUTRAL.MAIN,
-                        },
-                      ]}
-                    />
-                  ))}
-                </View>
-
-                <TouchableOpacity
-                  onPress={() => setOpen(false)}
-                  style={styles.applyBtn}
-                >
-                  <Font type='SubButton' style={styles.applyBtnText}>
-                    적용하기
-                  </Font>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
+          <ProfileImageModal
+            visible={open}
+            selectedImg={selectedImg ?? 0}
+            onSelect={handleImageChange}
+            onClose={() => setOpen(false)}
+          />
 
           <View style={styles.subtitleNick}>
             <Font type='Body4' style={styles.subtitle}>
@@ -736,7 +731,15 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 70,
-    backgroundColor: NEUTRAL.GRAY_900,
+    backgroundColor: NEUTRAL.MAIN,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileImgInner: {
+    width: 110,
+    height: 110,
+    padding: 20,
   },
   imgIcon: {
     position: 'absolute',

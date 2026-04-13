@@ -1,3 +1,4 @@
+import { getTierBaseImage, IMAGES } from '@/src/constants/Images';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -25,12 +26,7 @@ export function WeeklyRanking({ type, rankings }: WeeklyRankingProps) {
 
   const renderRankIcon = (rank: number, isFirst: boolean) => {
     if (isFirst) {
-      return (
-        <Image
-          source={require('../../../assets/images/Ranking/crown.png')}
-          style={styles.rankIcon}
-        />
-      );
+      return <Image source={IMAGES.RANKING.CROWN()} style={styles.rankIcon} />;
     }
     return (
       <Font type='Body2' style={styles.rankNumber}>
@@ -43,9 +39,12 @@ export function WeeklyRanking({ type, rankings }: WeeklyRankingProps) {
     return isFirst ? styles.profileImg : styles.profileImgSecondThird;
   };
 
-  const getFoxEmojiStyle = (isFirst: boolean) => {
-    return isFirst ? styles.foxEmojiFirst : styles.foxEmojiSecondThird;
+  const getProfileWrapperStyle = (isFirst: boolean) => {
+    return isFirst ? styles.profileWrapper : styles.profileWrapperSecondThird;
   };
+
+  const top3 = rankings.slice(0, 3).sort((a, b) => a.rank - b.rank);
+  const podiumOrder = top3.length === 3 ? [top3[1], top3[0], top3[2]] : top3;
 
   const renderInfoText = (item: RankingItem) => {
     if (type === 'tier') {
@@ -89,15 +88,16 @@ export function WeeklyRanking({ type, rankings }: WeeklyRankingProps) {
       </View>
 
       <View style={styles.rankingRow}>
-        {rankings.map((item, index) => (
+        {podiumOrder.map((item, index) => (
           <View key={index} style={styles.rankingContainer}>
             {renderRankIcon(item.rank, item.isFirst)}
 
-            <View style={styles.profileWrapper}>
-              <View style={getProfileImgStyle(item.isFirst)} />
-              <Font type='Body2' style={getFoxEmojiStyle(item.isFirst)}>
-                🦊
-              </Font>
+            <View style={getProfileWrapperStyle(item.isFirst)}>
+              <Image
+                source={getTierBaseImage(item.tierCode)}
+                style={getProfileImgStyle(item.isFirst)}
+                resizeMode='contain'
+              />
             </View>
 
             <View style={styles.infoContainer}>
@@ -155,43 +155,38 @@ const styles = StyleSheet.create({
   },
   profileWrapper: {
     position: 'relative',
-  },
-  profileImg: {
     width: PROFILE.FIRST.SIZE,
     height: PROFILE.FIRST.SIZE,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderRadius: PROFILE.FIRST.BORDER_RADIUS,
     borderWidth: PROFILE.BORDER_WIDTH,
     borderColor: NEUTRAL.MAIN,
-    backgroundColor: NEUTRAL.GRAY_800,
+    backgroundColor: NEUTRAL.GRAY_300,
     shadowColor: NEUTRAL.MAIN,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 9,
     elevation: 0,
   },
-  profileImgSecondThird: {
+  profileWrapperSecondThird: {
+    position: 'relative',
     width: PROFILE.OTHER.SIZE,
     height: PROFILE.OTHER.SIZE,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderRadius: PROFILE.OTHER.BORDER_RADIUS,
     borderWidth: PROFILE.BORDER_WIDTH,
     borderColor: NEUTRAL.GRAY_600,
-    backgroundColor: NEUTRAL.GRAY_800,
+    backgroundColor: NEUTRAL.GRAY_300,
   },
-  foxEmojiFirst: {
-    position: 'absolute',
-    bottom: PROFILE.FIRST.EMOJI_BOTTOM,
-    right: PROFILE.FIRST.EMOJI_RIGHT,
-    fontSize: PROFILE.FIRST.EMOJI_SIZE,
-    paddingHorizontal: 3,
-    paddingVertical: 2,
+  profileImg: {
+    width: PROFILE.FIRST.SIZE,
+    height: PROFILE.FIRST.SIZE,
   },
-  foxEmojiSecondThird: {
-    position: 'absolute',
-    bottom: PROFILE.OTHER.EMOJI_BOTTOM,
-    right: PROFILE.OTHER.EMOJI_RIGHT,
-    fontSize: PROFILE.OTHER.EMOJI_SIZE,
-    paddingHorizontal: 2,
-    paddingVertical: 1,
+  profileImgSecondThird: {
+    width: PROFILE.OTHER.SIZE,
+    height: PROFILE.OTHER.SIZE,
   },
   infoContainer: {
     alignItems: 'center',

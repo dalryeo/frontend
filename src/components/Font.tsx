@@ -4,6 +4,7 @@ import { FONT_FAMILY } from '../constants/FontFamily';
 import { useThemeColor } from '../hooks/useThemeColor';
 
 type FontType =
+  | 'Title'
   | 'Head1'
   | 'Head2'
   | 'Head3'
@@ -42,6 +43,7 @@ const createStyle = (
 });
 
 const table: Record<FontType, ReturnType<typeof createStyle>> = {
+  Title: createStyle(FONT_FAMILY.BOLD, 40, 1.4),
   Head1: createStyle(FONT_FAMILY.BOLD, 34, 1.4),
   Head2: createStyle(FONT_FAMILY.SEMIBOLD, 32, 1.4),
   Head3: createStyle(FONT_FAMILY.SEMIBOLD, 26, 1.4),

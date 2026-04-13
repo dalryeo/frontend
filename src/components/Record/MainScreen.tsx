@@ -17,11 +17,11 @@ import { useWeeklyRecord } from '../../hooks/useWeeklyRecord';
 import { Font } from '../Font';
 import { TierInfoCard } from './TierInfoCard';
 
+import { getTierImage, IMAGES } from '@/src/constants/Images';
 import { useRandomMessage } from '../../hooks/useRandomMessage';
 import {
   generateGradientSegments,
   getDisplayName,
-  getTierEmoji,
 } from '../../utils/commonUtils';
 import { formatPace } from '../../utils/formatUtils';
 
@@ -82,13 +82,6 @@ function MainScreen() {
     }, [refetch]),
   );
 
-  const getCurrentTierDisplay = () => {
-    if (!hasRecord || !weeklyRecord?.currentTier) {
-      return '-';
-    }
-    return `${getTierEmoji(weeklyRecord.currentTier)}`;
-  };
-
   if (!fontsLoaded) return null;
 
   const displayName = getDisplayName(user);
@@ -100,7 +93,7 @@ function MainScreen() {
       <View style={styles.Icon}>
         <TouchableOpacity onPress={() => router.push('/myPage')}>
           <Image
-            source={require('../../../assets/images/Main/accountIcon.png')}
+            source={IMAGES.MAIN.ACCOUNT_ICON()}
             style={styles.accountIcon}
           />
         </TouchableOpacity>
@@ -150,15 +143,22 @@ function MainScreen() {
           ) : (
             <>
               <View style={styles.recordItem}>
-                <Font
-                  type='Head2'
-                  style={[
-                    styles.recordItemTop,
-                    hasRecord ? {} : { color: NEUTRAL.GRAY_100 },
-                  ]}
-                >
-                  {getCurrentTierDisplay()}
-                </Font>
+                {hasRecord && weeklyRecord?.currentTier ? (
+                  <View style={styles.recordImgClip}>
+                    <Image
+                      source={getTierImage(weeklyRecord.currentTier)}
+                      style={styles.recordItemImg}
+                      resizeMode='contain'
+                    />
+                  </View>
+                ) : (
+                  <Font
+                    type='Head2'
+                    style={[styles.recordItemTop, { color: NEUTRAL.GRAY_100 }]}
+                  >
+                    -
+                  </Font>
+                )}
                 <Font type='Body4' style={styles.recordItemBottom}>
                   현재 티어
                 </Font>
@@ -279,11 +279,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  recordImgClip: {
+    width: 40,
+    height: 40,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recordItemImg: {
+    width: 40,
+    height: 40,
+  },
   recordItem: {
     flexDirection: 'column',
+    alignItems: 'center',
     marginHorizontal: 24,
   },
   recordItemTop: {
+    height: 40,
     alignSelf: 'center',
     color: NEUTRAL.GRAY_100,
   },

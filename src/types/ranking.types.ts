@@ -6,11 +6,13 @@ export interface RankingItem {
   nickname: string;
   time: string;
   distance: string;
+  tierCode: string;
 }
 
 export interface RankingListItem {
   rank: number;
   nickname: string;
+  tierCode: string;
   time: string;
   distance: string;
 }
@@ -33,12 +35,14 @@ export interface TierMyRecord {
   averagePace: string;
   percentage: string;
   rank?: string;
+  tierCode: string;
 }
 
 export interface DistanceMyRecord {
   distance: string;
   percentage: string;
   rank?: string;
+  tierCode: string;
 }
 
 export type MyRecord = TierMyRecord | DistanceMyRecord | null;

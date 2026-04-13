@@ -1,5 +1,6 @@
 import {
   Dimensions,
+  Image,
   Modal,
   ScrollView,
   StyleSheet,
@@ -8,6 +9,7 @@ import {
 } from 'react-native';
 import { tiers } from '../../data/tiers';
 
+import { getTierBaseImage } from '@/src/constants/Images';
 import { NEUTRAL } from '../../constants/Colors';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { Font } from '../Font';
@@ -52,7 +54,11 @@ export default function TierDetail({
               {tierData.subtitle}
             </Font>
 
-            <View style={styles.profileImg} />
+            <Image
+              source={getTierBaseImage(tierData.iconSet)}
+              style={styles.profileImg}
+              resizeMode='contain'
+            />
 
             {tierData.sections.map((section, index) => (
               <View key={index}>
@@ -121,10 +127,11 @@ const styles = StyleSheet.create({
   },
 
   profileImg: {
-    width: 150,
-    height: 150,
+    width: 130,
+    height: 130,
+    padding: 20,
     borderRadius: 80,
-    backgroundColor: NEUTRAL.GRAY_800,
+    backgroundColor: NEUTRAL.MAIN,
     marginTop: 10,
     marginBottom: 30,
     alignSelf: 'center',

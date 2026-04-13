@@ -1,6 +1,8 @@
+import { IMAGES, getTierBaseImage, getTierImage } from '@/src/constants/Images';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
+  Image,
   ImageBackground,
   ScrollView,
   StyleSheet,
@@ -128,7 +130,11 @@ export default function TierRecommend() {
           {tierData.subtitle}
         </Font>
 
-        <View style={styles.profileImg} />
+        <Image
+          source={getTierBaseImage(tierData.iconSet)}
+          style={styles.profileImg}
+          resizeMode='contain'
+        />
 
         {tierData.sections.map((section, index) => (
           <View key={index} style={styles.section}>
@@ -157,12 +163,16 @@ export default function TierRecommend() {
             onPress={() => changeTier(nextTierKey)}
           >
             <ImageBackground
-              source={require('../../../assets/images/Tier/nextTier.png')}
+              source={IMAGES.TIER_DETAIL.NEXT_TIER()}
               style={styles.nextTierSection}
               imageStyle={styles.nextTierBackground}
             >
               <View style={styles.nextTier}>
-                <Font type='Head1'>{nextTierData.iconSet}</Font>
+                <Image
+                  source={getTierBaseImage(nextTierData.iconSet)}
+                  style={styles.tierIcon}
+                  resizeMode='contain'
+                />
 
                 <View style={styles.nextTierTextContainer}>
                   <Font type='Body7' style={styles.NextTierText}>
@@ -183,12 +193,16 @@ export default function TierRecommend() {
             onPress={() => changeTier(prevTierKey)}
           >
             <ImageBackground
-              source={require('../../../assets/images/Tier/prevTier.png')}
+              source={IMAGES.TIER_DETAIL.PREV_TIER()}
               style={styles.prevTierSection}
               imageStyle={styles.prevTierBackground}
             >
               <View style={styles.prevTier}>
-                <Font type='Head1'>{prevTierData.iconSet}</Font>
+                <Image
+                  source={getTierImage(prevTierData.iconSet)}
+                  style={styles.tierIcon}
+                  resizeMode='contain'
+                />
 
                 <View style={styles.prevTierTextContainer}>
                   <Font type='Body7' style={styles.prevTierText}>
@@ -239,9 +253,10 @@ const styles = StyleSheet.create({
   profileImg: {
     width: 130,
     height: 130,
+    padding: 20,
     borderRadius: 70,
-    backgroundColor: NEUTRAL.GRAY_900,
     marginTop: 30,
+    backgroundColor: NEUTRAL.MAIN,
     alignSelf: 'center',
   },
   subtitle: {
@@ -274,6 +289,10 @@ const styles = StyleSheet.create({
     color: NEUTRAL.GRAY_300,
     flexShrink: 1,
   },
+  tierIcon: {
+    width: 50,
+    height: 50,
+  },
   nextTierSection: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -283,14 +302,13 @@ const styles = StyleSheet.create({
   },
   nextTier: {
     flexDirection: 'row',
-    marginLeft: 15,
     alignItems: 'center',
   },
   nextTierBackground: {
     resizeMode: 'contain',
   },
   nextTierTextContainer: {
-    marginLeft: 15,
+    marginLeft: 20,
     justifyContent: 'center',
   },
   NextTierText: {
@@ -315,7 +333,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   prevTierTextContainer: {
-    marginLeft: 15,
+    marginLeft: 20,
     justifyContent: 'center',
   },
   prevTierText: {
