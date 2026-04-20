@@ -32,7 +32,7 @@ import {
   workoutModule,
   WorkoutSessionState,
 } from '@/modules/workout';
-import { useWorkout } from '../hooks/useWorkout';
+import { useWorkout } from '../../hooks/useWorkout';
 
 const colors = {
   primary: '#2563eb',

@@ -1,3 +1,3 @@
-import { WorkoutScreen } from '@/src/components/WorkoutScreen';
+import { WorkoutScreen } from '@/src/components/Debug/WorkoutScreen';
 
 export default WorkoutScreen;

@@ -45,6 +45,8 @@ class WorkoutManager: NSObject, WorkoutControlling {
     /// 마지막 샘플 이후 누적된 칼로리 (킬로칼로리)
     private var caloriesSinceLastSample: Double = 0
     
+    private var locationAuthContinuation: CheckedContinuation<Void, Never>?
+    
     public func hasAllPermissions() -> Bool {
         let hasHealthKit = checkHealthKitWritePermission()
         let hasLocation = checkLocationPermission()
@@ -55,7 +57,7 @@ class WorkoutManager: NSObject, WorkoutControlling {
     }
     
     public var isWorkoutActive: Bool {
-      switch metrics.sessionState {
+        switch metrics.sessionState {
         case .running, .paused:
             return true
         default:
@@ -108,7 +110,7 @@ extension WorkoutManager {
             throw WorkoutError.workoutAlreadyInProgress
         }
         
-        resetWorkout()
+        await resetWorkout()
         
         let configuration = HKWorkoutConfiguration()
         configuration.activityType = metrics.activityType
@@ -339,7 +341,14 @@ extension WorkoutManager {
             """)
     }
     
-    public func resetWorkout() {
+    public func resetWorkout() async {
+        if let builder = workoutBuilder {
+            if metrics.sessionState == .running || metrics.sessionState == .paused {
+                builder.discardWorkout()
+                WorkoutLogger.info("진행 중이던 워크아웃 빌더를 폐기했습니다.")
+            }
+        }
+        
         metrics.reset()
         stopElapsedTimeTimer()
         workoutBuilder = nil
@@ -384,9 +393,14 @@ extension WorkoutManager {
         WorkoutLogger.debug("현재 위치 권한 상태: \(status.rawValue)")
         
         if status == .notDetermined {
+            guard locationAuthContinuation == nil else { return }
             WorkoutLogger.info("위치 권한 요청 중...")
-            locationManager.requestWhenInUseAuthorization()
-            try? await Task.sleep(nanoseconds: Constants.authorizationWaitTimeNanoseconds)
+            
+            // Task.sleep 대신 Continuation을 사용하여 델리게이트 응답이 올 때까지 대기
+            await withCheckedContinuation { continuation in
+                self.locationAuthContinuation = continuation
+                locationManager.requestWhenInUseAuthorization()
+            }
         }
         
         WorkoutLogger.info("위치 권한 요청 완료")
@@ -789,6 +803,10 @@ extension WorkoutManager: CLLocationManagerDelegate {
         
         Task { @MainActor in
             onLocationAuthorizationChange?(hasPermission)
+            
+            // 대기 중인 위치 권한 요청이 있다면, 여기서 대기를 풀고 진행시킴
+            self.locationAuthContinuation?.resume()
+            self.locationAuthContinuation = nil
         }
     }
     

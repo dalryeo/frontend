@@ -1,5 +1,7 @@
 import {
   Result,
+  WorkoutMetrics,
+  WorkoutMode,
   WorkoutPermissionStatus,
   wrapResult,
 } from './src/Workout.types';
@@ -60,17 +62,19 @@ export const workoutModule = {
     wrapResult(WorkoutModuleNative.endWorkout()),
 
   /**
-   * 세션 상태를 NotStarted로 초기화 (동기)
+   * 세션 상태를 NotStarted로 초기화 (비동기)
    * @remarks Ended 상태에서 새 운동 시작 전 호출
    */
-  reset: () => WorkoutModuleNative.resetWorkout(),
+  reset: (): Promise<Result<void, WorkoutError>> =>
+    wrapResult(WorkoutModuleNative.resetWorkout()),
 
   /**
    * 현재 운동 메트릭 조회 (동기)
    * @returns 거리, 페이스, 칼로리, 심박수 등 현재 측정값
    * @remarks 실시간 UI 업데이트용 - 이벤트 구독 권장
    */
-  getCurrentMetrics: () => WorkoutModuleNative.getCurrentMetrics(),
+  getCurrentMetrics: (): Promise<Result<WorkoutMetrics, WorkoutError>> =>
+    wrapResult(WorkoutModuleNative.getCurrentMetrics()),
 
   /**
    * 위치 권한 요청
@@ -104,4 +108,13 @@ export const workoutModule = {
   checkPermissions: (): Promise<
     Result<WorkoutPermissionStatus, WorkoutError>
   > => wrapResult(WorkoutModuleNative.checkPermissions()),
+
+  /**
+   * 현재 기기 환경 모드 확인 (아이폰 단독 vs 애플워치 미러링)
+   */
+  getWorkoutMode: (): Promise<Result<WorkoutMode, WorkoutError>> =>
+    wrapResult(WorkoutModuleNative.getWorkoutMode()),
+
+  syncWatchState: (): Promise<Result<void, WorkoutError>> =>
+    wrapResult(WorkoutModuleNative.syncWatchState()),
 };
