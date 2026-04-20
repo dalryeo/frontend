@@ -2,6 +2,7 @@ import { ConfigContext, ExpoConfig } from 'expo/config';
 
 const IS_PROD = process.env.APP_ENV === 'production';
 const BUNDLE_SUFFIX = process.env.BUNDLE_SUFFIX || 'unknown';
+const IS_DEBUG = process.env.DEBUG || 'false';
 const BUNDLE_ID = {
   ios: IS_PROD ? 'com.ios.dalryeo' : `com.ios.dalryeo.${BUNDLE_SUFFIX}`,
   aos: IS_PROD ? 'com.android.dalryeo' : `com.android.dalryeo.${BUNDLE_SUFFIX}`,
@@ -55,5 +56,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     IS_PROD,
+    IS_DEBUG,
   },
 });

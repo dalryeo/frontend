@@ -4,6 +4,7 @@ import {
   ThemeProvider,
 } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
+import Constants from 'expo-constants';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
@@ -18,6 +19,7 @@ import { AuthProvider, useAuth } from '@/src/contexts/AuthContext';
 import { ToastProvider } from '@/src/contexts/ToastContext';
 import { useAppFonts } from '@/src/hooks/useAppFonts';
 
+import { WorkoutDebugScreen } from '@/src/components/Debug/WorkoutDebugScreen';
 import CustomSplashScreen from '@/src/components/SplashScreen';
 
 Sentry.init({
@@ -87,6 +89,11 @@ export default function RootLayout() {
 
     prepare();
   }, [loaded]);
+
+  // 디버거
+  if (Constants.expoConfig?.extra?.IS_DEBUG === 'true') {
+    return <WorkoutDebugScreen />;
+  }
 
   if (!ready) {
     return <CustomSplashScreen />;

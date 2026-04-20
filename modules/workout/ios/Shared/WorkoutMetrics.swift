@@ -220,7 +220,7 @@ final class WorkoutMetrics {
     
     // 애플워치 -> 아이폰 데이터 전송용
     public func createPayload() -> Data?  {
-        let workoutState =  WorkoutState(
+        let workoutState = WorkoutState(
             heartRate: self.heartRate,
             averageHeartRate: self.averageHeartRate,
             calories: self.calories,

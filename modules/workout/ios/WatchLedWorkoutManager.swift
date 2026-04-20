@@ -23,12 +23,12 @@ class WatchLedWorkoutManager: NSObject, WorkoutControlling {
         bufferingPolicy: .bufferingNewest(Constants.streamBufferSize)
     )
     private var session: HKWorkoutSession?
-    private var currentPauseStartDate: Date?
-    private var totalPausedDuration: TimeInterval = 0
+    private var lastSyncedWatchTime: TimeInterval = 0
+    private var lastSyncLocalTimestamp: Date = Date.now
     private var elapsedTimeTimer: Timer?
     
     public var isWorkoutActive: Bool {
-      switch metrics.sessionState {
+        switch metrics.sessionState {
         case .running, .paused:
             return true
         default:
@@ -69,10 +69,8 @@ class WatchLedWorkoutManager: NSObject, WorkoutControlling {
         }
     }
     
-    
-    
     public func retrieveRemoteSession() {
-        WorkoutLogger.info("원격 세션 핸들러 설정")
+        WorkoutLogger.info("원격 세션 수신기(Handler) 설정 및 재활성화")
         
         healthStore.workoutSessionMirroringStartHandler = { [weak self] mirroredSession in
             guard let self = self else { return }
@@ -81,9 +79,11 @@ class WatchLedWorkoutManager: NSObject, WorkoutControlling {
             WorkoutLogger.debug("미러링 세션 정보 - state: \(mirroredSession.state.rawValue), startDate: \(mirroredSession.startDate?.description ?? "nil")")
             
             Task { @MainActor in
-                self.resetWorkout()
+                await self.performReset(shouldReRegisterHandler: false)
+                
                 self.session = mirroredSession
                 mirroredSession.delegate = self
+                
                 let currentState = SessionStateChange(newState: mirroredSession.state, date: mirroredSession.startDate ?? Date.now)
                 
                 WorkoutLogger.debug("초기 상태 전송: \(currentState.newState.rawValue)")
@@ -92,6 +92,36 @@ class WatchLedWorkoutManager: NSObject, WorkoutControlling {
         }
         
         WorkoutLogger.debug("원격 세션 핸들러 설정 완료")
+    }
+    
+    private func performReset(shouldReRegisterHandler: Bool) async {
+        WorkoutLogger.info("[iPhone] Workout 로컬 상태 초기화 진행")
+        
+        if let activeSession = session {
+            WorkoutLogger.info("활성화된 세션 강제 종료 요청")
+            activeSession.delegate = nil
+            
+            if activeSession.state == .running || activeSession.state == .paused {
+                activeSession.stopActivity(with: Date.now)
+            }
+            if activeSession.state != .ended {
+                activeSession.end()
+            }
+                       
+        }
+        
+        metrics.reset()
+        session = nil
+        stopElapsedTimeTimer()
+        
+        lastSyncedWatchTime = 0
+        lastSyncLocalTimestamp = Date.now
+        
+        // 강제 종료 후 HealthKit 귀가 멀어지는 현상을 방지하기 위해 수신기를 재부팅.
+        if shouldReRegisterHandler {
+            WorkoutLogger.debug("다음 미러링 세션을 받기 위해 핸들러 재등록 수행")
+            retrieveRemoteSession()
+        }
     }
     
     private func consumeSessionStateChange(_ change: SessionStateChange) async {
@@ -110,27 +140,21 @@ class WatchLedWorkoutManager: NSObject, WorkoutControlling {
                 // 최초 시작
                 WorkoutLogger.info("최초 시작 - startDate 설정: \(change.date)")
                 metrics.setStartDate(change.date)
-                totalPausedDuration = 0
                 WorkoutLogger.debug("totalPausedDuration 초기화: 0")
-            } else if let pauseStart = currentPauseStartDate {
-                let pauseDuration = change.date.timeIntervalSince(pauseStart)
-                totalPausedDuration += pauseDuration
-                WorkoutLogger.info("재개 - pause 시간: \(String(format: "%.1f", pauseDuration))초, 누적: \(String(format: "%.1f", totalPausedDuration))초")
-                currentPauseStartDate = nil
             }
-            
+            lastSyncLocalTimestamp = Date.now
             startElapsedTimeTimer()
         case .paused:
             WorkoutLogger.debug("paused - 타이머 중지")
             WorkoutLogger.info("pause 시작 시간 기록: \(change.date)")
-            currentPauseStartDate = change.date
+            lastSyncedWatchTime = metrics.elapsedTime
             stopElapsedTimeTimer()
         case .stopped:
             WorkoutLogger.info("stopped - 세션 종료 시작")
-            WorkoutLogger.debug("최종 통계 - 총 pause: \(String(format: "%.1f", totalPausedDuration))초")
             stopElapsedTimeTimer()
         case .ended:
             WorkoutLogger.debug("ended - 종료됨")
+            stopElapsedTimeTimer()
         @unknown default:
             WorkoutLogger.fault("올바르지 않은 상태")
             fatalError("올바르지 않은 상태")
@@ -142,6 +166,11 @@ class WatchLedWorkoutManager: NSObject, WorkoutControlling {
 extension WatchLedWorkoutManager {
     public func startWorkout() async throws {
         WorkoutLogger.info("[iPhone] Workout 시작 요청")
+        
+        if metrics.sessionState == .ended {
+            WorkoutLogger.info("이전 미러링 세션이 종료된 상태입니다. 내부 데이터를 초기화합니다.")
+            await resetWorkout()
+        }
         
         // 중복 시작 방지
         guard session == nil else {
@@ -210,13 +239,8 @@ extension WatchLedWorkoutManager {
         session.stopActivity(with: .now)
     }
     
-    public func resetWorkout() {
-        WorkoutLogger.info("[iPhone] Workout 리셋")
-        metrics.reset()
-        session = nil
-        currentPauseStartDate = nil
-        totalPausedDuration = 0
-        stopElapsedTimeTimer()
+    public func resetWorkout() async {
+        await performReset(shouldReRegisterHandler: true)
         WorkoutLogger.debug("리셋 완료 - pause 정보 초기화")
     }
 }
@@ -224,23 +248,18 @@ extension WatchLedWorkoutManager {
 // MARK: - 운동 경과 시간 처리
 extension WatchLedWorkoutManager {
     private func updateElapsedTime() {
-        guard let startDate = metrics.startDate else {
+        guard metrics.startDate != nil else {
             metrics.updateElapsedTime(0)
             return
         }
         
-        // 현재까지의 총 경과 시간
-        let totalElapsed = Date.now.timeIntervalSince(startDate)
-        // pause 시간을 제외한 실제 운동 시간
-        let elapsedTime = totalElapsed - totalPausedDuration
+        guard metrics.sessionState == .running else { return }
         
-        // 음수 방지 (시스템 시간 변경 등의 예외 상황)
-        if elapsedTime < 0 {
-            WorkoutLogger.warning("elapsedTime 음수 감지: \(elapsedTime) - 0으로 설정")
-            metrics.updateElapsedTime(0)
-        } else {
-            metrics.updateElapsedTime(elapsedTime)
-        }
+        // 마지막으로 워치와 동기화된 시점으로부터 아이폰 내부에서 흐른 시간 계산
+        let timeSinceLastSync = Date.now.timeIntervalSince(lastSyncLocalTimestamp)
+        let currentExtrapolatedTime = lastSyncedWatchTime + timeSinceLastSync
+        
+        metrics.updateElapsedTime(currentExtrapolatedTime)
     }
     
     private func stopElapsedTimeTimer() {
@@ -274,43 +293,28 @@ extension WatchLedWorkoutManager {
 // MARK: - 데이터 수신 처리
 extension WatchLedWorkoutManager {
     private func handleReceivedData(_ data: Data) throws {
-        WorkoutLogger.debug("원격 데이터 수신: \(data.count) bytes")
-        
-        // 초기 동기화 데이터 처리
+        // 1. 초기 동기화 데이터 처리
         if let initialSync = try? JSONDecoder().decode(WorkoutInitialSync.self, from: data) {
-            WorkoutLogger.info("초기 동기화 데이터 수신")
-            WorkoutLogger.debug("동기화 정보 - startDate: \(initialSync.workoutStartDate), elapsedTime: \(String(format: "%.1f", initialSync.currentElapsedTime))초, pauseDuration: \(String(format: "%.1f", initialSync.totalPausedDuration))초")
-            
             metrics.setStartDate(initialSync.workoutStartDate)
-            totalPausedDuration = initialSync.totalPausedDuration
-            startElapsedTimeTimer()
             
-            WorkoutLogger.info("초기 동기화 완료")
+            // 절대 기준점 갱신
+            self.lastSyncedWatchTime = initialSync.currentElapsedTime
+            self.lastSyncLocalTimestamp = Date.now
+            
+            startElapsedTimeTimer()
             return
         }
         
-        // 운동 상태 업데이트 처리
+        // 2. 운동 상태 업데이트 처리 (1초마다 수신)
         if let message = try? WorkoutStatePayload.decode(from: data) {
-            WorkoutLogger.debug("운동 상태 업데이트 수신")
-            WorkoutLogger.debug("심박수: \(String(format: "%.0f", message.state.heartRate)) bpm")
-            WorkoutLogger.debug("칼로리: \(String(format: "%.1f", message.state.calories)) kcal")
-            WorkoutLogger.debug("거리: \(String(format: "%.0f", message.state.distance)) m")
-            WorkoutLogger.debug("페이스: \(String(format: "%.2f", message.state.pace)) min/km")
-            WorkoutLogger.debug("경과시간: \(String(format: "%.0f", message.state.elapsedTime)) 초")
-            
             metrics.updateHeartRate(message.state.heartRate)
             metrics.updateCalories(message.state.calories)
             metrics.updateDistance(message.state.distance)
             metrics.updatePace(message.state.pace)
             
-            do {
-                try validateAndCorrectElapsedTime(watchElapsedTime: message.state.elapsedTime)
-            } catch {
-                WorkoutLogger.error("시간 검증 실패: \(error.localizedDescription)")
-                // 시간 검증 실패는 치명적이지 않으므로 계속 진행
-            }
-            
-            WorkoutLogger.debug("상태 업데이트 완료")
+            self.lastSyncedWatchTime = message.state.elapsedTime
+            self.lastSyncLocalTimestamp = Date.now
+            metrics.updateElapsedTime(self.lastSyncedWatchTime)
             return
         }
         
@@ -319,48 +323,6 @@ extension WatchLedWorkoutManager {
         throw WorkoutError.invalidDataFormat
     }
     
-    private func validateAndCorrectElapsedTime(watchElapsedTime: TimeInterval) throws {
-        let localElapsedTime = metrics.elapsedTime
-        let drift = abs(localElapsedTime - watchElapsedTime)
-        
-        WorkoutLogger.debug("시간 검증 - iPhone: \(String(format: "%.1f", localElapsedTime))초, Watch: \(String(format: "%.1f", watchElapsedTime))초, 차이: \(String(format: "%.1f", drift))초")
-        
-        // 임계값 이상 차이나는 경우 처리
-        if drift > Constants.timeDriftThreshold {
-            WorkoutLogger.warning("시간 불일치 감지: \(String(format: "%.1f", drift))초")
-            
-            // Watch 시간이 더 크거나 보정 임계값 이상 차이나면 보정
-            if watchElapsedTime > localElapsedTime || drift > Constants.timeDriftCorrectionThreshold {
-                guard let startDate = metrics.startDate else {
-                    WorkoutLogger.error("startDate 없음 - 보정 불가")
-                    throw WorkoutError.timeValidationFailed
-                }
-                
-                WorkoutLogger.info("시간 보정 중...")
-                
-                let timeSinceStart = Date.now.timeIntervalSince(startDate)
-                let oldPauseDuration = totalPausedDuration
-                
-                // 보정: totalPausedDuration = (현재까지 경과 시간) - (Watch의 실제 운동 시간)
-                totalPausedDuration = timeSinceStart - watchElapsedTime
-                
-                // 음수 방지
-                if totalPausedDuration < 0 {
-                    WorkoutLogger.error("보정 결과 음수 - 보정 취소")
-                    totalPausedDuration = oldPauseDuration
-                    throw WorkoutError.timeValidationFailed
-                }
-                
-                WorkoutLogger.debug("보정 결과 - 이전 pause: \(String(format: "%.1f", oldPauseDuration))초 → 새 pause: \(String(format: "%.1f", totalPausedDuration))초")
-                
-                updateElapsedTime()
-                
-                WorkoutLogger.info("시간 보정 완료")
-            } else {
-                WorkoutLogger.debug("작은 차이 - 보정 생략")
-            }
-        }
-    }
 }
 
 // MARK: - HealthKit 처리
@@ -413,7 +375,7 @@ extension WatchLedWorkoutManager {
     }
     
     public func checkLocationPermission() -> Bool {
-      return true
+        return true
     }
     
     public func requestLocationAuthorization() async { }
@@ -505,6 +467,14 @@ extension WatchLedWorkoutManager: HKWorkoutSessionDelegate {
             // - 재연결 시도
             // - 사용자에게 알림
             // - 로컬 데이터 보존
+            
+            WorkoutLogger.info("워치 앱이 종료되었거나 연결이 끊어졌습니다. 아이폰 상태를 자동으로 초기화합니다.")
+            
+            // 1. 아이폰 쪽에 남아있는 찌꺼기 세션을 완전히 파기
+            await self.performReset(shouldReRegisterHandler: true)
+            
+            // 2. JS(React Native) 쪽으로 "완전히 초기화되었다"는 이벤트를 강제로 한 번 쏴주어 UI 즉시 렌더링
+            NotificationCenter.default.post(name: NSNotification.Name("WatchDidRequestReset"), object: nil)
         }
     }
     

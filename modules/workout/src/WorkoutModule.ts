@@ -1,9 +1,10 @@
 import { NativeModule, requireNativeModule } from 'expo';
 
 import {
-  WorkoutPermissionStatus,
   WorkoutMetrics,
+  WorkoutMode,
   WorkoutModuleEvents,
+  WorkoutPermissionStatus,
 } from './Workout.types';
 
 declare class WorkoutModule extends NativeModule<WorkoutModuleEvents> {
@@ -11,11 +12,13 @@ declare class WorkoutModule extends NativeModule<WorkoutModuleEvents> {
   pauseWorkout(): Promise<void>;
   resumeWorkout(): Promise<void>;
   endWorkout(): Promise<void>;
-  resetWorkout(): void;
-  getCurrentMetrics(): WorkoutMetrics;
+  resetWorkout(): Promise<void>;
+  getCurrentMetrics(): Promise<WorkoutMetrics>;
   requestLocationAuthorization(): Promise<void>;
   requestHealthAuthorization(): Promise<void>;
   checkPermissions(): Promise<WorkoutPermissionStatus>;
+  getWorkoutMode(): Promise<WorkoutMode>;
+  syncWatchState(): Promise<void>;
 }
 
 // This call loads the native module object from the JSI.

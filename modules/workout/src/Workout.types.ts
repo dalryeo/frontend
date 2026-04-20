@@ -9,6 +9,19 @@ export enum WorkoutSessionState {
   Stopped = 'stopped',
 }
 
+export enum WorkoutMode {
+  iPhoneOnly = 'iPhoneOnly',
+  WatchMirroring = 'watchMirroring',
+}
+
+export type WatchState = {
+  isPaired: boolean;
+  isWatchAppInstalled: boolean;
+  isReachable: boolean;
+  isWatchMode: boolean;
+  isFallback: boolean;
+};
+
 export type WorkoutMetrics = {
   sessionState: WorkoutSessionState;
   elapsedTime: number;
@@ -36,6 +49,7 @@ export type WorkoutModuleEvents = {
   onWorkoutStateChange(payload: { sessionState: WorkoutSessionState }): void;
   onWorkoutError(payload: WorkoutErrorState): void;
   onLocationAuthChange(payload: { locationPermission: boolean }): void;
+  onWatchStateChange(payload: WatchState): void;
 };
 
 /**

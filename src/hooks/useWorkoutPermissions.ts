@@ -11,7 +11,7 @@ interface UseWorkoutPermissionsReturn {
   permissions: WorkoutPermissionStatus;
   hasAllPermissions: boolean;
   isRequesting: boolean;
-  checkPermissions: () => Promise<void>;
+  checkPermissions: () => Promise<WorkoutPermissionStatus>;
   requestPermissions: () => Promise<WorkoutPermissionStatus>;
   requestHealthPermission: () => Promise<WorkoutPermissionStatus>;
   requestLocationPermission: () => Promise<WorkoutPermissionStatus>;
@@ -31,13 +31,20 @@ export const useWorkoutPermissions = (): UseWorkoutPermissionsReturn => {
   );
 
   const checkPermissions = async () => {
-    const result = await workoutModule.checkPermissions();
+    setIsRequesting(true);
+    try {
+      const result = await workoutModule.checkPermissions();
 
-    if (result.success) {
-      setHealthKit(result.data.healthKit);
-      setLocation(result.data.location);
+      if (result.success) {
+        setHealthKit(result.data.healthKit);
+        setLocation(result.data.location);
+        return result.data;
+      }
+    } finally {
+      setIsRequesting(false);
     }
-    setIsRequesting(false);
+
+    return { healthKit: false, location: false };
   };
 
   const requestPermissions = async () => {
@@ -45,8 +52,7 @@ export const useWorkoutPermissions = (): UseWorkoutPermissionsReturn => {
     try {
       await workoutModule.requestHealthAuthorization();
       await workoutModule.requestLocationAuthorization();
-      // 약간의 지연 후 실제 권한 상태 확인 (0.5초)
-      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const result = await workoutModule.checkPermissions();
 
       if (result.success) {
@@ -64,8 +70,7 @@ export const useWorkoutPermissions = (): UseWorkoutPermissionsReturn => {
     setIsRequesting(true);
     try {
       await workoutModule.requestHealthAuthorization();
-      // 약간의 지연 후 실제 권한 상태 확인 (0.5초)
-      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const result = await workoutModule.checkPermissions();
 
       if (result.success) {
@@ -82,8 +87,7 @@ export const useWorkoutPermissions = (): UseWorkoutPermissionsReturn => {
     setIsRequesting(true);
     try {
       await workoutModule.requestLocationAuthorization();
-      // 약간의 지연 후 실제 권한 상태 확인 (0.5초)
-      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const result = await workoutModule.checkPermissions();
 
       if (result.success) {
