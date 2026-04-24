@@ -41,11 +41,21 @@ export const formatDuration = (durationSec: number): string => {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 };
 
-// 페이스 포맷팅 (초 -> MM'SS")
+// 페이스 포맷팅 (초/km -> MM'SS")
+// 예: 360 -> "06'00"
 export const formatPace = (paceSecPerKm: number): string => {
   if (!paceSecPerKm || paceSecPerKm <= 0) return '00\'00"';
   const minutes = Math.floor(paceSecPerKm / 60);
-  const seconds = paceSecPerKm % 60;
+  const seconds = Math.round(paceSecPerKm % 60);
+  return `${String(minutes).padStart(2, '0')}'${String(seconds).padStart(2, '0')}"`;
+};
+
+// 러닝 기록 중 실시간 페이스 포맷팅 (소수점 min/km -> MM'SS")
+// 예: 2.0508 (= 2분 3초/km) -> "02'03"
+export const formatPaceLive = (paceMinPerKm: number): string => {
+  if (!paceMinPerKm || paceMinPerKm <= 0) return '00\'00"';
+  const minutes = Math.floor(paceMinPerKm);
+  const seconds = Math.round((paceMinPerKm - minutes) * 60);
   return `${String(minutes).padStart(2, '0')}'${String(seconds).padStart(2, '0')}"`;
 };
 

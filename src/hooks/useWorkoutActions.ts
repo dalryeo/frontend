@@ -25,6 +25,10 @@ export const useWorkoutActions = () => {
     try {
       const result = await workoutModule.start();
       if (!result.success) {
+        if (result.error.code === 'workoutAlreadyInProgress') {
+          onSuccess();
+          return;
+        }
         Alert.alert('오류', result.error.message);
       } else {
         onSuccess();

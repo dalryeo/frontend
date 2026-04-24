@@ -44,19 +44,21 @@ export const createRecordData = (
   startTime: Date,
   endTime: Date,
 ) => {
-  const distanceKm = Math.max(0.01, metrics.distance / 1000);
-  const avgPaceSecPerKm = calculatePace(
-    metrics.pace,
-    distanceKm,
-    metrics.elapsedTime,
+  const distanceKm = parseFloat(
+    Math.max(0.1, metrics.distance / 1000).toFixed(2),
+  );
+  const durationSec = Math.max(1, Math.round(metrics.elapsedTime));
+  const avgPaceSecPerKm = Math.min(
+    3600,
+    Math.max(60, Math.round(durationSec / distanceKm)),
   );
 
   return {
     platform: 'IOS' as const,
-    distanceKm: parseFloat(distanceKm.toFixed(2)),
-    durationSec: Math.max(1, Math.round(metrics.elapsedTime)),
-    avgPaceSecPerKm: Math.max(60, avgPaceSecPerKm),
-    avgHeartRate: metrics.heartRate ? Math.round(metrics.heartRate) : 0,
+    distanceKm,
+    durationSec,
+    avgPaceSecPerKm,
+    avgHeartRate: metrics.heartRate ? Math.round(metrics.heartRate) : null,
     caloriesKcal: calculateCalories(distanceKm),
     startAt: formatLocalDateTime(startTime),
     endAt: formatLocalDateTime(endTime),

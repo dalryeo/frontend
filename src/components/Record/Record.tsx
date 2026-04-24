@@ -3,6 +3,7 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
+  Alert,
   Animated,
   Easing,
   StyleSheet,
@@ -16,7 +17,7 @@ import { useAppFonts } from '../../hooks/useAppFonts';
 import { useWorkout } from '../../hooks/useWorkout';
 import { useWorkoutActions } from '../../hooks/useWorkoutActions';
 import { RunningRecordService } from '../../services/runningRecordService';
-import { formatElapsedTime, formatPace } from '../../utils/formatUtils';
+import { formatElapsedTime, formatPaceLive } from '../../utils/formatUtils';
 import { Font } from '../Font';
 
 type ControlState = 'paused' | 'playing' | 'sheet';
@@ -26,16 +27,22 @@ function Record() {
   const [controlState, setControlState] = useState<ControlState>('paused');
   const [isSaving, setIsSaving] = useState(false);
   const [startTime, setStartTime] = useState<Date | null>(null);
+  const [watchEndedWorkout, setWatchEndedWorkout] = useState(false);
   const router = useRouter();
   const { showToast } = useToast();
   const { getAccessToken } = useAuth();
   const {
     metrics,
-    sessionState,
+    sessionState: rawSessionState,
     hasAllPermissions,
     isRequesting,
     requestPermissions,
   } = useWorkout();
+
+  const sessionState =
+    rawSessionState !== WorkoutSessionState.NotStarted
+      ? rawSessionState
+      : metrics.sessionState;
 
   const {
     handleStart,
@@ -62,12 +69,50 @@ function Record() {
         break;
       case WorkoutSessionState.Running:
         setControlState('playing');
+        setStartTime((prev) => prev ?? new Date());
         break;
       case WorkoutSessionState.Paused:
         setControlState('sheet');
         break;
+      case WorkoutSessionState.Stopped:
+      case WorkoutSessionState.Ended:
+        setWatchEndedWorkout(true);
+        break;
     }
   }, [sessionState]);
+
+  const saveRef = useRef<() => Promise<void>>(async () => {});
+  saveRef.current = async () => {
+    if (!startTime) return;
+    setIsSaving(true);
+    try {
+      const saved = await RunningRecordService.saveRecord(
+        metrics,
+        startTime,
+        getAccessToken,
+      );
+      if (!saved) return;
+      await workoutEnd();
+      await workoutModule.reset();
+      showToast('러닝이 완료되었어요');
+      router.replace('/analysis');
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : '기록 저장에 실패했습니다.';
+      Alert.alert('저장 실패', message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const isSavingRef = useRef(false);
+  isSavingRef.current = isSaving;
+
+  useEffect(() => {
+    if (!watchEndedWorkout || isSavingRef.current) return;
+    setWatchEndedWorkout(false);
+    saveRef.current();
+  }, [watchEndedWorkout]);
 
   if (!fontsLoaded) return null;
 
@@ -82,25 +127,7 @@ function Record() {
     }
   };
 
-  const handleEndClick = async () => {
-    setIsSaving(true);
-    try {
-      const success = await RunningRecordService.saveRecord(
-        metrics,
-        startTime!,
-        getAccessToken,
-      );
-
-      if (success) {
-        await workoutEnd();
-        workoutModule.reset();
-        showToast('러닝이 완료되었어요');
-        router.replace('/analysis');
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  const handleEndClick = () => saveRef.current();
 
   const sheetTranslateY = sheetAnim.interpolate({
     inputRange: [0, 1],
@@ -167,7 +194,7 @@ function Record() {
             controlState === 'sheet' && { color: NEUTRAL.GRAY_800 },
           ]}
         >
-          {formatPace(metrics.pace)}
+          {formatPaceLive(metrics.pace)}
         </Font>
 
         <TouchableOpacity

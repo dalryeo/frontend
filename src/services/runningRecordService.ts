@@ -17,14 +17,30 @@ export class RunningRecordService {
       return false;
     }
 
-    if (metrics.elapsedTime < 10) {
+    // Watch 종료 시 disconnect → performReset으로 elapsedTime이 0이 될 수 있으므로
+    // startTime 기반 wall-clock을 폴백으로 사용
+    const endTime = new Date();
+    const effectiveElapsedSec =
+      metrics.elapsedTime > 0
+        ? metrics.elapsedTime
+        : (endTime.getTime() - startTime.getTime()) / 1000;
+
+    if (effectiveElapsedSec < 10) {
       Alert.alert('기록 부족', '최소 10초 이상 운동해야 기록이 저장됩니다.');
       return false;
     }
 
     try {
-      const endTime = new Date();
-      const recordData = createRecordData(metrics, startTime, endTime);
+      const durationSec = Math.max(1, Math.round(effectiveElapsedSec));
+      const computedStartTime = new Date(
+        endTime.getTime() - durationSec * 1000,
+      );
+      const effectiveMetrics = { ...metrics, elapsedTime: effectiveElapsedSec };
+      const recordData = createRecordData(
+        effectiveMetrics,
+        computedStartTime,
+        endTime,
+      );
 
       const token = await getAccessToken();
       if (!token) {
@@ -35,8 +51,7 @@ export class RunningRecordService {
 
       return true;
     } catch (error) {
-      console.error('러닝 기록 저장 실패:', error);
-      return false;
+      throw error;
     }
   }
 }

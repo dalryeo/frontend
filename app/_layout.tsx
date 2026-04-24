@@ -7,20 +7,19 @@ import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import 'react-native-reanimated';
 import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
 
+import { WorkoutDebugScreen } from '@/src/components/Debug/WorkoutDebugScreen';
+import CustomSplashScreen from '@/src/components/SplashScreen';
 import { useColorScheme } from '@/src/components/useColorScheme';
 import { AuthProvider, useAuth } from '@/src/contexts/AuthContext';
 import { ToastProvider } from '@/src/contexts/ToastContext';
 import { useAppFonts } from '@/src/hooks/useAppFonts';
-
-import { WorkoutDebugScreen } from '@/src/components/Debug/WorkoutDebugScreen';
-import CustomSplashScreen from '@/src/components/SplashScreen';
 
 Sentry.init({
   dsn: 'https://1f265665b9cbe66c55ae0f82f9ee0a8a@o4511108762697728.ingest.de.sentry.io/4511108858708048',
@@ -90,29 +89,39 @@ export default function RootLayout() {
     prepare();
   }, [loaded]);
 
-  // 디버거
-  if (Constants.expoConfig?.extra?.IS_DEBUG === 'true') {
-    return <WorkoutDebugScreen />;
-  }
-
   if (!ready) {
     return <CustomSplashScreen />;
+  }
+
+  // 디버거
+  if (Constants.expoConfig?.extra?.IS_DEBUG === 'false') {
+    return <WorkoutDebugScreen />;
   }
 
   return <RootLayoutNav />;
 }
 
 function AuthenticatedLayout() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isOnboardingComplete } = useAuth();
   const router = useRouter();
+  const hasNavigatedOnLoad = useRef(false);
 
   useEffect(() => {
     if (!isLoading) {
-      if (!user) {
+      if (!hasNavigatedOnLoad.current) {
+        hasNavigatedOnLoad.current = true;
+        if (!user) {
+          router.replace('/login');
+        } else if (!isOnboardingComplete) {
+          router.replace('/startRecord');
+        } else {
+          router.replace('/(tabs)');
+        }
+      } else if (!user) {
         router.replace('/login');
       }
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, isOnboardingComplete, router]);
 
   if (isLoading) {
     return <CustomSplashScreen />;
