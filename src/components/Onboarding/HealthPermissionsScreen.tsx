@@ -8,9 +8,15 @@ const HealthPermissionsScreen = () => {
     useWorkoutPermissions();
   const router = useRouter();
 
-  const handleHealthPermission = useCallback(() => {
-    requestHealthPermission().catch(console.error);
-    router.replace('/locationPermission');
+  const handleHealthPermission = useCallback(async () => {
+    try {
+      const result = await requestHealthPermission();
+      console.log('Health 권한 요청 결과:', result);
+      router.replace('/locationPermission');
+    } catch (error) {
+      console.error('Health 권한 요청 오류:', error);
+      router.replace('/locationPermission');
+    }
   }, [requestHealthPermission, router]);
 
   useEffect(() => {

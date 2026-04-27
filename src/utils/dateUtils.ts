@@ -17,14 +17,10 @@ export const formatLocalDate = (date: Date): string =>
     date.getDate(),
   ).padStart(2, '0')}`;
 
-export const formatLocalDateTime = (date: Date): string => {
-  const offsetMin = -date.getTimezoneOffset();
-  const sign = offsetMin >= 0 ? '+' : '-';
-  const absOffset = Math.abs(offsetMin);
-  const offsetHH = String(Math.floor(absOffset / 60)).padStart(2, '0');
-  const offsetMM = String(absOffset % 60).padStart(2, '0');
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}${sign}${offsetHH}:${offsetMM}`;
-};
+export const formatLocalDateTime = (date: Date): string =>
+  `${formatLocalDate(date)}T${String(date.getHours()).padStart(2, '0')}:${String(
+    date.getMinutes(),
+  ).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
 
 // 표시용 날짜 포맷 (YYYY. MM. DD)
 export const formatDateString = (dateStr: string): string => {

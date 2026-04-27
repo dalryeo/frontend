@@ -64,6 +64,10 @@ export const useWeeklyData = () => {
     }
   }, [getAccessToken, forceLogout]);
 
+  useEffect(() => {
+    fetchWeeklyData();
+  }, [fetchWeeklyData]);
+
   return {
     weeklyDataList,
     loading,

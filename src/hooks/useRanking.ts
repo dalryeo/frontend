@@ -12,13 +12,8 @@ import {
 } from '../types/ranking.types';
 import { hasErrorCode } from '../utils/typeGuards';
 
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-}
-
-function usePublicRanking<T>(fetchFn: () => Promise<ApiResponse<T[]>>) {
-  const [rankings, setRankings] = useState<T[]>([]);
+export function useScoreRanking() {
+  const [rankings, setRankings] = useState<ScoreRankingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { forceLogout } = useAuth();
@@ -28,16 +23,16 @@ function usePublicRanking<T>(fetchFn: () => Promise<ApiResponse<T[]>>) {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetchFn();
+      const response = await fetchScoreRanking();
 
       if (response.success && response.data) {
         if (hasErrorCode(response.data)) {
-          if ((response.data as { code?: string }).code === 'AC-006') {
+          if (response.data.code === 'AC-006') {
             await forceLogout();
           }
           setRankings([]);
         } else if (Array.isArray(response.data)) {
-          setRankings(response.data);
+          setRankings(response.data as ScoreRankingItem[]);
         } else {
           setRankings([]);
         }
@@ -50,21 +45,65 @@ function usePublicRanking<T>(fetchFn: () => Promise<ApiResponse<T[]>>) {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchFn, forceLogout]);
+  }, [forceLogout]);
 
   useEffect(() => {
     fetchRanking();
   }, [fetchRanking]);
 
-  return { rankings, isLoading, error, refetch: fetchRanking };
-}
-
-export function useScoreRanking() {
-  return usePublicRanking<ScoreRankingItem>(fetchScoreRanking);
+  return {
+    rankings,
+    isLoading,
+    error,
+    refetch: fetchRanking,
+  };
 }
 
 export function useDistanceRanking() {
-  return usePublicRanking<DistanceRankingItem>(fetchDistanceRanking);
+  const [rankings, setRankings] = useState<DistanceRankingItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { forceLogout } = useAuth();
+
+  const fetchRanking = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await fetchDistanceRanking();
+
+      if (response.success && response.data) {
+        if (hasErrorCode(response.data)) {
+          if (response.data.code === 'AC-006') {
+            await forceLogout();
+          }
+          setRankings([]);
+        } else if (Array.isArray(response.data)) {
+          setRankings(response.data as DistanceRankingItem[]);
+        } else {
+          setRankings([]);
+        }
+      } else {
+        setRankings([]);
+      }
+    } catch (err) {
+      setRankings([]);
+      setError(err instanceof Error ? err.message : '알 수 없는 오류');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [forceLogout]);
+
+  useEffect(() => {
+    fetchRanking();
+  }, [fetchRanking]);
+
+  return {
+    rankings,
+    isLoading,
+    error,
+    refetch: fetchRanking,
+  };
 }
 
 export function useMyRanking() {
@@ -79,6 +118,7 @@ export function useMyRanking() {
       setError(null);
 
       const token = await getAccessToken();
+
       if (!token) {
         setMyRanking(null);
         return;
@@ -88,7 +128,9 @@ export function useMyRanking() {
 
       if (response.success && response.data) {
         if (hasErrorCode(response.data)) {
-          if (response.data.code === 'AC-006') await forceLogout();
+          if (response.data.code === 'AC-006') {
+            await forceLogout();
+          }
           setMyRanking(null);
         } else {
           setMyRanking(response.data as MyRankingData);
@@ -108,7 +150,12 @@ export function useMyRanking() {
     fetchMyRanking();
   }, [fetchMyRanking]);
 
-  return { myRanking, isLoading, error, refetch: fetchMyRanking };
+  return {
+    myRanking,
+    isLoading,
+    error,
+    refetch: fetchMyRanking,
+  };
 }
 
 export function useRankingData() {

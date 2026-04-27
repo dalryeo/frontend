@@ -1,5 +1,4 @@
 import { BASE_URL } from '../config/api';
-import { throwIfNetworkError } from '../utils/apiUtils';
 import { fetchWithTokenRefresh } from './apiClient';
 
 type RefreshTokenCallback = () => Promise<string | null>;
@@ -60,9 +59,12 @@ export const weeklyService = {
         },
         refreshTokenCallback,
       );
-      return response.json();
+
+      const result = await response.json();
+
+      return result;
     } catch (error) {
-      throwIfNetworkError(error);
+      console.error('주간 요약 목록 조회 실패:', error);
       throw error;
     }
   },
@@ -80,19 +82,20 @@ export const weeklyService = {
         },
         refreshTokenCallback,
       );
+
       const result = await response.json();
+
       if (!result.success) {
         throw new Error(result.error?.message ?? 'WEEKLY_RECORDS_FETCH_FAILED');
       }
+
       return result;
     } catch (error) {
-      throwIfNetworkError(error);
+      console.error('주간 기록 목록 조회 실패:', error);
       throw error;
     }
   },
 };
 
-export const getWeeklySummaryList =
-  weeklyService.getWeeklySummaryList.bind(weeklyService);
-export const getWeeklyRecords =
-  weeklyService.getWeeklyRecords.bind(weeklyService);
+export const getWeeklySummaryList = weeklyService.getWeeklySummaryList;
+export const getWeeklyRecords = weeklyService.getWeeklyRecords;

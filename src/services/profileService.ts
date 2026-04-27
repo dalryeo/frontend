@@ -1,5 +1,4 @@
 import { BASE_URL } from '../config/api';
-import { assertApiSuccess, throwIfNetworkError } from '../utils/apiUtils';
 import type { Gender } from '../utils/commonUtils';
 
 interface ProfileData {
@@ -55,11 +54,26 @@ export const getOnboardingData = async (
         Authorization: `Bearer ${token}`,
       },
     });
+
     const result: OnboardingResponse = await response.json();
-    assertApiSuccess(result, '프로필 정보를 가져오는데 실패했습니다.');
+
+    if (!result.success) {
+      throw new Error('프로필 정보를 가져오는데 실패했습니다.');
+    }
+
     return result.data;
   } catch (error) {
-    throwIfNetworkError(error);
+    console.error('Get onboarding data error:', error);
+
+    if (
+      error instanceof TypeError &&
+      error.message.includes('Network request failed')
+    ) {
+      throw new Error(
+        '네트워크 연결을 확인해주세요. 서버에 연결할 수 없습니다.',
+      );
+    }
+
     throw error;
   }
 };
@@ -77,20 +91,36 @@ export const updateOnboardingData = async (
       },
       body: JSON.stringify(onboardingData),
     });
+
     const result = await response.json();
+
     if (!response.ok) {
+      console.error('❌ HTTP 오류:', response.status, response.statusText);
       throw new Error(
         `HTTP ${response.status}: ${result.error?.message || response.statusText}`,
       );
     }
-    assertApiSuccess(result, '프로필 수정에 실패했습니다.');
+
+    if (!result.success) {
+      throw new Error(result.error?.message ?? '프로필 수정에 실패했습니다.');
+    }
+
     return result;
   } catch (error) {
-    throwIfNetworkError(error);
+    console.error('🚨 Update onboarding data error:', error);
+
+    if (
+      error instanceof TypeError &&
+      error.message.includes('Network request failed')
+    ) {
+      throw new Error(
+        '네트워크 연결을 확인해주세요. 서버에 연결할 수 없습니다.',
+      );
+    }
+
     throw error;
   }
 };
-
 export const submitProfileData = async (
   profileData: ProfileData,
   token: string,
@@ -104,11 +134,26 @@ export const submitProfileData = async (
       },
       body: JSON.stringify(profileData),
     });
+
     const result = await response.json();
-    assertApiSuccess(result, 'PROFILE_SAVE_FAILED');
+
+    if (!result.success) {
+      throw new Error(result.error?.message ?? 'PROFILE_SAVE_FAILED');
+    }
+
     return result.data;
   } catch (error) {
-    throwIfNetworkError(error);
+    console.error('Profile submission error:', error);
+
+    if (
+      error instanceof TypeError &&
+      error.message.includes('Network request failed')
+    ) {
+      throw new Error(
+        '네트워크 연결을 확인해주세요. 서버에 연결할 수 없습니다.',
+      );
+    }
+
     throw error;
   }
 };
@@ -128,11 +173,24 @@ export const checkNicknameAvailability = async (
         },
       },
     );
+
     const result = await response.json();
-    assertApiSuccess(result, 'NICKNAME_CHECK_FAILED');
+
+    if (!result.success) {
+      throw new Error(result.error?.message ?? 'NICKNAME_CHECK_FAILED');
+    }
+
     return result.data;
   } catch (error) {
-    throwIfNetworkError(error);
+    console.error('닉네임 체크 실패:', error);
+
+    if (
+      error instanceof TypeError &&
+      error.message.includes('Network request failed')
+    ) {
+      throw new Error('네트워크 연결을 확인해주세요.');
+    }
+
     throw error;
   }
 };

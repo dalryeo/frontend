@@ -5,24 +5,22 @@ import {
 } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
-import { useEvent } from 'expo';
-import { Stack, usePathname, useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useRef, useState } from 'react';
-
-import WorkoutModule, { WorkoutSessionState } from '@/modules/workout';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
 
-import { WorkoutDebugScreen } from '@/src/components/Debug/WorkoutDebugScreen';
-import CustomSplashScreen from '@/src/components/SplashScreen';
 import { useColorScheme } from '@/src/components/useColorScheme';
 import { AuthProvider, useAuth } from '@/src/contexts/AuthContext';
 import { ToastProvider } from '@/src/contexts/ToastContext';
 import { useAppFonts } from '@/src/hooks/useAppFonts';
+
+import { WorkoutDebugScreen } from '@/src/components/Debug/WorkoutDebugScreen';
+import CustomSplashScreen from '@/src/components/SplashScreen';
 
 Sentry.init({
   dsn: 'https://1f265665b9cbe66c55ae0f82f9ee0a8a@o4511108762697728.ingest.de.sentry.io/4511108858708048',
@@ -80,63 +78,41 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    if (!loaded) return;
-    SplashScreen.hideAsync();
-    const timer = setTimeout(() => setReady(true), 2000);
-    return () => clearTimeout(timer);
+    const prepare = async () => {
+      if (!loaded) return;
+
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      setReady(true);
+      await SplashScreen.hideAsync();
+    };
+
+    prepare();
   }, [loaded]);
+
+  // 디버거
+  if (Constants.expoConfig?.extra?.IS_DEBUG === 'true') {
+    return <WorkoutDebugScreen />;
+  }
 
   if (!ready) {
     return <CustomSplashScreen />;
-  }
-
-  // 디버거
-  if (Constants.expoConfig?.extra?.IS_DEBUG === 'false') {
-    return <WorkoutDebugScreen />;
   }
 
   return <RootLayoutNav />;
 }
 
 function AuthenticatedLayout() {
-  const { user, isLoading, isOnboardingComplete } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
-  const hasNavigatedOnLoad = useRef(false);
-
-  const { sessionState: workoutSessionState } = useEvent(
-    WorkoutModule,
-    'onWorkoutStateChange',
-    { sessionState: WorkoutSessionState.NotStarted },
-  );
 
   useEffect(() => {
     if (!isLoading) {
-      if (!hasNavigatedOnLoad.current) {
-        hasNavigatedOnLoad.current = true;
-        if (!user) {
-          router.replace('/login');
-        } else if (!isOnboardingComplete) {
-          router.replace('/startRecord');
-        } else {
-          router.replace('/(tabs)');
-        }
-      } else if (!user) {
+      if (!user) {
         router.replace('/login');
       }
     }
-  }, [user, isLoading, isOnboardingComplete, router]);
-
-  useEffect(() => {
-    if (isLoading || !user || !hasNavigatedOnLoad.current) return;
-    if (
-      (workoutSessionState === WorkoutSessionState.Running ||
-        workoutSessionState === WorkoutSessionState.Paused) &&
-      !pathname.startsWith('/record')
-    ) {
-      router.push('/record');
-    }
-  }, [workoutSessionState, isLoading, user, pathname, router]);
+  }, [user, isLoading, router]);
 
   if (isLoading) {
     return <CustomSplashScreen />;

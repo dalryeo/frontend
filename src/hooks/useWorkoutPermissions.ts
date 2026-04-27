@@ -30,35 +30,11 @@ export const useWorkoutPermissions = (): UseWorkoutPermissionsReturn => {
     },
   );
 
-  const checkPermissions = async (): Promise<WorkoutPermissionStatus> => {
+  const checkPermissions = async () => {
     setIsRequesting(true);
     try {
-      const result = await Promise.race([
-        workoutModule.checkPermissions(),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), 5000),
-        ),
-      ]);
-      if (result.success) {
-        setHealthKit(result.data.healthKit);
-        setLocation(result.data.location);
-        return result.data;
-      }
-    } catch {
-      // 타임아웃 또는 에러 시 현재 상태 유지
-    } finally {
-      setIsRequesting(false);
-    }
-    return { healthKit: false, location: false };
-  };
-
-  const executePermissionRequest = async (
-    authorize: () => Promise<unknown>,
-  ): Promise<WorkoutPermissionStatus> => {
-    setIsRequesting(true);
-    try {
-      await authorize();
       const result = await workoutModule.checkPermissions();
+
       if (result.success) {
         setHealthKit(result.data.healthKit);
         setLocation(result.data.location);
@@ -67,22 +43,62 @@ export const useWorkoutPermissions = (): UseWorkoutPermissionsReturn => {
     } finally {
       setIsRequesting(false);
     }
+
     return { healthKit: false, location: false };
   };
 
-  const requestPermissions = () =>
-    executePermissionRequest(async () => {
+  const requestPermissions = async () => {
+    setIsRequesting(true);
+    try {
       await workoutModule.requestHealthAuthorization();
       await workoutModule.requestLocationAuthorization();
-    });
 
-  const requestHealthPermission = () =>
-    executePermissionRequest(() => workoutModule.requestHealthAuthorization());
+      const result = await workoutModule.checkPermissions();
 
-  const requestLocationPermission = () =>
-    executePermissionRequest(() =>
-      workoutModule.requestLocationAuthorization(),
-    );
+      if (result.success) {
+        setHealthKit(result.data.healthKit);
+        setLocation(result.data.location);
+        return result.data;
+      }
+    } finally {
+      setIsRequesting(false);
+    }
+    return { healthKit: false, location: false };
+  };
+
+  const requestHealthPermission = async () => {
+    setIsRequesting(true);
+    try {
+      await workoutModule.requestHealthAuthorization();
+
+      const result = await workoutModule.checkPermissions();
+
+      if (result.success) {
+        setHealthKit(result.data.healthKit);
+        return result.data;
+      }
+    } finally {
+      setIsRequesting(false);
+    }
+    return { healthKit: false, location: false };
+  };
+
+  const requestLocationPermission = async () => {
+    setIsRequesting(true);
+    try {
+      await workoutModule.requestLocationAuthorization();
+
+      const result = await workoutModule.checkPermissions();
+
+      if (result.success) {
+        setLocation(result.data.location);
+        return result.data;
+      }
+    } finally {
+      setIsRequesting(false);
+    }
+    return { healthKit: false, location: false };
+  };
 
   useEffect(() => {
     checkPermissions();

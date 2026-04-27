@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getWeeklyRecordSummary } from '../services/recordService';
 import { WeeklyRecordSummary } from '../types/record';
@@ -77,6 +77,10 @@ export const useWeeklyRecord = () => {
       setLoading(false);
     }
   }, [getAccessToken, forceLogout, user]);
+
+  useEffect(() => {
+    fetchWeeklyRecord();
+  }, [fetchWeeklyRecord]);
 
   return {
     weeklyRecord,

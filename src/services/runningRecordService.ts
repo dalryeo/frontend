@@ -1,46 +1,42 @@
-import { RecordSaveRequest } from '../types/record';
-import {
-  createRecordData,
-  validateRunningRecord,
-} from '../utils/calculationUtils';
+import { Alert } from 'react-native';
+import { createRecordData } from '../utils/calculationUtils';
 import { recordService } from './recordService';
 
 interface RunningMetrics {
   distance: number;
   elapsedTime: number;
-  pace?: number;
-  heartRate?: number;
 }
 
 export class RunningRecordService {
-  static prepareRecord(
+  static async saveRecord(
     metrics: RunningMetrics,
     startTime: Date,
-  ): { recordData: RecordSaveRequest; validationError: string | null } {
-    const endTime = new Date();
-    const effectiveElapsedSec =
-      metrics.elapsedTime > 0
-        ? metrics.elapsedTime
-        : (endTime.getTime() - startTime.getTime()) / 1000;
-    const durationSec = Math.max(1, Math.round(effectiveElapsedSec));
-    const computedStartTime = new Date(endTime.getTime() - durationSec * 1000);
-    const effectiveMetrics = { ...metrics, elapsedTime: effectiveElapsedSec };
-    const recordData = createRecordData(
-      effectiveMetrics,
-      computedStartTime,
-      endTime,
-    );
-    const validationError = validateRunningRecord(recordData);
-    return { recordData, validationError };
-  }
-
-  static async saveToBackend(
-    recordData: RecordSaveRequest,
     getAccessToken: () => Promise<string | null>,
   ): Promise<boolean> {
-    const token = await getAccessToken();
-    if (!token) return false;
-    await recordService.saveRecord(recordData, token);
-    return true;
+    if (!startTime) {
+      return false;
+    }
+
+    if (metrics.elapsedTime < 10) {
+      Alert.alert('기록 부족', '최소 10초 이상 운동해야 기록이 저장됩니다.');
+      return false;
+    }
+
+    try {
+      const endTime = new Date();
+      const recordData = createRecordData(metrics, startTime, endTime);
+
+      const token = await getAccessToken();
+      if (!token) {
+        return false;
+      }
+
+      await recordService.saveRecord(recordData, token);
+
+      return true;
+    } catch (error) {
+      console.error('러닝 기록 저장 실패:', error);
+      return false;
+    }
   }
 }

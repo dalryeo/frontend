@@ -1,6 +1,6 @@
-import { WorkoutSessionState } from '@/modules/workout';
+import { workoutModule, WorkoutSessionState } from '@/modules/workout';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import { useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -10,11 +10,13 @@ import {
   View,
 } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
+import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import { useAppFonts } from '../../hooks/useAppFonts';
 import { useWorkout } from '../../hooks/useWorkout';
-import { useWorkoutSave } from '../../hooks/useWorkoutSave';
-import { workoutService } from '../../services/workoutService';
-import { formatElapsedTime, formatPaceLive } from '../../utils/formatUtils';
+import { useWorkoutActions } from '../../hooks/useWorkoutActions';
+import { RunningRecordService } from '../../services/runningRecordService';
+import { formatElapsedTime, formatPace } from '../../utils/formatUtils';
 import { Font } from '../Font';
 
 type ControlState = 'paused' | 'playing' | 'sheet';
@@ -22,24 +24,25 @@ type ControlState = 'paused' | 'playing' | 'sheet';
 function Record() {
   const [fontsLoaded] = useAppFonts();
   const [controlState, setControlState] = useState<ControlState>('paused');
+  const [isSaving, setIsSaving] = useState(false);
   const [startTime, setStartTime] = useState<Date | null>(null);
-  const [watchEndedWorkout, setWatchEndedWorkout] = useState(false);
-  const { autoStart } = useLocalSearchParams<{ autoStart?: string }>();
-  const autoStartTriggered = useRef(false);
+  const router = useRouter();
+  const { showToast } = useToast();
+  const { getAccessToken } = useAuth();
   const {
     metrics,
-    sessionState: rawSessionState,
+    sessionState,
     hasAllPermissions,
     isRequesting,
     requestPermissions,
   } = useWorkout();
 
-  const sessionState =
-    rawSessionState !== WorkoutSessionState.NotStarted
-      ? rawSessionState
-      : metrics.sessionState;
-
-  const { isSaving, isSavingRef, saveRef } = useWorkoutSave(metrics, startTime);
+  const {
+    handleStart,
+    handlePause,
+    handleResume,
+    handleEnd: workoutEnd,
+  } = useWorkoutActions();
 
   const sheetAnim = useRef(new Animated.Value(1)).current;
 
@@ -52,56 +55,19 @@ function Record() {
     }).start();
   }, [controlState, sheetAnim]);
 
-  const hasBeenRunningRef = useRef(false);
-
   useEffect(() => {
     switch (sessionState) {
       case WorkoutSessionState.NotStarted:
         setControlState('paused');
         break;
       case WorkoutSessionState.Running:
-        hasBeenRunningRef.current = true;
         setControlState('playing');
-        setStartTime((prev) => prev ?? new Date());
         break;
       case WorkoutSessionState.Paused:
         setControlState('sheet');
         break;
-      case WorkoutSessionState.Stopped:
-      case WorkoutSessionState.Ended:
-        setControlState('paused');
-        if (hasBeenRunningRef.current) {
-          setWatchEndedWorkout(true);
-        }
-        break;
     }
   }, [sessionState]);
-
-  useEffect(() => {
-    if (!watchEndedWorkout || isSavingRef.current) return;
-    setWatchEndedWorkout(false);
-    saveRef.current(false);
-  }, [watchEndedWorkout, isSavingRef, saveRef]);
-
-  useEffect(() => {
-    if (
-      autoStart !== 'true' ||
-      autoStartTriggered.current ||
-      !fontsLoaded ||
-      isRequesting
-    )
-      return;
-    autoStartTriggered.current = true;
-    workoutService.start(hasAllPermissions, requestPermissions, () =>
-      setStartTime(new Date()),
-    );
-  }, [
-    autoStart,
-    fontsLoaded,
-    hasAllPermissions,
-    isRequesting,
-    requestPermissions,
-  ]);
 
   if (!fontsLoaded) return null;
 
@@ -110,18 +76,30 @@ function Record() {
 
   const handlePress = () => {
     if (controlState === 'paused') {
-      workoutService.start(
-        hasAllPermissions,
-        requestPermissions,
-        onStartSuccess,
-      );
+      handleStart(hasAllPermissions, requestPermissions, onStartSuccess);
     } else if (controlState === 'playing') {
-      workoutService.pause();
+      handlePause();
     }
   };
 
-  const handleEndClick = () => {
-    saveRef.current();
+  const handleEndClick = async () => {
+    setIsSaving(true);
+    try {
+      const success = await RunningRecordService.saveRecord(
+        metrics,
+        startTime!,
+        getAccessToken,
+      );
+
+      if (success) {
+        await workoutEnd();
+        workoutModule.reset();
+        showToast('러닝이 완료되었어요');
+        router.replace('/analysis');
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const sheetTranslateY = sheetAnim.interpolate({
@@ -189,7 +167,7 @@ function Record() {
             controlState === 'sheet' && { color: NEUTRAL.GRAY_800 },
           ]}
         >
-          {formatPaceLive(metrics.pace)}
+          {formatPace(metrics.pace)}
         </Font>
 
         <TouchableOpacity
@@ -262,7 +240,7 @@ function Record() {
                   styles.recordEndButton,
                   isSaving && styles.disabledButton,
                 ]}
-                onPress={() => workoutService.resume(onResumeSuccess)}
+                onPress={() => handleResume(onResumeSuccess)}
                 activeOpacity={0.8}
                 disabled={isSaving}
               >
