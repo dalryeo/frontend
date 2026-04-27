@@ -1,4 +1,5 @@
 import { BASE_URL } from '../config/api';
+import { assertApiSuccess, throwIfNetworkError } from '../utils/apiUtils';
 import { fetchWithTokenRefresh } from './apiClient';
 
 type RefreshTokenCallback = () => Promise<string | null>;
@@ -48,36 +49,14 @@ export const analysisService = {
       );
 
       const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(
-          result.error?.message ?? 'ANALYSIS_RECORDS_FETCH_FAILED',
-        );
-      }
-
+      assertApiSuccess(result, 'ANALYSIS_RECORDS_FETCH_FAILED');
       return result;
     } catch (error) {
-      console.error('분석 기록 조회 실패:', error);
-
-      if (error instanceof Error) {
-        if (error.message === 'TOKEN_EXPIRED') {
-          throw error;
-        }
-
-        if (
-          error instanceof TypeError &&
-          error.message.includes('Network request failed')
-        ) {
-          throw new Error(
-            '네트워크 연결을 확인해주세요. 서버에 연결할 수 없습니다.',
-          );
-        }
-      }
-
+      throwIfNetworkError(error);
       throw error;
     }
   },
 };
 
-// export 함수
-export const getAnalysisRecords = analysisService.getAnalysisRecords;
+export const getAnalysisRecords =
+  analysisService.getAnalysisRecords.bind(analysisService);

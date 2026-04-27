@@ -13,8 +13,6 @@ export async function fetchWithTokenRefresh(
   if (
     result.data?.code === 'AC-006' ||
     result.data?.message?.includes('refreshToken 만료') ||
-    result.data?.message?.includes('토큰') ||
-    result.message?.includes('토큰') ||
     response.status === 401
   ) {
     if (retryCount < 1 && refreshTokenCallback) {

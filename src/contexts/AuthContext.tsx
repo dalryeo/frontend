@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import { BASE_URL } from '../config/api';
@@ -65,7 +66,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(
     null,
   );
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const isRefreshingRef = useRef(false);
   const router = useRouter();
 
   const forceLogout = useCallback(async () => {
@@ -90,16 +91,16 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const refreshAccessToken = useCallback(async (): Promise<string | null> => {
-    if (isRefreshing) {
+    if (isRefreshingRef.current) {
       let attempts = 0;
-      while (isRefreshing && attempts < 10) {
+      while (isRefreshingRef.current && attempts < 10) {
         await new Promise((resolve) => setTimeout(resolve, 500));
         attempts++;
       }
-      return await AsyncStorage.getItem('accessToken');
+      return AsyncStorage.getItem('accessToken');
     }
 
-    setIsRefreshing(true);
+    isRefreshingRef.current = true;
 
     try {
       const refreshToken = await AsyncStorage.getItem('refreshToken');
@@ -111,9 +112,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const response = await fetch(`${BASE_URL}/auth/refresh`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),
       });
 
@@ -121,12 +120,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (result.success && result.data && !result.data.code) {
         const { accessToken, refreshToken: newRefreshToken } = result.data;
-
         const updates: [string, string][] = [['accessToken', accessToken]];
-        if (newRefreshToken) {
-          updates.push(['refreshToken', newRefreshToken]);
-        }
-
+        if (newRefreshToken) updates.push(['refreshToken', newRefreshToken]);
         await AsyncStorage.multiSet(updates);
         return accessToken;
       } else {
@@ -138,41 +133,13 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       await forceLogout();
       return null;
     } finally {
-      setIsRefreshing(false);
+      isRefreshingRef.current = false;
     }
-  }, [isRefreshing, forceLogout]);
+  }, [forceLogout]);
 
   const getAccessToken = useCallback(async (): Promise<string | null> => {
-    try {
-      let accessToken = await AsyncStorage.getItem('accessToken');
-
-      if (!accessToken) {
-        return null;
-      }
-
-      try {
-        const testResponse = await fetch(`${BASE_URL}/auth/verify`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (testResponse.status === 401) {
-          return await refreshAccessToken();
-        }
-
-        return accessToken;
-      } catch (verifyError) {
-        console.log('토큰 검증 스킵 (네트워크 오류):', verifyError);
-        return accessToken;
-      }
-    } catch (error) {
-      console.error('AccessToken 확인 오류:', error);
-      return await refreshAccessToken();
-    }
-  }, [refreshAccessToken]);
+    return AsyncStorage.getItem('accessToken').catch(() => null);
+  }, []);
 
   const checkOnboardingStatus = useCallback(async () => {
     try {
@@ -292,7 +259,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         const parsedUser = JSON.parse(storedUser[1]);
         setUserState(parsedUser);
 
-        await checkOnboardingStatus();
+        await Promise.race([
+          checkOnboardingStatus(),
+          new Promise<void>((resolve) => setTimeout(resolve, 8000)),
+        ]);
       }
 
       if (storedTierData[1]) {

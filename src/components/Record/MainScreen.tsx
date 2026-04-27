@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -18,10 +18,11 @@ import { Font } from '../Font';
 import { TierInfoCard } from './TierInfoCard';
 
 import { getTierImage, IMAGES } from '@/src/constants/Images';
-import { useRandomMessage } from '../../hooks/useRandomMessage';
 import {
+  COMMENT_MESSAGES,
   generateGradientSegments,
   getDisplayName,
+  getRandomMessage,
 } from '../../utils/commonUtils';
 import { formatPace } from '../../utils/formatUtils';
 
@@ -70,7 +71,7 @@ function MainScreen() {
   const { user } = useAuth();
   const { weeklyRecord, loading, error, refetch } = useWeeklyRecord();
 
-  const commentMessage = useRandomMessage();
+  const [commentMessage] = useState(() => getRandomMessage(COMMENT_MESSAGES));
 
   useFocusEffect(
     useCallback(() => {

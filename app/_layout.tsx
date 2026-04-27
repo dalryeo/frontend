@@ -5,9 +5,12 @@ import {
 } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
-import { Stack, useRouter } from 'expo-router';
+import { useEvent } from 'expo';
+import { Stack, usePathname, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useRef, useState } from 'react';
+
+import WorkoutModule, { WorkoutSessionState } from '@/modules/workout';
 import 'react-native-reanimated';
 import {
   initialWindowMetrics,
@@ -77,16 +80,10 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    const prepare = async () => {
-      if (!loaded) return;
-
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      setReady(true);
-      await SplashScreen.hideAsync();
-    };
-
-    prepare();
+    if (!loaded) return;
+    SplashScreen.hideAsync();
+    const timer = setTimeout(() => setReady(true), 2000);
+    return () => clearTimeout(timer);
   }, [loaded]);
 
   if (!ready) {
@@ -104,7 +101,14 @@ export default function RootLayout() {
 function AuthenticatedLayout() {
   const { user, isLoading, isOnboardingComplete } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const hasNavigatedOnLoad = useRef(false);
+
+  const { sessionState: workoutSessionState } = useEvent(
+    WorkoutModule,
+    'onWorkoutStateChange',
+    { sessionState: WorkoutSessionState.NotStarted },
+  );
 
   useEffect(() => {
     if (!isLoading) {
@@ -122,6 +126,17 @@ function AuthenticatedLayout() {
       }
     }
   }, [user, isLoading, isOnboardingComplete, router]);
+
+  useEffect(() => {
+    if (isLoading || !user || !hasNavigatedOnLoad.current) return;
+    if (
+      (workoutSessionState === WorkoutSessionState.Running ||
+        workoutSessionState === WorkoutSessionState.Paused) &&
+      !pathname.startsWith('/record')
+    ) {
+      router.push('/record');
+    }
+  }, [workoutSessionState, isLoading, user, pathname, router]);
 
   if (isLoading) {
     return <CustomSplashScreen />;
