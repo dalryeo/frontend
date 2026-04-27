@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
@@ -41,8 +42,9 @@ function MyPage() {
     useState(false);
   const { getAccessToken, logout } = useAuth();
 
-  const currentVersion = 'v0.0.1';
-  const latestVersion = 'v0.0.1';
+  const appVersion = Constants.expoConfig?.version ?? '0.0.1';
+  const currentVersion = `v${appVersion}`;
+  const latestVersion = `v${appVersion}`;
 
   const menuList = [
     {

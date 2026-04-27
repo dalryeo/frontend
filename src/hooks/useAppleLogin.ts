@@ -52,7 +52,7 @@ export function useAppleLogin() {
       if (isOnboardingComplete) {
         router.replace('/(tabs)');
       } else {
-        router.replace('/profile');
+        router.replace('/startRecord');
       }
     } catch (error) {
       console.error('Apple login error:', error);

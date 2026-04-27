@@ -16,7 +16,7 @@ export interface RecordSaveRequest {
   distanceKm: number;
   durationSec: number;
   avgPaceSecPerKm: number;
-  avgHeartRate: number;
+  avgHeartRate: number | null;
   caloriesKcal: number;
   startAt: string;
   endAt: string;
