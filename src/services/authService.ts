@@ -1,5 +1,6 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { BASE_URL } from '../config/api';
+import { assertApiSuccess, throwIfNetworkError } from '../utils/apiUtils';
 
 export async function appleLogin() {
   const credential = await AppleAuthentication.signInAsync({
@@ -9,24 +10,16 @@ export async function appleLogin() {
     ],
   });
 
-  if (!credential.identityToken) {
-    throw new Error('NO_IDENTITY_TOKEN');
-  }
+  if (!credential.identityToken) throw new Error('NO_IDENTITY_TOKEN');
 
   const response = await fetch(`${BASE_URL}/auth/oauth/apple`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      identityToken: credential.identityToken,
-    }),
+    body: JSON.stringify({ identityToken: credential.identityToken }),
   });
 
   const result = await response.json();
-
-  if (!result.success) {
-    throw new Error(result.error?.message ?? 'AUTH_FAILED');
-  }
-
+  assertApiSuccess(result, 'AUTH_FAILED');
   return result.data;
 }
 
@@ -41,18 +34,11 @@ export async function estimateTier(
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      distanceKm,
-      paceSecPerKm,
-    }),
+    body: JSON.stringify({ distanceKm, paceSecPerKm }),
   });
 
   const result = await response.json();
-
-  if (!result.success) {
-    throw new Error(result.error?.message ?? 'ESTIMATE_TIER_FAILED');
-  }
-
+  assertApiSuccess(result, 'ESTIMATE_TIER_FAILED');
   return result.data;
 }
 
@@ -62,31 +48,14 @@ export const refreshAccessToken = async (
   try {
     const response = await fetch(`${BASE_URL}/auth/refresh`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
     });
-
     const result = await response.json();
-
-    if (!result.success) {
-      throw new Error('TOKEN_REFRESH_FAILED');
-    }
-
+    assertApiSuccess(result, 'TOKEN_REFRESH_FAILED');
     return result.data;
   } catch (error) {
-    console.error('Token refresh error:', error);
-
-    if (
-      error instanceof TypeError &&
-      error.message.includes('Network request failed')
-    ) {
-      throw new Error(
-        '네트워크 연결을 확인해주세요. 서버에 연결할 수 없습니다.',
-      );
-    }
-
+    throwIfNetworkError(error);
     throw error;
   }
 };
@@ -100,24 +69,10 @@ export const logout = async (token: string): Promise<void> => {
         Authorization: `Bearer ${token}`,
       },
     });
-
     const result = await response.json();
-
-    if (!result.success) {
-      throw new Error('로그아웃에 실패했습니다.');
-    }
+    assertApiSuccess(result, '로그아웃에 실패했습니다.');
   } catch (error) {
-    console.error('Logout error:', error);
-
-    if (
-      error instanceof TypeError &&
-      error.message.includes('Network request failed')
-    ) {
-      throw new Error(
-        '네트워크 연결을 확인해주세요. 서버에 연결할 수 없습니다.',
-      );
-    }
-
+    throwIfNetworkError(error);
     throw error;
   }
 };
@@ -131,24 +86,10 @@ export const withdraw = async (token: string): Promise<void> => {
         Authorization: `Bearer ${token}`,
       },
     });
-
     const result = await response.json();
-
-    if (!result.success) {
-      throw new Error('회원탈퇴에 실패했습니다.');
-    }
+    assertApiSuccess(result, '회원탈퇴에 실패했습니다.');
   } catch (error) {
-    console.error('Withdraw error:', error);
-
-    if (
-      error instanceof TypeError &&
-      error.message.includes('Network request failed')
-    ) {
-      throw new Error(
-        '네트워크 연결을 확인해주세요. 서버에 연결할 수 없습니다.',
-      );
-    }
-
+    throwIfNetworkError(error);
     throw error;
   }
 };

@@ -63,7 +63,7 @@ function CountDown() {
             useNativeDriver: true,
           }),
         ]).start(() => {
-          router.replace('/record');
+          router.replace('/record?autoStart=true');
         });
       }, 1200);
 
