@@ -97,10 +97,11 @@ public class WorkoutModule: Module {
             }
         }
         
-        AsyncFunction(WorkoutFunction.requestLocationAuthorization) {
+        AsyncFunction(WorkoutFunction.requestLocationAuthorization) { (promise: Promise) in
             Task { @MainActor in
                 let manager = await self.ensureProvider()
                 await manager.requestLocationAuthorization()
+                promise.resolve(true)
             }
         }
         
