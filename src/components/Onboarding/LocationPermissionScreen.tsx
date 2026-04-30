@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useWorkoutPermissions } from '../../hooks/useWorkoutPermissions';
 import { PermissionScreen } from './PermissionScreen';
 
@@ -7,23 +7,26 @@ const LocationPermissionScreen = () => {
   const { requestLocationPermission, isRequesting, permissions } =
     useWorkoutPermissions();
   const router = useRouter();
+  const [attempted, setAttempted] = useState(false);
 
   const handleLocationPermission = useCallback(async () => {
+    setAttempted(true);
     try {
       const result = await requestLocationPermission();
-      console.log('Location 권한 요청 결과:', result);
-      router.replace('/(tabs)');
+      if (result.location) {
+        router.replace('/(tabs)');
+      }
     } catch (error) {
       console.error('Location 권한 요청 오류:', error);
-      router.replace('/(tabs)');
     }
   }, [requestLocationPermission, router]);
 
+  // 버튼을 누른 후에만 auto-navigate (설정 앱에서 돌아온 경우도 처리)
   useEffect(() => {
-    if (permissions.location && !isRequesting) {
+    if (attempted && permissions.location && !isRequesting) {
       router.replace('/(tabs)');
     }
-  }, [permissions.location, isRequesting, router]);
+  }, [attempted, permissions.location, isRequesting, router]);
 
   return (
     <PermissionScreen

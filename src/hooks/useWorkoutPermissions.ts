@@ -1,6 +1,6 @@
 import { useEventListener } from 'expo';
 import { useEffect, useState } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Linking } from 'react-native';
 
 import WorkoutModule, {
   workoutModule,
@@ -79,10 +79,57 @@ export const useWorkoutPermissions = (): UseWorkoutPermissionsReturn => {
   const requestHealthPermission = () =>
     executePermissionRequest(() => workoutModule.requestHealthAuthorization());
 
-  const requestLocationPermission = () =>
-    executePermissionRequest(() =>
-      workoutModule.requestLocationAuthorization(),
-    );
+  const requestLocationPermission =
+    async (): Promise<WorkoutPermissionStatus> => {
+      setIsRequesting(true);
+      try {
+        const current = await workoutModule.checkPermissions();
+        if (current.success && current.data.location) {
+          setHealthKit(current.data.healthKit);
+          setLocation(current.data.location);
+          return current.data;
+        }
+
+        return await new Promise<WorkoutPermissionStatus>((resolve) => {
+          let settled = false;
+
+          const settle = () => {
+            if (settled) return;
+            settled = true;
+            sub.remove();
+            clearTimeout(timeoutId);
+
+            workoutModule
+              .checkPermissions()
+              .then((result) => {
+                if (result.success) {
+                  setHealthKit(result.data.healthKit);
+                  setLocation(result.data.location);
+                  resolve(result.data);
+                } else {
+                  resolve({ healthKit, location: false });
+                }
+              })
+              .catch(() => resolve({ healthKit, location: false }));
+          };
+
+          const sub = WorkoutModule.addListener('onLocationAuthChange', settle);
+
+          // 10초 내 응답 없으면 dialog가 뜨지 않은 것 → 설정 앱으로 이동
+          const timeoutId = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            sub.remove();
+            resolve({ healthKit, location: false });
+            Linking.openSettings().catch(console.error);
+          }, 10_000);
+
+          workoutModule.requestLocationAuthorization().catch(settle);
+        });
+      } finally {
+        setIsRequesting(false);
+      }
+    };
 
   useEffect(() => {
     checkPermissions();

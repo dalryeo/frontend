@@ -1,23 +1,16 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useWorkoutPermissions } from '../../hooks/useWorkoutPermissions';
 import { PermissionScreen } from './PermissionScreen';
 
 const HealthPermissionsScreen = () => {
-  const { requestHealthPermission, isRequesting, permissions } =
-    useWorkoutPermissions();
+  const { requestHealthPermission, isRequesting } = useWorkoutPermissions();
   const router = useRouter();
 
-  const handleHealthPermission = useCallback(() => {
-    requestHealthPermission().catch(console.error);
+  const handleHealthPermission = useCallback(async () => {
+    await requestHealthPermission().catch(console.error);
     router.replace('/locationPermission');
   }, [requestHealthPermission, router]);
-
-  useEffect(() => {
-    if (permissions.healthKit && !isRequesting) {
-      router.replace('/locationPermission');
-    }
-  }, [permissions.healthKit, isRequesting, router]);
 
   return (
     <PermissionScreen
