@@ -4,8 +4,8 @@ const IS_PROD = process.env.APP_ENV === 'production';
 const BUNDLE_SUFFIX = process.env.BUNDLE_SUFFIX || 'unknown';
 const IS_DEBUG = process.env.DEBUG || 'false';
 const BUNDLE_ID = {
-  ios: IS_PROD ? 'com.ios.dalryeo' : `com.ios.dalryeo.${BUNDLE_SUFFIX}`,
-  aos: IS_PROD ? 'com.android.dalryeo' : `com.android.dalryeo.${BUNDLE_SUFFIX}`,
+  ios: IS_PROD ? 'com.dalryeo.ios' : `com.dalryeo.ios.${BUNDLE_SUFFIX}`,
+  aos: IS_PROD ? 'com.dalryeo.android' : `com.dalryeo.android.${BUNDLE_SUFFIX}`,
 };
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
