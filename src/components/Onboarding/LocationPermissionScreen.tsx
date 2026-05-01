@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
+import { Alert, Linking } from 'react-native';
 import { useWorkoutPermissions } from '../../hooks/useWorkoutPermissions';
 import { PermissionScreen } from './PermissionScreen';
 
@@ -15,6 +16,15 @@ const LocationPermissionScreen = () => {
       const result = await requestLocationPermission();
       if (result.location) {
         router.replace('/(tabs)');
+      } else {
+        Alert.alert(
+          '위치 권한이 필요해요',
+          '설정에서 위치 권한을 허용해주세요.',
+          [
+            { text: '취소', style: 'cancel' },
+            { text: '설정 열기', onPress: () => Linking.openSettings() },
+          ],
+        );
       }
     } catch (error) {
       console.error('Location 권한 요청 오류:', error);

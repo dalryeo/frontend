@@ -1,5 +1,5 @@
 import { workoutModule } from '@/modules/workout';
-import { Alert } from 'react-native';
+import { Alert, Linking } from 'react-native';
 
 export const workoutService = {
   async start(
@@ -23,6 +23,17 @@ export const workoutService = {
       if (!result.success) {
         if (result.error.code === 'workoutAlreadyInProgress') {
           onSuccess();
+          return;
+        }
+        if (result.error.message.includes('위치 접근 권한')) {
+          Alert.alert(
+            '위치 권한이 필요해요',
+            '설정에서 위치 권한을 허용해주세요.',
+            [
+              { text: '취소', style: 'cancel' },
+              { text: '설정 열기', onPress: () => Linking.openSettings() },
+            ],
+          );
           return;
         }
         Alert.alert('오류', result.error.message);
