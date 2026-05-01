@@ -23,7 +23,7 @@ export const useProfileForm = () => {
   const [nicknameChecked, setNicknameChecked] = useState(false);
   const [showNicknameValidation, setShowNicknameValidation] = useState(false);
 
-  const timeoutRef = useRef<number | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { getAccessToken } = useAuth();
 
   const checkNicknameDuplication = useCallback(
