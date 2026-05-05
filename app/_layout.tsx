@@ -4,7 +4,6 @@ import {
   ThemeProvider,
 } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
-import Constants from 'expo-constants';
 import { useEvent } from 'expo';
 import { Stack, usePathname, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -17,7 +16,6 @@ import {
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
 
-import { WorkoutDebugScreen } from '@/src/components/Debug/WorkoutDebugScreen';
 import CustomSplashScreen from '@/src/components/SplashScreen';
 import { useColorScheme } from '@/src/components/useColorScheme';
 import { AuthProvider, useAuth } from '@/src/contexts/AuthContext';
@@ -91,9 +89,9 @@ export default function RootLayout() {
   }
 
   // 디버거
-  if (Constants.expoConfig?.extra?.IS_DEBUG === 'false') {
-    return <WorkoutDebugScreen />;
-  }
+  // if (Constants.expoConfig?.extra?.IS_DEBUG === 'true') {
+  //   return <WorkoutDebugScreen />;
+  // }
 
   return <RootLayoutNav />;
 }

@@ -10,6 +10,7 @@ export function addXCConfigurationList(
     currentProjectVersion,
     bundleIdentifier,
     deploymentTarget,
+    appleTeamIdentifier,
   }: AddXCConfigurationListOptions,
 ) {
   const watchBundleIdentifier = `${bundleIdentifier}.watchkitapp`;
@@ -17,7 +18,7 @@ export function addXCConfigurationList(
   const infoPlistFileName = `${targetName.replace(/ /g, '-')}-Info.plist`;
   const entitlementsFileName = `${targetName}.entitlements`;
 
-  const commonBuildSettings: any = {
+  const commonBuildSettings = {
     ASSETCATALOG_COMPILER_APPICON_NAME: 'AppIcon',
     ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: 'YES',
     ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: 'AccentColor',
@@ -29,6 +30,7 @@ export function addXCConfigurationList(
     CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER: 'YES',
     CLANG_WARN_UNGUARDED_AVAILABILITY: 'YES_AGGRESSIVE',
     CODE_SIGN_STYLE: 'Automatic',
+    DEVELOPMENT_TEAM: appleTeamIdentifier,
     COPY_PHASE_STRIP: 'NO',
     CURRENT_PROJECT_VERSION: currentProjectVersion,
     DEBUG_INFORMATION_FORMAT: '"dwarf-with-dsym"',

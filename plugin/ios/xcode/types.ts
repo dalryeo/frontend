@@ -68,6 +68,7 @@ export interface AddXCConfigurationListOptions {
   currentProjectVersion: string;
   bundleIdentifier: string;
   deploymentTarget: string;
+  appleTeamIdentifier: string;
 }
 
 export interface AddProductFileOptions {
