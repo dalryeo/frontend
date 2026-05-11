@@ -42,6 +42,7 @@ export function addXCConfigurationList(
     INFOPLIST_FILE: `"../${targetName}/${infoPlistFileName}"`,
     // HealthKit 권한을 위한 entitlements 파일 경로
     CODE_SIGN_ENTITLEMENTS: `"../${targetName}/${entitlementsFileName}"`,
+    INFOPLIST_KEY_CFBundleIconName: '"AppIcon"',
     INFOPLIST_KEY_CFBundleDisplayName: name,
     // HealthKit Usage Description 추가
     INFOPLIST_KEY_NSHealthShareUsageDescription: `"달려 앱은 러닝 운동 데이터를 HealthKit에 저장하고 읽기 위해 건강 데이터 접근 권한이 필요합니다."`,
