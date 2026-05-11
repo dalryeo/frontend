@@ -32,6 +32,9 @@ const withIosRunning = (config: ExpoConfig): ExpoConfig => {
       backgroundModes.push('workout-processing');
     }
 
+    infoPlistConfiguration.modResults.UIBackgroundModes =
+      backgroundModes.filter((mode) => mode !== 'processing');
+
     return infoPlistConfiguration;
   });
 
