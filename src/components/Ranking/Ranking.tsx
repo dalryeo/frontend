@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
 import { LAYOUT } from '../../constants/Layout';
@@ -22,32 +23,35 @@ export function Ranking() {
   const [distanceData, setDistanceData] = useState<RankingItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadRankingData() {
-      try {
-        const [scoreResponse, distanceResponse] = await Promise.all([
-          fetchScoreRanking(),
-          fetchDistanceRanking(),
-        ]);
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      async function loadRankingData() {
+        try {
+          const [scoreResponse, distanceResponse] = await Promise.all([
+            fetchScoreRanking(),
+            fetchDistanceRanking(),
+          ]);
 
-        if (scoreResponse.success) {
-          setTierData(transformScoreRankingToItems(scoreResponse.data));
-        }
+          if (scoreResponse.success) {
+            setTierData(transformScoreRankingToItems(scoreResponse.data));
+          }
 
-        if (distanceResponse.success) {
-          setDistanceData(
-            transformDistanceRankingToItems(distanceResponse.data),
-          );
+          if (distanceResponse.success) {
+            setDistanceData(
+              transformDistanceRankingToItems(distanceResponse.data),
+            );
+          }
+        } catch (error) {
+          console.error('랭킹 데이터 로드 실패:', error);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('랭킹 데이터 로드 실패:', error);
-      } finally {
-        setLoading(false);
       }
-    }
 
-    loadRankingData();
-  }, []);
+      loadRankingData();
+    }, []),
+  );
 
   if (!fontsLoaded || loading) {
     return (

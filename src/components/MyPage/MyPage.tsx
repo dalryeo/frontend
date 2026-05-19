@@ -1,10 +1,10 @@
 import Constants from 'expo-constants';
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { router } from 'expo-router';
+import { useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Image,
+  Linking,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -26,21 +26,17 @@ import {
   withdraw as withdrawAPI,
 } from '../../services/authService';
 
-import { getOnboardingData } from '../../services/profileService';
-
 function MyPage() {
   const [fontsLoaded] = useAppFonts();
-  const [nickname, setNickname] = useState('');
-  const [displayProfileImage, setDisplayProfileImage] = useState<string | null>(
-    null,
-  );
-  const [isLoading, setIsLoading] = useState(true);
   const [versionModalVisible, setVersionModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
   const [withdrawConfirmModalVisible, setWithdrawConfirmModalVisible] =
     useState(false);
-  const { getAccessToken, logout } = useAuth();
+  const { getAccessToken, logout, onboardingData } = useAuth();
+
+  const nickname = onboardingData?.nickname ?? '';
+  const displayProfileImage = onboardingData?.displayProfileImage ?? null;
 
   const appVersion = Constants.expoConfig?.version ?? '0.0.1';
   const currentVersion = `v${appVersion}`;
@@ -63,30 +59,6 @@ function MyPage() {
     { id: 4, title: '로그아웃', type: 'logout' },
     { id: 5, title: '회원탈퇴', type: 'withdraw' },
   ];
-
-  useFocusEffect(
-    useCallback(() => {
-      const loadUserData = async () => {
-        try {
-          const token = await getAccessToken();
-          if (!token) {
-            setIsLoading(false);
-            return;
-          }
-
-          const data = await getOnboardingData(token);
-          setNickname(data.nickname);
-          setDisplayProfileImage(data.displayProfileImage);
-        } catch (error) {
-          console.error('사용자 정보 로드 실패:', error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      loadUserData();
-    }, [getAccessToken]),
-  );
 
   const handleMenuPress = (item: (typeof menuList)[0]) => {
     if (item.type === 'navigate' && item.guideKey) {
@@ -186,17 +158,9 @@ function MyPage() {
           style={{ alignItems: 'center', flexDirection: 'row' }}
           onPress={() => router.push('/profileEdit')}
         >
-          {isLoading ? (
-            <ActivityIndicator
-              size='small'
-              color={NEUTRAL.MAIN}
-              style={{ marginLeft: 25 }}
-            />
-          ) : (
-            <Font type='Head5' style={styles.profileText}>
-              {nickname}님
-            </Font>
-          )}
+          <Font type='Head5' style={styles.profileText}>
+            {nickname}님
+          </Font>
           <MaterialIcons
             style={{ color: NEUTRAL.GRAY_500 }}
             name='navigate-next'
@@ -234,7 +198,11 @@ function MyPage() {
         </TouchableOpacity>
       ))}
 
-      <View style={styles.feedback}>
+      <TouchableOpacity
+        style={styles.feedback}
+        onPress={() => Linking.openURL('https://open.kakao.com/o/sgQw0dhi')}
+        activeOpacity={0.7}
+      >
         <View>
           <Font type='Head1'>💡</Font>
         </View>
@@ -247,7 +215,7 @@ function MyPage() {
             https://open.kakao.com/o/sgQw0dhi
           </Font>
         </View>
-      </View>
+      </TouchableOpacity>
 
       <VersionModal
         visible={versionModalVisible}

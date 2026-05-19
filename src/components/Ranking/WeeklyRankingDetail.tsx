@@ -1,7 +1,7 @@
 import { useAuth } from '@/src/contexts/AuthContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -44,55 +44,61 @@ export function WeeklyRankingDetail() {
   const [podiumRankings, setPodiumRankings] = useState<RankingItem[]>([]);
   const [allRankings, setAllRankings] = useState<RankingListItem[]>([]);
 
-  useEffect(() => {
-    if (!isValidType) {
-      setLoading(false);
-      return;
-    }
-
-    async function loadDetailData() {
-      try {
-        const accessToken = await getAccessToken();
-
-        if (!accessToken) {
-          return;
-        }
-
-        const [myRankingResponse, rankingResponse] = await Promise.all([
-          fetchMyRanking(accessToken),
-          type === 'tier'
-            ? fetchScoreRankingDetail()
-            : fetchDistanceRankingDetail(),
-        ]);
-
-        if (
-          myRankingResponse.success &&
-          myRankingResponse.data &&
-          !('code' in myRankingResponse.data)
-        ) {
-          setMyRecord(transformMyRankingToRecord(myRankingResponse.data, type));
-        } else {
-          setMyRecord(null);
-        }
-
-        if (rankingResponse.success && rankingResponse.data) {
-          const transformedItems =
-            type === 'tier'
-              ? transformScoreRankingToItems(rankingResponse.data)
-              : transformDistanceRankingToItems(rankingResponse.data);
-
-          setPodiumRankings(transformedItems.slice(0, 3));
-          setAllRankings(transformToRankingListItems(rankingResponse.data));
-        }
-      } catch (error) {
-        console.error('상세 데이터 로드 실패:', error);
-      } finally {
+  useFocusEffect(
+    useCallback(() => {
+      if (!isValidType) {
         setLoading(false);
+        return;
       }
-    }
 
-    loadDetailData();
-  }, [type, isValidType, getAccessToken]);
+      setLoading(true);
+
+      async function loadDetailData() {
+        try {
+          const accessToken = await getAccessToken();
+
+          if (!accessToken) {
+            return;
+          }
+
+          const [myRankingResponse, rankingResponse] = await Promise.all([
+            fetchMyRanking(accessToken),
+            type === 'tier'
+              ? fetchScoreRankingDetail()
+              : fetchDistanceRankingDetail(),
+          ]);
+
+          if (
+            myRankingResponse.success &&
+            myRankingResponse.data &&
+            !('code' in myRankingResponse.data)
+          ) {
+            setMyRecord(
+              transformMyRankingToRecord(myRankingResponse.data, type),
+            );
+          } else {
+            setMyRecord(null);
+          }
+
+          if (rankingResponse.success && rankingResponse.data) {
+            const transformedItems =
+              type === 'tier'
+                ? transformScoreRankingToItems(rankingResponse.data)
+                : transformDistanceRankingToItems(rankingResponse.data);
+
+            setPodiumRankings(transformedItems.slice(0, 3));
+            setAllRankings(transformToRankingListItems(rankingResponse.data));
+          }
+        } catch (error) {
+          console.error('상세 데이터 로드 실패:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      loadDetailData();
+    }, [type, isValidType, getAccessToken]),
+  );
 
   if (!isValidType) {
     return (

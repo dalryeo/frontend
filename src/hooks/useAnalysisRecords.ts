@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import {
   AnalysisRecord,
@@ -49,10 +49,6 @@ export const useAnalysisRecords = () => {
     },
     [fetchRecords],
   );
-
-  useEffect(() => {
-    fetchRecords();
-  }, [fetchRecords]);
 
   return {
     records,

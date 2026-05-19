@@ -33,6 +33,8 @@ export interface OnboardingData {
   height: number;
   weight: number;
   profileImage?: string;
+  displayProfileImage: string;
+  customProfileImage: string | null;
 }
 
 interface AuthContextValue {
@@ -130,6 +132,12 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('토큰 갱신 실패:', error);
+      if (
+        error instanceof TypeError &&
+        error.message.includes('Network request failed')
+      ) {
+        return null;
+      }
       await forceLogout();
       return null;
     } finally {
@@ -143,16 +151,30 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkOnboardingStatus = useCallback(async () => {
     try {
-      const accessToken = await getAccessToken();
+      let accessToken = await getAccessToken();
       if (!accessToken) return false;
 
-      const response = await fetch(`${BASE_URL}/onboarding`, {
+      let response = await fetch(`${BASE_URL}/onboarding`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });
+
+      if (response.status === 401) {
+        const newToken = await refreshAccessToken();
+        if (!newToken) return false;
+
+        accessToken = newToken;
+        response = await fetch(`${BASE_URL}/onboarding`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      }
 
       if (response.ok) {
         const result = await response.json();
@@ -217,7 +239,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       setOnboardingData(null);
       return false;
     }
-  }, [getAccessToken, forceLogout]);
+  }, [getAccessToken, forceLogout, refreshAccessToken]);
 
   const login = useCallback(
     async (user: User, accessToken: string, refreshToken: string) => {
@@ -240,6 +262,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const checkAuthStatus = useCallback(async () => {
+    const startTime = Date.now();
     try {
       const [
         storedUser,
@@ -279,6 +302,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Auth check failed:', error);
     } finally {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 2000 - elapsed);
+      await new Promise<void>((resolve) => setTimeout(resolve, remaining));
       setIsLoading(false);
     }
   }, [checkOnboardingStatus]);

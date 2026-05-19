@@ -7,7 +7,7 @@ export default function SplashScreen() {
   return (
     <View style={styles.container}>
       <Image source={IMAGES.APP.SPLASH()} style={styles.logo} />
-      <Font type='Title' style={{ color: NEUTRAL.MAIN }}>
+      <Font type='Title' style={{ color: NEUTRAL.MAIN, paddingHorizontal: 8 }}>
         DALRYEO
       </Font>
     </View>

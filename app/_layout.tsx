@@ -7,7 +7,8 @@ import * as Sentry from '@sentry/react-native';
 import { useEvent } from 'expo';
 import { Stack, usePathname, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { View } from 'react-native';
 
 import WorkoutModule, { WorkoutSessionState } from '@/modules/workout';
 import 'react-native-reanimated';
@@ -64,29 +65,25 @@ Sentry.init({
 export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: 'login',
+  initialRouteName: 'login/index',
 };
 
 SplashScreen.preventAutoHideAsync();
 
+const BG = { flex: 1, backgroundColor: '#151515' } as const;
+
 export default function RootLayout() {
   const [loaded, error] = useAppFonts();
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
   useEffect(() => {
-    if (!loaded) return;
     SplashScreen.hideAsync();
-    const timer = setTimeout(() => setReady(true), 2000);
-    return () => clearTimeout(timer);
-  }, [loaded]);
+  }, []);
 
-  if (!ready) {
-    return <CustomSplashScreen />;
-  }
+  if (!loaded) return <View style={BG} />;
 
   // 디버거
   // if (Constants.expoConfig?.extra?.IS_DEBUG === 'true') {
@@ -144,7 +141,7 @@ function AuthenticatedLayout() {
     <ToastProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-        <Stack.Screen name='login' options={{ headerShown: false }} />
+        <Stack.Screen name='login/index' options={{ headerShown: false }} />
         <Stack.Screen
           name='startRecord/index'
           options={{ headerShown: false }}
