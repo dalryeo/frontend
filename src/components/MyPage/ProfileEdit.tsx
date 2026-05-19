@@ -81,7 +81,7 @@ function ProfileEdit() {
     selectedImg: null,
   });
   const router = useRouter();
-  const { getAccessToken } = useAuth();
+  const { getAccessToken, checkOnboardingStatus } = useAuth();
 
   const {
     gender,
@@ -240,6 +240,7 @@ function ProfileEdit() {
       const response = await updateOnboardingData(token, updateData);
 
       if (response.success) {
+        await checkOnboardingStatus();
         Alert.alert('성공', '프로필이 성공적으로 수정되었습니다.', [
           {
             text: '확인',
