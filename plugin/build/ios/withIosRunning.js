@@ -24,9 +24,9 @@ const withIosRunning = (config) => {
         if (!config.modResults.UIBackgroundModes.includes('location')) {
             config.modResults.UIBackgroundModes.push('location');
         }
-        if (!config.modResults.UIBackgroundModes.includes('processing')) {
-            config.modResults.UIBackgroundModes.push('processing');
-        }
+        // if (!config.modResults.UIBackgroundModes.includes('processing')) {
+        //     config.modResults.UIBackgroundModes.push('processing');
+        // }
         return config;
     });
     // Entitlements에 HealthKit 추가
