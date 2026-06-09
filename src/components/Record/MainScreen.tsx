@@ -161,7 +161,7 @@ function MainScreen() {
                   </Font>
                 )}
                 <Font type='Body4' style={styles.recordItemBottom}>
-                  현재 티어
+                  내 티어
                 </Font>
               </View>
 
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   recordItem: {
     flexDirection: 'column',
     alignItems: 'center',
-    marginHorizontal: 24,
+    flex: 1,
   },
   recordItemTop: {
     height: 40,
