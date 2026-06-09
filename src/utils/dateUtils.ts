@@ -55,15 +55,15 @@ export const getDateRange = (period: 'weekly' | 'monthly' | 'yearly') => {
 
   switch (period) {
     case 'weekly':
-      // 이번 주 일요일부터 토요일까지
-      const dayOfWeek = today.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
+      // 이번 주 월요일부터 일요일까지
+      const dayOfWeekMon = (today.getDay() + 6) % 7; // 월요일 = 0, ..., 일요일 = 6
       startDate = new Date(today);
-      startDate.setDate(today.getDate() - dayOfWeek);
-      startDate.setHours(0, 0, 0, 0); // 시간을 00:00:00으로 설정
+      startDate.setDate(today.getDate() - dayOfWeekMon);
+      startDate.setHours(0, 0, 0, 0);
 
       endDate = new Date(startDate);
       endDate.setDate(startDate.getDate() + 6);
-      endDate.setHours(23, 59, 59, 999); // 시간을 23:59:59로 설정
+      endDate.setHours(23, 59, 59, 999);
       break;
 
     case 'monthly':
@@ -111,7 +111,7 @@ export const getWeeksInMonth = (year: number, month: number): WeekInfo[] => {
 
   while (currentDate <= lastDay) {
     const weekStart = new Date(currentDate);
-    const dayOfWeek = weekStart.getDay();
+    const dayOfWeek = (weekStart.getDay() + 6) % 7; // 월요일 = 0, 일요일 = 6
     weekStart.setDate(weekStart.getDate() - dayOfWeek);
 
     const weekEnd = new Date(weekStart);
