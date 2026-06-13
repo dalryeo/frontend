@@ -211,6 +211,7 @@ function MainScreen() {
         </Font>
 
         <View style={styles.tailOuter} />
+        <View style={styles.tailCover} />
         <View style={styles.tailInner} />
       </View>
     </View>
@@ -326,8 +327,11 @@ const styles = StyleSheet.create({
     color: NEUTRAL.DANGER,
   },
   commentWrapper: {
+    position: 'absolute',
+    bottom: 155,
+    left: 0,
+    right: 0,
     alignItems: 'center',
-    marginTop: '40%',
   },
   comment: {
     alignSelf: 'center',
@@ -339,6 +343,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 30,
     color: NEUTRAL.GRAY_300,
+    backgroundColor: NEUTRAL.BACKGROUND,
+  },
+  tailCover: {
+    position: 'absolute',
+    bottom: 0,
+    width: 13,
+    height: 3,
     backgroundColor: NEUTRAL.BACKGROUND,
   },
   tailOuter: {
