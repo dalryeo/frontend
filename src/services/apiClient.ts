@@ -1,5 +1,25 @@
 type RefreshTokenCallback = () => Promise<string | null>;
 
+const TIMEOUT_MS = 60000;
+
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Network request timed out');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function fetchWithTokenRefresh(
   url: string,
   options: RequestInit,
@@ -7,7 +27,7 @@ export async function fetchWithTokenRefresh(
   retryCount = 0,
   throwOnTokenExpired = true,
 ): Promise<Response> {
-  const response = await fetch(url, options);
+  const response = await fetchWithTimeout(url, options);
   const result = await response.json();
 
   if (

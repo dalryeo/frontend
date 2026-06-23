@@ -164,6 +164,10 @@ function AuthenticatedLayout() {
           name='locationPermission/index'
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name='failedRecords/index'
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
       </Stack>
     </ToastProvider>

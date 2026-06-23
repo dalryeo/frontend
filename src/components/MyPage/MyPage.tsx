@@ -55,9 +55,10 @@ function MyPage() {
       type: 'navigate',
       guideKey: 'privacy' as UserGuideKey,
     },
-    { id: 3, title: '버전 정보', type: 'version', version: currentVersion },
-    { id: 4, title: '로그아웃', type: 'logout' },
-    { id: 5, title: '회원탈퇴', type: 'withdraw' },
+    { id: 3, title: '저장 실패 기록', type: 'failedRecords' },
+    { id: 4, title: '버전 정보', type: 'version', version: currentVersion },
+    { id: 5, title: '로그아웃', type: 'logout' },
+    { id: 6, title: '회원탈퇴', type: 'withdraw' },
   ];
 
   const handleMenuPress = (item: (typeof menuList)[0]) => {
@@ -68,6 +69,8 @@ function MyPage() {
       });
     } else if (item.type === 'version') {
       setVersionModalVisible(true);
+    } else if (item.type === 'failedRecords') {
+      router.navigate('/failedRecords');
     } else if (item.type === 'logout') {
       setLogoutModalVisible(true);
     } else if (item.type === 'withdraw') {
@@ -183,6 +186,14 @@ function MyPage() {
           </View>
 
           {item.type === 'navigate' && (
+            <MaterialIcons
+              style={{ color: NEUTRAL.GRAY_500 }}
+              name='navigate-next'
+              size={30}
+            />
+          )}
+
+          {item.type === 'failedRecords' && (
             <MaterialIcons
               style={{ color: NEUTRAL.GRAY_500 }}
               name='navigate-next'

@@ -1,9 +1,13 @@
 import { WorkoutMetrics, workoutModule } from '@/modules/workout';
+import * as Sentry from '@sentry/react-native';
+import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { recordRecoveryService } from '../services/recordRecoveryService';
+import { RecordError } from '../services/recordService';
 import { RunningRecordService } from '../services/runningRecordService';
 import { workoutService } from '../services/workoutService';
 
@@ -24,7 +28,7 @@ export const useWorkoutSave = (
   isSavingRef.current = isSaving;
   const hasEndedRef = useRef(false);
   const { showToast } = useToast();
-  const { getAccessToken } = useAuth();
+  const { getAccessToken, user } = useAuth();
   const router = useRouter();
 
   const saveRef = useRef<(allowResume?: boolean) => Promise<void>>(
@@ -54,10 +58,63 @@ export const useWorkoutSave = (
         hasEndedRef.current = false;
         return;
       }
-      toastMessage =
-        error instanceof Error && error.message === 'VALIDATION_REJECTED'
-          ? '러닝이 종료되었어요'
-          : '저장에 실패했어요';
+
+      if (error instanceof Error && error.message === 'VALIDATION_REJECTED') {
+        toastMessage = '러닝이 종료되었어요';
+      } else if ((error as RecordError).type) {
+        const recordError = error as RecordError;
+        toastMessage = recordError.userMessage;
+
+        const { recordData } = RunningRecordService.prepareRecord(
+          metrics,
+          startTime,
+        );
+
+        // 실패한 기록 로컬 저장
+        await recordRecoveryService.saveFailedRecord(
+          recordData,
+          recordError.type,
+          recordError.userMessage,
+        );
+
+        // Sentry로 에러 전송
+        Sentry.captureException(error, {
+          user: {
+            id: String(user?.id ?? 'unknown'),
+          },
+          contexts: {
+            record: {
+              ...recordData,
+              errorType: recordError.type,
+              errorMessage: recordError.message,
+              userMessage: recordError.userMessage,
+            },
+            app: {
+              app_version: Constants.expoConfig?.version ?? '0.0.0',
+            },
+            os: {
+              name: Platform.OS,
+              version: String(Platform.Version),
+            },
+          },
+          tags: {
+            errorType: recordError.type,
+            appVersion: Constants.expoConfig?.version ?? '0.0.0',
+          },
+        });
+
+        showToast(
+          '기록을 안전하게 보관했습니다. 저장 기록에서 다시 시도해주세요.',
+        );
+        return;
+      } else {
+        toastMessage = '저장에 실패했어요';
+        Sentry.captureException(error, {
+          contexts: {
+            user: user ? { userId: user.id } : {},
+          },
+        });
+      }
     } finally {
       setIsSaving(false);
     }
