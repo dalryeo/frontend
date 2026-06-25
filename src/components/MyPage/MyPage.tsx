@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     marginHorizontal: 20,
-    marginTop: 130,
+    marginTop: 85,
     marginBottom: 40,
     paddingHorizontal: 20,
     backgroundColor: NEUTRAL.GRAY_800,

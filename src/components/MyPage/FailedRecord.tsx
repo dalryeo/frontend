@@ -2,6 +2,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { useToast } from '@/src/contexts/ToastContext';
 import {
   FailedRecordEntry,
+  isRecordExpired,
   recordRecoveryService,
 } from '@/src/services/recordRecoveryService';
 import { recordService } from '@/src/services/recordService';
@@ -17,12 +18,15 @@ import {
   View,
 } from 'react-native';
 import { NEUTRAL } from '../../constants/Colors';
+import { FONT_FAMILY } from '../../constants/FontFamily';
 import { Font } from '../Font';
+import { EmptyState } from '../common/EmptyState';
 
 export default function FailedRecordsScreen() {
   const [failedRecords, setFailedRecords] = useState<FailedRecordEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRetrying, setIsRetrying] = useState<Record<string, boolean>>({});
+  const [expiredRemovedCount, setExpiredRemovedCount] = useState(0);
   const { getAccessToken } = useAuth();
   const { showToast } = useToast();
   const router = useRouter();
@@ -30,6 +34,8 @@ export default function FailedRecordsScreen() {
   const loadFailedRecords = useCallback(async () => {
     setIsLoading(true);
     try {
+      const removed = await recordRecoveryService.removeExpiredRecords();
+      if (removed > 0) setExpiredRemovedCount(removed);
       const records = await recordRecoveryService.getFailedRecords();
       setFailedRecords(records);
     } catch {
@@ -133,42 +139,65 @@ export default function FailedRecordsScreen() {
     return date.toLocaleString('ko-KR');
   };
 
-  const renderRecord = ({ item }: { item: FailedRecordEntry }) => (
-    <View style={[styles.recordCard, getErrorBorderColor(item.errorType)]}>
-      <Font type='Body5' style={styles.recordTitle}>
-        {(item.recordData.distanceKm || 0).toFixed(2)} km ·{' '}
-        {Math.floor(item.recordData.durationSec / 60)}분
-      </Font>
-      <Font type='Caption' style={styles.recordInfo}>
-        저장 실패: {formatDate(item.failedAt)}
-      </Font>
-      <Font type='Caption' style={styles.recordInfo}>
-        재시도 {item.attemptCount}회
-      </Font>
-      <Font type='Caption' style={styles.errorMessage}>
-        {item.userMessage}
-      </Font>
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={[styles.button, styles.retryButton]}
-          onPress={() => handleRetry(item)}
-          disabled={isRetrying[item.id]}
-        >
-          <Font type='Body6' style={styles.retryButtonText}>
-            {isRetrying[item.id] ? '재시도 중...' : '다시 저장'}
+  const getDaysRemaining = (entry: FailedRecordEntry): number => {
+    const expiryTime =
+      new Date(entry.failedAt).getTime() + 7 * 24 * 60 * 60 * 1000;
+    return Math.max(
+      0,
+      Math.ceil((expiryTime - Date.now()) / (1000 * 60 * 60 * 24)),
+    );
+  };
+
+  const renderRecord = ({ item }: { item: FailedRecordEntry }) => {
+    const daysRemaining = getDaysRemaining(item);
+    const isExpiringSoon = !isRecordExpired(item) && daysRemaining <= 2;
+
+    return (
+      <View style={[styles.recordCard, getErrorBorderColor(item.errorType)]}>
+        <View style={styles.recordTitleRow}>
+          <Font type='Body2' style={styles.recordTitle}>
+            {(item.recordData.distanceKm || 0).toFixed(2)} km ·{' '}
+            {Math.floor(item.recordData.durationSec / 60)}분
           </Font>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.button, styles.deleteButton]}
-          onPress={() => handleDelete(item.id)}
-        >
-          <Font type='Body6' style={styles.deleteButtonText}>
-            삭제
-          </Font>
-        </TouchableOpacity>
+          {isExpiringSoon && (
+            <View style={styles.expiryBadge}>
+              <Font type='Caption' style={styles.expiryBadgeText}>
+                D-{daysRemaining}
+              </Font>
+            </View>
+          )}
+        </View>
+        <Font type='Caption' style={styles.recordInfo}>
+          저장 실패: {formatDate(item.failedAt)}
+        </Font>
+        <Font type='Caption' style={styles.recordInfo}>
+          재시도 {item.attemptCount}회 · {daysRemaining}일 후 삭제
+        </Font>
+        <Font type='Caption' style={styles.errorMessage}>
+          {item.userMessage}
+        </Font>
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={[styles.button, styles.retryButton]}
+            onPress={() => handleRetry(item)}
+            disabled={isRetrying[item.id]}
+          >
+            <Font type='Body6' style={styles.retryButtonText}>
+              {isRetrying[item.id] ? '재시도 중...' : '다시 저장'}
+            </Font>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.deleteButton]}
+            onPress={() => handleDelete(item.id)}
+          >
+            <Font type='Body6' style={styles.deleteButtonText}>
+              삭제
+            </Font>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -184,13 +213,20 @@ export default function FailedRecordsScreen() {
         </Font>
       </View>
 
-      {failedRecords.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Font type='Body4' style={styles.emptyText}>
-            저장에 실패한 기록이 없습니다.{'\n'}모든 기록이 정상적으로
-            저장되었어요!
+      {expiredRemovedCount > 0 && (
+        <View style={styles.expiredBanner}>
+          <Font type='Caption' style={styles.expiredBannerText}>
+            보관 기간(7일)이 지난 기록 {expiredRemovedCount}개가 자동
+            삭제되었어요.
           </Font>
         </View>
+      )}
+
+      {failedRecords.length === 0 ? (
+        <EmptyState
+          title={`모든 기록이 저장되었어요`}
+          description='저장 실패 기록은 7일간만 재시도할 수 있어요'
+        />
       ) : (
         <>
           <Font type='Caption' style={styles.countText}>
@@ -257,16 +293,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 4,
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  emptyText: {
-    color: NEUTRAL.GRAY_500,
-    textAlign: 'center',
-  },
   listContainer: {
     flex: 1,
   },
@@ -284,6 +310,7 @@ const styles = StyleSheet.create({
   recordTitle: {
     color: NEUTRAL.WHITE,
     marginBottom: 8,
+    fontFamily: FONT_FAMILY.SEMIBOLD,
   },
   recordInfo: {
     color: NEUTRAL.GRAY_500,
@@ -344,5 +371,42 @@ const styles = StyleSheet.create({
   },
   retryAllButtonText: {
     color: NEUTRAL.BLACK,
+  },
+  recordTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  expiryBadge: {
+    backgroundColor: '#FF4D4D22',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: NEUTRAL.DANGER,
+  },
+  expiryBadgeText: {
+    color: NEUTRAL.DANGER,
+  },
+  expiredBanner: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#FF4D4D18',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: NEUTRAL.DANGER,
+  },
+  expiredBannerText: {
+    color: NEUTRAL.DANGER,
+    textAlign: 'center',
+  },
+  expiryNotice: {
+    marginHorizontal: 20,
+    marginTop: 8,
+  },
+  expiryNoticeText: {
+    color: NEUTRAL.GRAY_500,
   },
 });

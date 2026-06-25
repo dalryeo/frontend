@@ -3,6 +3,8 @@ import { RecordSaveRequest } from '../types/record';
 import { RecordErrorType } from './recordService';
 
 const FAILED_RECORDS_KEY = '@dalryeo/failed_records';
+const EXPIRY_DAYS = 7;
+const EXPIRY_MS = EXPIRY_DAYS * 24 * 60 * 60 * 1000;
 
 export interface FailedRecordEntry {
   id: string;
@@ -11,6 +13,10 @@ export interface FailedRecordEntry {
   userMessage: string;
   failedAt: string;
   attemptCount: number;
+}
+
+export function isRecordExpired(entry: FailedRecordEntry): boolean {
+  return Date.now() - new Date(entry.failedAt).getTime() > EXPIRY_MS;
 }
 
 export const recordRecoveryService = {
@@ -67,5 +73,15 @@ export const recordRecoveryService = {
 
   async clearAllFailedRecords(): Promise<void> {
     await AsyncStorage.removeItem(FAILED_RECORDS_KEY);
+  },
+
+  async removeExpiredRecords(): Promise<number> {
+    const records = await this.getFailedRecords();
+    const active = records.filter((r) => !isRecordExpired(r));
+    const removedCount = records.length - active.length;
+    if (removedCount > 0) {
+      await AsyncStorage.setItem(FAILED_RECORDS_KEY, JSON.stringify(active));
+    }
+    return removedCount;
   },
 };

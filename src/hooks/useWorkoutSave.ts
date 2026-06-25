@@ -7,8 +7,9 @@ import { Alert, Platform } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { recordRecoveryService } from '../services/recordRecoveryService';
-import { RecordError } from '../services/recordService';
+import { RecordError, RecordErrorType } from '../services/recordService';
 import { RunningRecordService } from '../services/runningRecordService';
+import { RecordSaveRequest } from '../types/record';
 import { workoutService } from '../services/workoutService';
 
 const askResume = (reason: string): Promise<boolean> =>
@@ -19,6 +20,11 @@ const askResume = (reason: string): Promise<boolean> =>
     ]);
   });
 
+export interface FailedSaveInfo {
+  errorType: RecordErrorType;
+  userMessage: string;
+}
+
 export const useWorkoutSave = (
   metrics: WorkoutMetrics,
   startTime: Date | null,
@@ -27,9 +33,14 @@ export const useWorkoutSave = (
   const isSavingRef = useRef(false);
   isSavingRef.current = isSaving;
   const hasEndedRef = useRef(false);
+  const [failedSaveInfo, setFailedSaveInfo] = useState<FailedSaveInfo | null>(
+    null,
+  );
   const { showToast } = useToast();
   const { getAccessToken, user } = useAuth();
   const router = useRouter();
+
+  const clearFailedSaveInfo = () => setFailedSaveInfo(null);
 
   const saveRef = useRef<(allowResume?: boolean) => Promise<void>>(
     async () => {},
@@ -38,21 +49,39 @@ export const useWorkoutSave = (
     if (!startTime || hasEndedRef.current) return;
     hasEndedRef.current = true;
     setIsSaving(true);
+
+    // try 블록 밖에서 선언해 catch에서도 사용 가능하게 함
+    let recordData: RecordSaveRequest | null = null;
     let toastMessage = '러닝이 완료되었어요';
+
     try {
-      const { recordData, validationError } =
-        RunningRecordService.prepareRecord(metrics, startTime);
-      if (validationError) {
+      const prepared = RunningRecordService.prepareRecord(metrics, startTime);
+      recordData = prepared.recordData;
+
+      if (prepared.validationError) {
         if (!allowResume) throw new Error('VALIDATION_REJECTED');
-        const resume = await askResume(validationError);
+        const resume = await askResume(prepared.validationError);
         if (resume) throw new Error('RESUME_WORKOUT');
         throw new Error('VALIDATION_REJECTED');
       }
+
       const saved = await RunningRecordService.saveToBackend(
         recordData,
         getAccessToken,
       );
-      if (!saved) toastMessage = '러닝이 종료되었어요';
+      if (saved) {
+        Sentry.addBreadcrumb({
+          category: 'workout',
+          message: '러닝 기록 저장 성공',
+          level: 'info',
+          data: {
+            distanceKm: recordData.distanceKm,
+            durationSec: recordData.durationSec,
+          },
+        });
+      } else {
+        toastMessage = '러닝이 종료되었어요';
+      }
     } catch (error) {
       if (error instanceof Error && error.message === 'RESUME_WORKOUT') {
         hasEndedRef.current = false;
@@ -63,25 +92,30 @@ export const useWorkoutSave = (
         toastMessage = '러닝이 종료되었어요';
       } else if ((error as RecordError).type) {
         const recordError = error as RecordError;
-        toastMessage = recordError.userMessage;
 
-        const { recordData } = RunningRecordService.prepareRecord(
-          metrics,
-          startTime,
-        );
-
-        // 실패한 기록 로컬 저장
-        await recordRecoveryService.saveFailedRecord(
-          recordData,
-          recordError.type,
-          recordError.userMessage,
-        );
-
-        // Sentry로 에러 전송
-        Sentry.captureException(error, {
-          user: {
-            id: String(user?.id ?? 'unknown'),
+        Sentry.addBreadcrumb({
+          category: 'workout',
+          message: '러닝 기록 저장 실패',
+          level: 'error',
+          data: {
+            errorType: recordError.type,
+            distanceKm: recordData?.distanceKm,
+            durationSec: recordData?.durationSec,
           },
+        });
+
+        if (recordData) {
+          try {
+            await recordRecoveryService.saveFailedRecord(
+              recordData,
+              recordError.type,
+              recordError.userMessage,
+            );
+          } catch {}
+        }
+
+        Sentry.captureException(error, {
+          user: { id: String(user?.id ?? 'unknown') },
           contexts: {
             record: {
               ...recordData,
@@ -89,13 +123,8 @@ export const useWorkoutSave = (
               errorMessage: recordError.message,
               userMessage: recordError.userMessage,
             },
-            app: {
-              app_version: Constants.expoConfig?.version ?? '0.0.0',
-            },
-            os: {
-              name: Platform.OS,
-              version: String(Platform.Version),
-            },
+            app: { app_version: Constants.expoConfig?.version ?? '0.0.0' },
+            os: { name: Platform.OS, version: String(Platform.Version) },
           },
           tags: {
             errorType: recordError.type,
@@ -103,21 +132,50 @@ export const useWorkoutSave = (
           },
         });
 
-        showToast(
-          '기록을 안전하게 보관했습니다. 저장 기록에서 다시 시도해주세요.',
-        );
+        try {
+          if (allowResume) await workoutService.end();
+          await workoutModule.reset();
+        } catch {}
+
+        setFailedSaveInfo({
+          errorType: recordError.type,
+          userMessage: recordError.userMessage,
+        });
         return;
       } else {
-        toastMessage = '저장에 실패했어요';
+        const genericUserMessage =
+          '기록 저장 중 알 수 없는 오류가 발생했습니다.';
+
+        if (recordData) {
+          try {
+            await recordRecoveryService.saveFailedRecord(
+              recordData,
+              'UNKNOWN_ERROR',
+              genericUserMessage,
+            );
+          } catch {}
+        }
+
         Sentry.captureException(error, {
-          contexts: {
-            user: user ? { userId: user.id } : {},
-          },
+          contexts: { user: user ? { userId: user.id } : {} },
         });
+
+        try {
+          if (allowResume) await workoutService.end();
+          await workoutModule.reset();
+        } catch {}
+
+        setFailedSaveInfo({
+          errorType: 'UNKNOWN_ERROR',
+          userMessage: genericUserMessage,
+        });
+        return;
       }
     } finally {
       setIsSaving(false);
     }
+
+    // 성공 및 VALIDATION_REJECTED 경로만 여기까지 도달
     try {
       if (allowResume) await workoutService.end();
       await workoutModule.reset();
@@ -126,5 +184,11 @@ export const useWorkoutSave = (
     router.replace('/analysis');
   };
 
-  return { isSaving, isSavingRef, saveRef };
+  return {
+    isSaving,
+    isSavingRef,
+    saveRef,
+    failedSaveInfo,
+    clearFailedSaveInfo,
+  };
 };
