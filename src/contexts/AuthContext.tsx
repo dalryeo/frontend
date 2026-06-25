@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, {
@@ -83,6 +84,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserState(null);
       setOnboardingData(null);
       setIsOnboardingCompleteState(false);
+      Sentry.setUser(null);
 
       setTimeout(() => {
         router.replace('/login');
@@ -250,6 +252,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           ['refreshToken', refreshToken],
         ]);
         setUserState(user);
+        Sentry.setUser({ id: String(user.id) });
 
         const isComplete = await checkOnboardingStatus();
         return isComplete;
@@ -281,6 +284,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       if (storedUser[1] && accessToken[1]) {
         const parsedUser = JSON.parse(storedUser[1]);
         setUserState(parsedUser);
+        Sentry.setUser({ id: String(parsedUser.id) });
 
         await Promise.race([
           checkOnboardingStatus(),
@@ -337,6 +341,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       setTierData(null);
       setIsOnboardingCompleteState(false);
       setOnboardingData(null);
+      Sentry.setUser(null);
     } catch (error) {
       console.error('Logout failed:', error);
     }

@@ -5,7 +5,13 @@ import {
 } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
 import { useEvent } from 'expo';
-import { Stack, usePathname, useRouter } from 'expo-router';
+import Constants from 'expo-constants';
+import {
+  Stack,
+  useNavigationContainerRef,
+  usePathname,
+  useRouter,
+} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
@@ -20,29 +26,48 @@ import {
 import CustomSplashScreen from '@/src/components/SplashScreen';
 import { useColorScheme } from '@/src/components/useColorScheme';
 import { AuthProvider, useAuth } from '@/src/contexts/AuthContext';
-import { ToastProvider } from '@/src/contexts/ToastContext';
+import { ToastProvider, useToast } from '@/src/contexts/ToastContext';
 import { useAppFonts } from '@/src/hooks/useAppFonts';
+import {
+  isRecordExpired,
+  recordRecoveryService,
+} from '@/src/services/recordRecoveryService';
+
+const navigationIntegration = Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: true,
+});
 
 Sentry.init({
   dsn: 'https://1f265665b9cbe66c55ae0f82f9ee0a8a@o4511108762697728.ingest.de.sentry.io/4511108858708048',
-  environment: 'prod',
-  release: 'mvp-dev',
+  environment:
+    process.env.APP_ENV === 'production' ? 'production' : 'development',
+  release: Constants.expoConfig?.version ?? '0.0.0',
+  integrations: [
+    Sentry.reactNativeTracingIntegration(),
+    navigationIntegration,
+    Sentry.mobileReplayIntegration({
+      maskAllText: true,
+      maskAllImages: true,
+    }),
+  ],
+  tracesSampleRate: 0.2,
+  _experiments: {
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  },
 
   beforeSend(event) {
-    // user 개인정보 제거
     if (event.user) {
       delete event.user.email;
       delete event.user.ip_address;
       delete event.user.username;
     }
 
-    // Authorization 헤더 제거
     if (event.request?.headers) {
       delete event.request.headers.Authorization;
       delete event.request.headers.authorization;
     }
 
-    // breadcrumb 토큰 마스킹
     if (event.breadcrumbs) {
       event.breadcrumbs = event.breadcrumbs.map((b) => {
         if (typeof b.data === 'object') {
@@ -72,7 +97,7 @@ SplashScreen.preventAutoHideAsync();
 
 const BG = { flex: 1, backgroundColor: '#151515' } as const;
 
-export default function RootLayout() {
+export default Sentry.wrap(function RootLayout() {
   const [loaded, error] = useAppFonts();
 
   useEffect(() => {
@@ -83,14 +108,36 @@ export default function RootLayout() {
     SplashScreen.hideAsync();
   }, []);
 
+  useEffect(() => {
+    Sentry.crashedLastRun().then((crashed) => {
+      if (crashed) {
+        Sentry.captureMessage('앱이 이전 세션에서 비정상 종료됨', 'warning');
+      }
+    });
+  }, []);
+
   if (!loaded) return <View style={BG} />;
 
-  // 디버거
-  // if (Constants.expoConfig?.extra?.IS_DEBUG === 'true') {
-  //   return <WorkoutDebugScreen />;
-  // }
-
   return <RootLayoutNav />;
+});
+
+function FailedRecordsChecker() {
+  const { showToast } = useToast();
+  const hasShownRef = useRef(false);
+
+  useEffect(() => {
+    if (hasShownRef.current) return;
+    hasShownRef.current = true;
+
+    recordRecoveryService.getFailedRecords().then((records) => {
+      const activeCount = records.filter((r) => !isRecordExpired(r)).length;
+      if (activeCount > 0) {
+        showToast(`저장 실패한 기록 ${activeCount}개가 있어요.`);
+      }
+    });
+  }, [showToast]);
+
+  return null;
 }
 
 function AuthenticatedLayout() {
@@ -170,12 +217,20 @@ function AuthenticatedLayout() {
         />
         <Stack.Screen name='modal' options={{ presentation: 'modal' }} />
       </Stack>
+      {user && isOnboardingComplete && <FailedRecordsChecker />}
     </ToastProvider>
   );
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const ref = useNavigationContainerRef();
+
+  useEffect(() => {
+    if (ref) {
+      navigationIntegration.registerNavigationContainer(ref);
+    }
+  }, [ref]);
 
   return (
     <AuthProvider>
