@@ -40,7 +40,6 @@ import {
 import { formatDate, formatLocalDate } from '../../utils/dateUtils';
 
 import {
-  checkNicknameAvailability,
   getOnboardingData,
   submitProfileData,
 } from '../../services/profileService';
@@ -90,9 +89,11 @@ function Profile() {
     weight,
     selectedImg,
     isFormValid,
+    isCheckingNickname,
     nicknameChecked,
     setGender,
     handleNicknameChange,
+    handleNicknameCheck,
     setBirth,
     setBirthDate,
     setHeight,
@@ -152,29 +153,6 @@ function Profile() {
   };
 
   const handleSubmit = async () => {
-    // 닉네임 중복 체크가 완료되지 않았으면 먼저 체크
-    if (!nicknameChecked && nickname.trim()) {
-      try {
-        const token = await getAccessToken();
-        if (!token) {
-          return;
-        }
-
-        const result = await checkNicknameAvailability(nickname.trim(), token);
-        if (!result.available) {
-          Alert.alert(
-            '닉네임 중복',
-            '이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.',
-          );
-          return;
-        }
-      } catch (error) {
-        console.error('닉네임 확인 오류:', error);
-        Alert.alert('오류', '닉네임 확인 중 오류가 발생했습니다.');
-        return;
-      }
-    }
-
     setIsLoading(true);
 
     try {
@@ -317,7 +295,7 @@ function Profile() {
                   </Font>
                 </>
               )}
-              {nickname && !nicknameError && (
+              {nicknameChecked && !nicknameError && (
                 <>
                   <Ionicons
                     name='checkmark-circle-outline'
@@ -332,14 +310,39 @@ function Profile() {
             </View>
           </View>
 
-          <TextInput
-            style={styles.nickname}
-            placeholder='1~12자, 영문·한글·숫자만 입력할 수 있어요.'
-            placeholderTextColor={NEUTRAL.GRAY_700}
-            value={nickname}
-            onChangeText={handleNicknameChange}
-            returnKeyType='done'
-          />
+          <View style={styles.nicknameContainer}>
+            <TextInput
+              style={styles.nickname}
+              placeholder='1~12자, 영문·한글·숫자만 입력할 수 있어요.'
+              placeholderTextColor={NEUTRAL.GRAY_700}
+              value={nickname}
+              onChangeText={handleNicknameChange}
+              returnKeyType='done'
+            />
+
+            <TouchableOpacity
+              style={[
+                styles.nicknameCheckBtn,
+                (!nickname.trim() || !!nicknameError || isCheckingNickname) &&
+                  styles.nicknameCheckBtnDisabled,
+              ]}
+              onPress={handleNicknameCheck}
+              disabled={
+                !nickname.trim() || !!nicknameError || isCheckingNickname
+              }
+            >
+              <Font
+                type='SubButton'
+                style={[
+                  styles.nicknameCheckText,
+                  (!nickname.trim() || !!nicknameError || isCheckingNickname) &&
+                    styles.nicknameCheckTextDisabled,
+                ]}
+              >
+                {isCheckingNickname ? '확인 중...' : '중복 확인'}
+              </Font>
+            </TouchableOpacity>
+          </View>
 
           <Font type='Body4' style={[styles.subtitle, { marginTop: 30 }]}>
             성별
@@ -395,7 +398,7 @@ function Profile() {
                   gender === 'other' && styles.genderSelected,
                 ]}
               >
-                그외
+                그 외
               </Font>
             </TouchableOpacity>
           </View>
@@ -641,17 +644,40 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 5,
   },
+  nicknameContainer: {
+    flexDirection: 'row',
+    width: '90%',
+    alignSelf: 'center',
+    marginTop: 10,
+    gap: 8,
+  },
   nickname: {
+    flex: 0.7,
     height: 50,
     backgroundColor: NEUTRAL.GRAY_900,
     borderColor: NEUTRAL.GRAY_800,
     borderWidth: 1,
     borderRadius: 32,
-    marginTop: 10,
-    alignSelf: 'center',
-    width: '90%',
     paddingHorizontal: 23,
     color: NEUTRAL.WHITE,
+  },
+  nicknameCheckBtn: {
+    flex: 0.3,
+    height: 50,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: NEUTRAL.MAIN,
+  },
+  nicknameCheckBtnDisabled: {
+    backgroundColor: NEUTRAL.GRAY_800,
+  },
+  nicknameCheckText: {
+    color: NEUTRAL.BACKGROUND,
+    textAlign: 'center',
+  },
+  nicknameCheckTextDisabled: {
+    color: NEUTRAL.GRAY_600,
   },
   genderContainer: {
     flexDirection: 'row',

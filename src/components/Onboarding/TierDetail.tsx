@@ -124,6 +124,7 @@ const styles = StyleSheet.create({
     color: NEUTRAL.GRAY_500,
     alignSelf: 'center',
     marginBottom: 20,
+    textAlign: 'center',
   },
 
   profileImg: {

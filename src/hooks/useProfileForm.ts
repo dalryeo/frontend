@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { checkNicknameAvailability } from '../services/profileService';
 import { GenderUI } from '../utils/commonUtils';
@@ -23,7 +23,6 @@ export const useProfileForm = () => {
   const [nicknameChecked, setNicknameChecked] = useState(false);
   const [showNicknameValidation, setShowNicknameValidation] = useState(false);
 
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { getAccessToken } = useAuth();
 
   const checkNicknameDuplication = useCallback(
@@ -70,37 +69,23 @@ export const useProfileForm = () => {
     [originalNickname, getAccessToken],
   );
 
-  const handleNicknameChange = useCallback(
-    (value: string) => {
-      setNickname(value);
-      setNicknameChecked(false);
+  const handleNicknameChange = useCallback((value: string) => {
+    setNickname(value);
+    setNicknameChecked(false);
 
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
+    const basicError = validateNickname(value);
+    if (basicError) {
+      setNicknameError(basicError);
+      return;
+    }
 
-      const basicError = validateNickname(value);
-      if (basicError) {
-        setNicknameError(basicError);
-        setShowNicknameValidation(true);
-        return;
-      }
+    setNicknameError(null);
+  }, []);
 
-      if (value.trim()) {
-        setIsCheckingNickname(true);
-        setShowNicknameValidation(true);
-
-        timeoutRef.current = setTimeout(() => {
-          checkNicknameDuplication(value);
-        }, 50);
-      } else {
-        setNicknameError(null);
-        setShowNicknameValidation(false);
-      }
-    },
-    [checkNicknameDuplication],
-  );
+  const handleNicknameCheck = useCallback(async () => {
+    if (!nickname.trim() || nicknameError) return;
+    await checkNicknameDuplication(nickname);
+  }, [nickname, nicknameError, checkNicknameDuplication]);
 
   const setInitialNickname = (value: string) => {
     setNickname(value);
@@ -136,6 +121,7 @@ export const useProfileForm = () => {
     setInitialNickname,
     setGender,
     handleNicknameChange,
+    handleNicknameCheck,
     setBirth,
     setBirthDate,
     setHeight,
