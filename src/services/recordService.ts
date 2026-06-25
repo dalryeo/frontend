@@ -16,11 +16,87 @@ type SaveRecordResult = {
   message?: string;
 };
 
+export type RecordErrorType =
+  | 'TOKEN_EXPIRED'
+  | 'NETWORK_ERROR'
+  | 'VALIDATION_ERROR'
+  | 'SERVER_ERROR'
+  | 'REQUEST_ERROR'
+  | 'UNKNOWN_ERROR';
+
+export interface RecordError extends Error {
+  type: RecordErrorType;
+  userMessage: string;
+}
+
+const createRecordError = (
+  type: RecordErrorType,
+  message: string,
+  userMessage: string,
+): RecordError => {
+  const error = new Error(message) as RecordError;
+  error.type = type;
+  error.userMessage = userMessage;
+  return error;
+};
+
+const classifyRecordError = (error: unknown): RecordError => {
+  if (error instanceof Error) {
+    if (error.message === 'TOKEN_EXPIRED') {
+      return createRecordError(
+        'TOKEN_EXPIRED',
+        'Token expired',
+        '로그인 정보가 만료되었습니다. 다시 로그인해주세요.',
+      );
+    }
+    if (
+      error.message.includes('네트워크 연결') ||
+      error.message.includes('Network')
+    ) {
+      return createRecordError(
+        'NETWORK_ERROR',
+        error.message,
+        '네트워크 연결을 확인해주세요.',
+      );
+    }
+    if (
+      error.message.includes('기록 정보 오류') ||
+      error.message.includes('VALIDATION')
+    ) {
+      return createRecordError(
+        'VALIDATION_ERROR',
+        error.message,
+        '기록 정보가 올바르지 않습니다. 다시 시도해주세요.',
+      );
+    }
+    if (error.message.includes('HTTP 5')) {
+      return createRecordError(
+        'SERVER_ERROR',
+        error.message,
+        '서버 일시 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+      );
+    }
+    if (error.message.includes('HTTP')) {
+      return createRecordError(
+        'REQUEST_ERROR',
+        error.message,
+        '요청이 올바르지 않습니다. 다시 시도해주세요.',
+      );
+    }
+  }
+  return createRecordError(
+    'UNKNOWN_ERROR',
+    String(error),
+    '기록 저장 중 오류가 발생했습니다. 앱을 재시작해주세요.',
+  );
+};
+
 let refreshTokenCallback: RefreshTokenCallback | null = null;
 
 export const setRefreshTokenCallback = (callback: RefreshTokenCallback) => {
   refreshTokenCallback = callback;
 };
+
 export const recordService = {
   async getWeeklyRecordSummary(token: string): Promise<WeeklyRecordResponse> {
     const response = await fetchWithTokenRefresh(
@@ -78,7 +154,7 @@ export const recordService = {
       return result as RecordSaveResponse;
     } catch (error) {
       throwIfNetworkError(error);
-      throw error;
+      throw classifyRecordError(error);
     }
   },
 };

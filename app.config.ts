@@ -39,6 +39,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     '@react-native-community/datetimepicker',
     './plugin/build/src/index.js',
+    '@sentry/react-native',
     [
       'expo-build-properties',
       {

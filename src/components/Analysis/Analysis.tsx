@@ -26,6 +26,7 @@ import {
   ProcessedRecord,
   processRecord,
 } from '../../utils/recordUtils';
+import { EmptyState } from '../common/EmptyState';
 
 type PeriodType = 'weekly' | 'monthly' | 'yearly';
 
@@ -175,18 +176,11 @@ function Analysis() {
       }
 
       return (
-        <View style={styles.noRecordContainer}>
-          <Image
-            source={IMAGES.EMPTY.TURTLE_EMPTY()}
-            style={styles.noRecordContent}
-          />
-          <Font type='Head3' style={{ color: NEUTRAL.WHITE }}>
-            {periodLabel}에 달린 기록이 없어요
-          </Font>
-          <Font type='Body4' style={{ color: NEUTRAL.GRAY_500, marginTop: 10 }}>
-            {periodLabel} 첫 러닝을 기록해보세요!
-          </Font>
-        </View>
+        <EmptyState
+          title={`${periodLabel}에 달린 기록이 없어요`}
+          description={`${periodLabel} 첫 러닝을 기록해보세요!`}
+          style={{ marginTop: 100, paddingTop: 0 }}
+        />
       );
     }
 
@@ -515,17 +509,6 @@ const styles = StyleSheet.create({
   heartRateText: {
     color: NEUTRAL.GRAY_200,
     marginLeft: 5,
-  },
-  noRecordContainer: {
-    flex: 1,
-    marginTop: '30%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
-  noRecordContent: {
-    height: 180,
-    resizeMode: 'contain',
   },
   modalBackdrop: {
     flex: 1,

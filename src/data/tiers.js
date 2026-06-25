@@ -3,7 +3,7 @@ export const tiers = {
     name: "치타",
     iconSet: "CHEETAH",
     title: "엘리트 스피드 러너",
-    subtitle: "폭발적인 속도와 레이스 본능을 가진 최상위 러너 타입",
+    subtitle: "폭발적인 속도와 레이스 본능을 가진\n최상위 러너 타입",
     sections: [
       {
         icon: "🧩",
@@ -43,7 +43,7 @@ export const tiers = {
     name: "사슴",
     iconSet: "DEER",
     title: "균형 잡힌 고급 러너",
-    subtitle: "경쾌한 리듬과 안정적인 페이스를 가진 성장형 상위 러너",
+    subtitle: "경쾌한 리듬과 안정적인 페이스를 가진\n성장형 상위 러너",
     sections: [
       {
         icon: "🧩",
@@ -80,7 +80,7 @@ export const tiers = {
     name: "허스키",
     iconSet: "HUSKY",
     title: "지구력 기반 올라운더 러너",
-    subtitle: "여유 있는 지속력과 흔들림 없는 완주력이 강점인 타입",
+    subtitle: "여유 있는 지속력과 흔들림 없는\n완주력이 강점인 타입",
     sections: [
       {
         icon: "🧩",
@@ -154,7 +154,7 @@ export const tiers = {
     name: "고라니",
     iconSet: "WATERDEER",
     title: "잠재력 높은 성장형 러너",
-    subtitle: "부드러운 스텝과 안정적인 기본기를 가진 성장 곡선 시작 타입",
+    subtitle: "부드러운 스텝과 안정적인 기본기를 가진\n성장 곡선 시작 타입",
     sections: [
       {
         icon: "🧩",
@@ -191,7 +191,7 @@ export const tiers = {
     name: "양",
     iconSet: "SHEEP",
     title: "리듬을 찾아가는 초중급 러너",
-    subtitle: "천천히 적응하며 페이스 감각을 키워가는 구축기 타입",
+    subtitle: "천천히 적응하며 페이스 감각을 키워가는\n구축기 타입",
     sections: [
       {
         icon: "🧩",
@@ -228,7 +228,7 @@ export const tiers = {
     name: "토끼",
     iconSet: "RABBIT",
     title: "속도 감각을 익혀가는 러너",
-    subtitle: "가볍게 시작해 러닝 감각을 만들어가는 초기 도전 타입",
+    subtitle: "가볍게 시작해 러닝 감각을 만들어가는\n초기 도전 타입",
     sections: [
       {
         icon: "🧩",
@@ -265,7 +265,7 @@ export const tiers = {
     name: "판다",
     iconSet: "PANDA",
     title: "기초 체력을 쌓아가는 러너",
-    subtitle: "편안한 페이스로 차근차근 기초 체력을 만드는 러너 타입",
+    subtitle: "편안한 페이스로 차근차근 기초 체력을\n만드는 러너 타입",
     sections: [
       {
         icon: "🧩",
@@ -302,7 +302,7 @@ export const tiers = {
     name: "오리",
     iconSet: "DUCK",
     title: "안전한 페이스를 지향하는 러너",
-    subtitle: "안정 우선, 무리 없는 속도로 지속 가능성을 만드는 타입",
+    subtitle: "안정 우선, 무리 없는 속도로 지속 가능성을\n만드는 타입",
     sections: [
       {
         icon: "🧩",

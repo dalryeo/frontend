@@ -1,4 +1,4 @@
-import { getTierImage, IMAGES } from '@/src/constants/Images';
+import { getTierImage } from '@/src/constants/Images';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React from 'react';
@@ -9,6 +9,7 @@ import { useWeeklyData } from '../../hooks/useWeeklyData';
 import { formatDateForDisplay } from '../../utils/dateUtils';
 import { formatPace } from '../../utils/formatUtils';
 import { Font } from '../Font';
+import { EmptyState } from '../common/EmptyState';
 import { TierInfoCard } from './TierInfoCard';
 
 function WeeklyRecord() {
@@ -85,27 +86,15 @@ function WeeklyRecord() {
           );
         })
       ) : (
-        <View style={styles.noRecordContainer}>
-          <View style={styles.noRecordContent}></View>
-          <Image
-            source={IMAGES.EMPTY.TURTLE_EMPTY()}
-            style={styles.turtleImg}
-          />
-          <Font type='Head3' style={{ color: NEUTRAL.WHITE, marginTop: 30 }}>
-            이번 달에 달린 기록이 없어요
-          </Font>
-          <Font type='Body4' style={{ color: NEUTRAL.GRAY_500, marginTop: 10 }}>
-            이번 달 첫 러닝을 기록하러 가볼까요?
-          </Font>
-          <View
-            style={styles.noRecordButton}
-            onTouchEnd={() => router.push('/countDown')}
-          >
-            <Font type='MainButton' style={{ color: NEUTRAL.BLACK }}>
-              달려 기록하러 가기 {`->`}
-            </Font>
-          </View>
-        </View>
+        <EmptyState
+          title='이번 달에 달린 기록이 없어요'
+          description='이번 달 첫 러닝을 기록하러 가볼까요?'
+          action={{
+            label: `달려 기록하러 가기 ->`,
+            onPress: () => router.push('/countDown'),
+          }}
+          style={{ flex: 0.9 }}
+        />
       )}
     </View>
   );

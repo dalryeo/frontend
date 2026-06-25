@@ -1,6 +1,7 @@
 import { WorkoutSessionState } from '@/modules/workout';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import { useLocalSearchParams } from 'expo-router';
+import * as Sentry from '@sentry/react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -16,6 +17,7 @@ import { useWorkoutSave } from '../../hooks/useWorkoutSave';
 import { workoutService } from '../../services/workoutService';
 import { formatElapsedTime, formatPaceLive } from '../../utils/formatUtils';
 import { Font } from '../Font';
+import { ConfirmModal } from '../MyPage/ConfirmModal';
 
 type ControlState = 'paused' | 'playing' | 'sheet';
 
@@ -26,6 +28,7 @@ function Record() {
   const [watchEndedWorkout, setWatchEndedWorkout] = useState(false);
   const { autoStart } = useLocalSearchParams<{ autoStart?: string }>();
   const autoStartTriggered = useRef(false);
+  const router = useRouter();
   const {
     metrics,
     sessionState: rawSessionState,
@@ -39,7 +42,13 @@ function Record() {
       ? rawSessionState
       : metrics.sessionState;
 
-  const { isSaving, isSavingRef, saveRef } = useWorkoutSave(metrics, startTime);
+  const {
+    isSaving,
+    isSavingRef,
+    saveRef,
+    failedSaveInfo,
+    clearFailedSaveInfo,
+  } = useWorkoutSave(metrics, startTime);
 
   const sheetAnim = useRef(new Animated.Value(1)).current;
 
@@ -106,21 +115,43 @@ function Record() {
   if (!fontsLoaded) return null;
 
   const onStartSuccess = () => setStartTime(new Date());
-  const onResumeSuccess = () => setControlState('playing');
+  const onResumeSuccess = () => {
+    Sentry.addBreadcrumb({
+      category: 'workout',
+      message: '러닝 재개',
+      level: 'info',
+    });
+    setControlState('playing');
+  };
 
   const handlePress = () => {
     if (controlState === 'paused') {
+      Sentry.addBreadcrumb({
+        category: 'workout',
+        message: '러닝 시작',
+        level: 'info',
+      });
       workoutService.start(
         hasAllPermissions,
         requestPermissions,
         onStartSuccess,
       );
     } else if (controlState === 'playing') {
+      Sentry.addBreadcrumb({
+        category: 'workout',
+        message: '러닝 일시정지',
+        level: 'info',
+      });
       workoutService.pause();
     }
   };
 
   const handleEndClick = () => {
+    Sentry.addBreadcrumb({
+      category: 'workout',
+      message: '러닝 종료 요청',
+      level: 'info',
+    });
     saveRef.current();
   };
 
@@ -281,6 +312,22 @@ function Record() {
           </Animated.View>
         </Animated.View>
       )}
+
+      <ConfirmModal
+        visible={!!failedSaveInfo}
+        title='러닝 기록 저장에 실패했어요'
+        description={`${failedSaveInfo?.userMessage}\n\n저장 실패 기록에서 다시 저장을 시도할 수 있어요.`}
+        cancelText='저장 실패 기록 보기'
+        confirmText='메인으로 이동'
+        onClose={() => {
+          clearFailedSaveInfo();
+          router.replace('/failedRecords');
+        }}
+        onConfirm={() => {
+          clearFailedSaveInfo();
+          router.replace('/(tabs)');
+        }}
+      />
     </View>
   );
 }
