@@ -93,9 +93,11 @@ function ProfileEdit() {
     weight,
     selectedImg,
     isFormValid,
-    showNicknameValidation,
+    isCheckingNickname,
+    nicknameChecked,
     setGender,
     handleNicknameChange,
+    handleNicknameCheck,
     setInitialNickname,
     setBirth,
     setBirthDate,
@@ -380,7 +382,7 @@ function ProfileEdit() {
               닉네임
             </Font>
             <View style={styles.nicknameErrorContainer}>
-              {showNicknameValidation && nicknameError && (
+              {nickname && nicknameError && (
                 <>
                   <MaterialIcons
                     name='error-outline'
@@ -392,29 +394,64 @@ function ProfileEdit() {
                   </Font>
                 </>
               )}
-              {showNicknameValidation && !nicknameError && nickname && (
-                <>
-                  <Ionicons
-                    name='checkmark-circle-outline'
-                    size={16}
-                    style={{ color: NEUTRAL.MAIN }}
-                  />
-                  <Font type='Error' style={styles.nicknameSuccess}>
-                    사용 가능한 닉네임이에요
-                  </Font>
-                </>
-              )}
+              {nicknameChecked &&
+                !nicknameError &&
+                nickname !== originalData.nickname && (
+                  <>
+                    <Ionicons
+                      name='checkmark-circle-outline'
+                      size={16}
+                      style={{ color: NEUTRAL.MAIN }}
+                    />
+                    <Font type='Error' style={styles.nicknameSuccess}>
+                      사용 가능한 닉네임이에요
+                    </Font>
+                  </>
+                )}
             </View>
           </View>
 
-          <TextInput
-            style={styles.nickname}
-            placeholder='1~12자, 영문·한글·숫자만 입력할 수 있어요.'
-            placeholderTextColor={NEUTRAL.GRAY_700}
-            value={nickname}
-            onChangeText={handleNicknameChange}
-            returnKeyType='done'
-          />
+          <View style={styles.nicknameContainer}>
+            <TextInput
+              style={styles.nickname}
+              placeholder='1~12자, 영문·한글·숫자만 입력할 수 있어요.'
+              placeholderTextColor={NEUTRAL.GRAY_700}
+              value={nickname}
+              onChangeText={handleNicknameChange}
+              returnKeyType='done'
+            />
+            <TouchableOpacity
+              style={[
+                styles.nicknameCheckBtn,
+                (!nickname.trim() ||
+                  !!nicknameError ||
+                  isCheckingNickname ||
+                  nickname === originalData.nickname) &&
+                  styles.nicknameCheckBtnDisabled,
+              ]}
+              onPress={handleNicknameCheck}
+              disabled={
+                !nickname.trim() ||
+                !!nicknameError ||
+                isCheckingNickname ||
+                nickname === originalData.nickname
+              }
+            >
+              <Font
+                type='SubButton'
+                style={[
+                  styles.nicknameCheckText,
+                  (!nickname.trim() ||
+                    !!nicknameError ||
+                    isCheckingNickname ||
+                    nickname === originalData.nickname) &&
+                    styles.nicknameCheckTextDisabled,
+                ]}
+              >
+                {isCheckingNickname ? '확인 중...' : '중복 확인'}
+              </Font>
+            </TouchableOpacity>
+          </View>
 
           <Font type='Body4' style={[styles.subtitle, { marginTop: 30 }]}>
             성별
@@ -792,14 +829,12 @@ const styles = StyleSheet.create({
     color: NEUTRAL.WHITE,
   },
   nickname: {
+    flex: 0.7,
     height: 50,
     backgroundColor: NEUTRAL.GRAY_900,
     borderColor: NEUTRAL.GRAY_800,
     borderWidth: 1,
     borderRadius: 32,
-    marginTop: 10,
-    alignSelf: 'center',
-    width: '90%',
     paddingHorizontal: 23,
     color: NEUTRAL.WHITE,
   },
@@ -873,16 +908,43 @@ const styles = StyleSheet.create({
   nextBtnTextDisabled: {
     color: NEUTRAL.GRAY_600,
   },
-  nicknameErrorContainer: {
+  nicknameContainer: {
     flexDirection: 'row',
+    width: '90%',
+    alignSelf: 'center',
+    marginTop: 10,
+    gap: 8,
+  },
+  nicknameCheckBtn: {
+    flex: 0.3,
+    height: 50,
+    borderRadius: 230,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 20,
-    gap: 4,
+    backgroundColor: NEUTRAL.MAIN,
+  },
+  nicknameCheckBtnDisabled: {
+    backgroundColor: NEUTRAL.GRAY_800,
+  },
+  nicknameCheckText: {
+    color: NEUTRAL.BACKGROUND,
+    textAlign: 'center',
+  },
+  nicknameCheckTextDisabled: {
+    color: NEUTRAL.GRAY_600,
   },
   subtitleNick: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 35,
+    marginLeft: 20,
+    marginRight: 20,
+  },
+  nicknameErrorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   nicknameError: {
     color: NEUTRAL.DANGER,
