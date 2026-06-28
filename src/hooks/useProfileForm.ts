@@ -69,18 +69,27 @@ export const useProfileForm = () => {
     [originalNickname, getAccessToken],
   );
 
-  const handleNicknameChange = useCallback((value: string) => {
-    setNickname(value);
-    setNicknameChecked(false);
+  const handleNicknameChange = useCallback(
+    (value: string) => {
+      setNickname(value);
 
-    const basicError = validateNickname(value);
-    if (basicError) {
-      setNicknameError(basicError);
-      return;
-    }
+      if (value.trim() === originalNickname) {
+        setNicknameChecked(true);
+        setNicknameError(null);
+        return;
+      }
 
-    setNicknameError(null);
-  }, []);
+      setNicknameChecked(false);
+      const basicError = validateNickname(value);
+      if (basicError) {
+        setNicknameError(basicError);
+        return;
+      }
+
+      setNicknameError(null);
+    },
+    [originalNickname],
+  );
 
   const handleNicknameCheck = useCallback(async () => {
     if (!nickname.trim() || nicknameError) return;
