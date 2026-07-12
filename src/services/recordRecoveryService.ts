@@ -33,9 +33,9 @@ export const recordRecoveryService = {
     recordData: RecordSaveRequest,
     errorType: RecordErrorType,
     userMessage: string,
-  ): Promise<FailedRecordEntry> {
+  ): Promise<FailedRecordEntry | null> {
     const entry: FailedRecordEntry = {
-      id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
       recordData,
       errorType,
       userMessage,
@@ -43,10 +43,14 @@ export const recordRecoveryService = {
       attemptCount: 1,
     };
 
-    const failed = await this.getFailedRecords();
-    failed.push(entry);
-    await AsyncStorage.setItem(FAILED_RECORDS_KEY, JSON.stringify(failed));
-    return entry;
+    try {
+      const failed = await this.getFailedRecords();
+      failed.push(entry);
+      await AsyncStorage.setItem(FAILED_RECORDS_KEY, JSON.stringify(failed));
+      return entry;
+    } catch {
+      return null;
+    }
   },
 
   async increaseAttemptCount(id: string): Promise<void> {

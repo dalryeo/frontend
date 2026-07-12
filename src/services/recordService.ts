@@ -4,7 +4,7 @@ import {
   RecordSaveResponse,
   WeeklyRecordResponse,
 } from '../types/record';
-import { assertApiSuccess, throwIfNetworkError } from '../utils/apiUtils';
+import { assertApiSuccess } from '../utils/apiUtils';
 import { fetchWithTokenRefresh } from './apiClient';
 
 type RefreshTokenCallback = () => Promise<string | null>;
@@ -41,6 +41,13 @@ const createRecordError = (
 };
 
 const classifyRecordError = (error: unknown): RecordError => {
+  if (error instanceof SyntaxError) {
+    return createRecordError(
+      'SERVER_ERROR',
+      error.message,
+      '서버 응답을 처리하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+    );
+  }
   if (error instanceof Error) {
     if (error.message === 'TOKEN_EXPIRED') {
       return createRecordError(
@@ -83,6 +90,11 @@ const classifyRecordError = (error: unknown): RecordError => {
         '요청이 올바르지 않습니다. 다시 시도해주세요.',
       );
     }
+    return createRecordError(
+      'SERVER_ERROR',
+      error.message,
+      '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+    );
   }
   return createRecordError(
     'UNKNOWN_ERROR',
@@ -153,7 +165,6 @@ export const recordService = {
       assertApiSuccess(result, 'RECORD_SAVE_FAILED');
       return result as RecordSaveResponse;
     } catch (error) {
-      throwIfNetworkError(error);
       throw classifyRecordError(error);
     }
   },

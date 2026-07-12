@@ -23,6 +23,7 @@ function Login() {
       await login();
     } catch (error) {
       console.error('로그인 실패:', error);
+    } finally {
       setIsLogging(false);
     }
   };

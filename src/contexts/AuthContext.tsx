@@ -148,8 +148,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [forceLogout]);
 
   const getAccessToken = useCallback(async (): Promise<string | null> => {
-    return AsyncStorage.getItem('accessToken').catch(() => null);
-  }, []);
+    const token = await AsyncStorage.getItem('accessToken').catch(() => null);
+    if (token) return token;
+    return refreshAccessToken();
+  }, [refreshAccessToken]);
 
   const checkOnboardingStatus = useCallback(async () => {
     try {
