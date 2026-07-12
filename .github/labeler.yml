@@ -1,0 +1,90 @@
+# ── 도메인별 ──────────────────────────────
+record:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/record/**'
+          - 'app/startRecord/**'
+          - 'app/countDown/**'
+          - 'app/failedRecords/**'
+          - 'src/components/Record/**'
+          - 'src/hooks/useWorkout*'
+          - 'src/services/record*'
+
+ranking:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/(tabs)/ranking/**'
+          - 'src/components/Ranking/**'
+
+analysis:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/(tabs)/analysis/**'
+          - 'src/components/Analysis/**'
+
+mypage:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/myPage/**'
+          - 'app/profile/**'
+          - 'app/profileEdit/**'
+          - 'app/weeklyRecord/**'
+          - 'app/weeklyRankingDetail/**'
+          - 'src/components/MyPage/**'
+
+onboarding:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/login/**'
+          - 'app/locationPermission/**'
+          - 'app/healthPermission/**'
+          - 'src/components/Onboarding/**'
+
+tier:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/tierOverView/**'
+          - 'app/tierRecommend/**'
+
+auth:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/contexts/AuthContext.tsx'
+
+# ── 기술 영역별 ───────────────────────────
+watch:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'dalryeo Watch App/**'
+
+native:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'ios/**'
+          - 'android/**'
+          - 'modules/**'
+          - 'plugin/**'
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/workflows/**'
+          - 'eas.json'
+
+chore:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'package.json'
+          - 'package-lock.json'
+          - 'tsconfig*.json'
+          - 'eslint.config.*'
+          - 'app.config.ts'
+          - 'metro.config.js'
+          - 'expo-env.d.ts'
+          - '.husky/**'
+
+style:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/constants/**'
+          - 'assets/**'
