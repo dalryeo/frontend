@@ -122,7 +122,6 @@ const styles = StyleSheet.create({
 
   subscribe: {
     color: NEUTRAL.GRAY_500,
-    alignSelf: 'center',
     marginBottom: 20,
     textAlign: 'center',
   },

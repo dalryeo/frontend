@@ -4,8 +4,26 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "staging": {
+      "distribution": "store",
+      "autoIncrement": true,
+      "env": {
+        "APP_ENV": "staging"
+      }
+    },
     "production": {
-      "autoIncrement": true
+      "distribution": "store",
+      "autoIncrement": true,
+      "env": {
+        "APP_ENV": "production"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleTeamId": "7P6YWC373Q"
+      }
     }
   }
 }
