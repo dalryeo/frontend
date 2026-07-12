@@ -9,8 +9,8 @@ import { useToast } from '../contexts/ToastContext';
 import { recordRecoveryService } from '../services/recordRecoveryService';
 import { RecordError, RecordErrorType } from '../services/recordService';
 import { RunningRecordService } from '../services/runningRecordService';
-import { RecordSaveRequest } from '../types/record';
 import { workoutService } from '../services/workoutService';
+import { RecordSaveRequest } from '../types/record';
 
 const askResume = (reason: string): Promise<boolean> =>
   new Promise((resolve) => {
@@ -104,14 +104,14 @@ export const useWorkoutSave = (
           },
         });
 
+        let storageError = false;
         if (recordData) {
-          try {
-            await recordRecoveryService.saveFailedRecord(
-              recordData,
-              recordError.type,
-              recordError.userMessage,
-            );
-          } catch {}
+          const savedEntry = await recordRecoveryService.saveFailedRecord(
+            recordData,
+            recordError.type,
+            recordError.userMessage,
+          );
+          storageError = savedEntry === null;
         }
 
         Sentry.captureException(error, {
@@ -122,6 +122,7 @@ export const useWorkoutSave = (
               errorType: recordError.type,
               errorMessage: recordError.message,
               userMessage: recordError.userMessage,
+              storageError,
             },
             app: { app_version: Constants.expoConfig?.version ?? '0.0.0' },
             os: { name: Platform.OS, version: String(Platform.Version) },
@@ -139,25 +140,30 @@ export const useWorkoutSave = (
 
         setFailedSaveInfo({
           errorType: recordError.type,
-          userMessage: recordError.userMessage,
+          userMessage: storageError
+            ? `${recordError.userMessage}\n기기 저장 공간이 부족해 임시 저장에 실패했습니다.`
+            : recordError.userMessage,
         });
         return;
       } else {
         const genericUserMessage =
           '기록 저장 중 알 수 없는 오류가 발생했습니다.';
 
+        let storageError = false;
         if (recordData) {
-          try {
-            await recordRecoveryService.saveFailedRecord(
-              recordData,
-              'UNKNOWN_ERROR',
-              genericUserMessage,
-            );
-          } catch {}
+          const savedEntry = await recordRecoveryService.saveFailedRecord(
+            recordData,
+            'UNKNOWN_ERROR',
+            genericUserMessage,
+          );
+          storageError = savedEntry === null;
         }
 
         Sentry.captureException(error, {
-          contexts: { user: user ? { userId: user.id } : {} },
+          contexts: {
+            user: user ? { userId: user.id } : {},
+            storage: { storageError },
+          },
         });
 
         try {
@@ -167,7 +173,9 @@ export const useWorkoutSave = (
 
         setFailedSaveInfo({
           errorType: 'UNKNOWN_ERROR',
-          userMessage: genericUserMessage,
+          userMessage: storageError
+            ? `${genericUserMessage}\n기기 저장 공간이 부족해 임시 저장에 실패했습니다.`
+            : genericUserMessage,
         });
         return;
       }
