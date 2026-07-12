@@ -37,11 +37,13 @@ const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: true,
 });
 
+const version = Constants.expoConfig?.version ?? '0.0.0';
+const buildNumber = Constants.expoConfig?.ios?.buildNumber ?? '1';
+
 Sentry.init({
   dsn: 'https://1f265665b9cbe66c55ae0f82f9ee0a8a@o4511108762697728.ingest.de.sentry.io/4511108858708048',
-  environment:
-    process.env.APP_ENV === 'production' ? 'production' : 'development',
-  release: Constants.expoConfig?.version ?? '0.0.0',
+  environment: process.env.APP_ENV ?? 'development',
+  release: `${version}+${buildNumber}`,
   integrations: [
     Sentry.reactNativeTracingIntegration(),
     navigationIntegration,
