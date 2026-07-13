@@ -8,14 +8,17 @@
       "distribution": "store",
       "autoIncrement": true,
       "env": {
-        "APP_ENV": "staging"
+        "APP_ENV": "staging",
+        "BUNDLE_SUFFIX": "cujdev",
+        "APPLE_TEAM_ID": "7P6YWC373Q"
       }
     },
     "production": {
       "distribution": "store",
       "autoIncrement": true,
       "env": {
-        "APP_ENV": "production"
+        "APP_ENV": "production",
+        "APPLE_TEAM_ID": "7P6YWC373Q"
       }
     }
   },
