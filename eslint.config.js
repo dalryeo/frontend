@@ -10,7 +10,7 @@ module.exports = defineConfig([
   reactCompiler.configs.recommended,
   eslintPluginPrettierRecommended,
   {
-    ignores: ['dist/*', 'plugin/build/*'],
+    ignores: ['dist/**', 'plugin/build/**'],
     plugins: {
       '@typescript-eslint': tsEslint,
     },

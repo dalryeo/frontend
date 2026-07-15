@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addXCConfigurationList = addXCConfigurationList;
-function addXCConfigurationList(xcodeProject, { name, targetName, currentProjectVersion, bundleIdentifier, deploymentTarget, }) {
+function addXCConfigurationList(xcodeProject, { name, targetName, currentProjectVersion, bundleIdentifier, deploymentTarget, appleTeamIdentifier, }) {
     const watchBundleIdentifier = `${bundleIdentifier}.watchkitapp`;
     // 파일명 생성 (공백을 하이픈으로 변환)
     const infoPlistFileName = `${targetName.replace(/ /g, '-')}-Info.plist`;
@@ -18,6 +18,7 @@ function addXCConfigurationList(xcodeProject, { name, targetName, currentProject
         CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER: 'YES',
         CLANG_WARN_UNGUARDED_AVAILABILITY: 'YES_AGGRESSIVE',
         CODE_SIGN_STYLE: 'Automatic',
+        DEVELOPMENT_TEAM: appleTeamIdentifier,
         COPY_PHASE_STRIP: 'NO',
         CURRENT_PROJECT_VERSION: currentProjectVersion,
         DEBUG_INFORMATION_FORMAT: '"dwarf-with-dsym"',
@@ -29,6 +30,7 @@ function addXCConfigurationList(xcodeProject, { name, targetName, currentProject
         INFOPLIST_FILE: `"../${targetName}/${infoPlistFileName}"`,
         // HealthKit 권한을 위한 entitlements 파일 경로
         CODE_SIGN_ENTITLEMENTS: `"../${targetName}/${entitlementsFileName}"`,
+        INFOPLIST_KEY_CFBundleIconName: '"AppIcon"',
         INFOPLIST_KEY_CFBundleDisplayName: name,
         // HealthKit Usage Description 추가
         INFOPLIST_KEY_NSHealthShareUsageDescription: `"달려 앱은 러닝 운동 데이터를 HealthKit에 저장하고 읽기 위해 건강 데이터 접근 권한이 필요합니다."`,

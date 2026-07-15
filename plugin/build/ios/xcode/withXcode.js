@@ -2,19 +2,23 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.withXcode = void 0;
 const config_plugins_1 = require("expo/config-plugins");
-const addXCConfigurationList_1 = require("./addXCConfigurationList");
-const addProductFile_1 = require("./addProductFile");
-const addToPbxNativeTargetSection_1 = require("./addToPbxNativeTargetSection");
-const addTargetDependency_1 = require("./addTargetDependency");
-const addToPbxProjectSection_1 = require("./addToPbxProjectSection");
-const addPbxGroup_1 = require("./addPbxGroup");
 const addBuildPhases_1 = require("./addBuildPhases");
+const addPbxGroup_1 = require("./addPbxGroup");
+const addProductFile_1 = require("./addProductFile");
 const addSharedFiles_1 = require("./addSharedFiles");
+const addTargetDependency_1 = require("./addTargetDependency");
+const addToPbxNativeTargetSection_1 = require("./addToPbxNativeTargetSection");
+const addToPbxProjectSection_1 = require("./addToPbxProjectSection");
+const addXCConfigurationList_1 = require("./addXCConfigurationList");
 const withXcode = (config, { name, targetName, bundleIdentifier, deploymentTarget, files }) => {
     return (0, config_plugins_1.withXcodeProject)(config, (config) => {
         const xcodeProject = config.modResults;
         const targetUuid = xcodeProject.generateUuid();
         const groupName = 'Embed Watch Content';
+        const appleTeamIdentifier = process.env.APPLE_TEAM_ID;
+        if (!appleTeamIdentifier) {
+            throw new Error('APPLE_TEAM_ID 환경 변수가 누락되었습니다. 로컬의 .env 또는 EAS Build 환경 변수에 Team ID를 설정해주세요.');
+        }
         // 1. 빌드 설정 생성
         const xCConfigurationList = (0, addXCConfigurationList_1.addXCConfigurationList)(xcodeProject, {
             name,
@@ -22,6 +26,7 @@ const withXcode = (config, { name, targetName, bundleIdentifier, deploymentTarge
             currentProjectVersion: config.ios.buildNumber ?? '1.0',
             bundleIdentifier,
             deploymentTarget,
+            appleTeamIdentifier,
         });
         // 2. 제품 파일 추가
         const productFile = (0, addProductFile_1.addProductFile)(xcodeProject, {
