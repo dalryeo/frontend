@@ -19,13 +19,10 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-      - name: Build
-        run: eas build --platform ios --profile staging --non-interactive
+      - name: Build & Submit to TestFlight
+        run: eas build --platform ios --profile staging --non-interactive --auto-submit
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      - name: Submit to TestFlight
-        run: eas submit --platform ios --latest --non-interactive
-        env:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}

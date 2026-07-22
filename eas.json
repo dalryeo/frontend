@@ -22,6 +22,11 @@
     }
   },
   "submit": {
+    "staging": {
+      "ios": {
+        "appleTeamId": "7P6YWC373Q"
+      }
+    },
     "production": {
       "ios": {
         "appleTeamId": "7P6YWC373Q"
