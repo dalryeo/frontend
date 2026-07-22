@@ -24,12 +24,14 @@
   "submit": {
     "staging": {
       "ios": {
-        "appleTeamId": "7P6YWC373Q"
+        "appleTeamId": "7P6YWC373Q",
+        "ascAppId": "6767122010"
       }
     },
     "production": {
       "ios": {
-        "appleTeamId": "7P6YWC373Q"
+        "appleTeamId": "7P6YWC373Q",
+        "ascAppId": "6767122010"
       }
     }
   }
