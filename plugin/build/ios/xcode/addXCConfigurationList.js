@@ -17,6 +17,7 @@ function addXCConfigurationList(xcodeProject, { name, targetName, currentProject
         CLANG_WARN_DOCUMENTATION_COMMENTS: 'YES',
         CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER: 'YES',
         CLANG_WARN_UNGUARDED_AVAILABILITY: 'YES_AGGRESSIVE',
+        CODE_SIGN_IDENTITY: '"Apple Distribution"',
         CODE_SIGN_STYLE: 'Automatic',
         DEVELOPMENT_TEAM: appleTeamIdentifier,
         COPY_PHASE_STRIP: 'NO',
