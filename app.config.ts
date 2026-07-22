@@ -1,6 +1,7 @@
 import { ConfigContext, ExpoConfig } from 'expo/config';
 
-const IS_PROD = process.env.APP_ENV === 'production';
+const IS_PROD =
+  process.env.APP_ENV === 'production' || process.env.APP_ENV === 'staging';
 const BUNDLE_SUFFIX = process.env.BUNDLE_SUFFIX || 'unknown';
 const IS_DEBUG = process.env.EXPO_PUBLIC_DEBUG || 'false';
 const BUNDLE_ID = {
