@@ -9,7 +9,6 @@
       "autoIncrement": true,
       "env": {
         "APP_ENV": "staging",
-        "BUNDLE_SUFFIX": "cujdev",
         "APPLE_TEAM_ID": "7P6YWC373Q"
       }
     },
@@ -23,6 +22,11 @@
     }
   },
   "submit": {
+    "staging": {
+      "ios": {
+        "appleTeamId": "7P6YWC373Q"
+      }
+    },
     "production": {
       "ios": {
         "appleTeamId": "7P6YWC373Q"
